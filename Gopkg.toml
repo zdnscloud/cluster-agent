@@ -41,6 +41,10 @@
  branch = "master"
  name = "github.com/zdnscloud/gorest"
 
+[[override]]
+ branch = "release-1.13"
+ name = "k8s.io/metrics"
+
 [prune]
   go-tests = true
   unused-packages = true

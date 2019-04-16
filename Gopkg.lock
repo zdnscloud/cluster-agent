@@ -489,8 +489,8 @@
   version = "v0.3.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:9ca56f623576912018fe412b5e4a7b63d02c223bf85d68eece2696ddc0eed9f2"
+  branch = "release-1.13"
+  digest = "1:0306ff09375dc31052d211f0e9db9b9b1156e5306d36ab0080e432bc9972262a"
   name = "k8s.io/metrics"
   packages = [
     "pkg/apis/metrics",
@@ -502,7 +502,7 @@
     "pkg/client/clientset/versioned/typed/metrics/v1beta1",
   ]
   pruneopts = "UT"
-  revision = "48e74fdef699a14062285b9d9bbee2fe866a12ec"
+  revision = "486c9ba21ea924d069175e771671f026eda5a34c"
 
 [[projects]]
   digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
