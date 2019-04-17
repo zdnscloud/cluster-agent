@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/zdnscloud/cluster-agent/lvmmanager/handler"
+	"github.com/zdnscloud/cluster-agent/storage/handler"
 )
 
 type Server struct {

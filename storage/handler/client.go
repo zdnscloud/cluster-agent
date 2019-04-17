@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	lvmd "github.com/google/lvmd/proto"
-	"github.com/zdnscloud/cluster-agent/lvmmanager/lvmdclient"
+	"github.com/zdnscloud/cluster-agent/storage/lvmdclient"
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/client/config"
 	corev1 "k8s.io/api/core/v1"
