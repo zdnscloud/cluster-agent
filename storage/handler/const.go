@@ -6,5 +6,5 @@ const (
 	LvmdPort            = "1736"
 	ConTimeout          = 10
 	DefaultVgName       = "k8s"
-	DefaultStorageClass = "lvm"
+	LocalStorageClass = "lvm"
 )

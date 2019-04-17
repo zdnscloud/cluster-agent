@@ -14,13 +14,13 @@ func newStorageManager() *StorageManager {
 }
 
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
-	return getStorageSlice()
+	return getStorages()
 }
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	var storages []Storage
 	id := ctx.Object.GetID()
-	storageclasss := getStorageSlice()
+	storageclasss := getStorages()
 	for _, s := range storageclasss {
 		if id == s.Name {
 			storages = append(storages, s)

@@ -14,12 +14,12 @@ func newNodeManager(storages *StorageManager) *NodeManager {
 }
 
 func (m *NodeManager) List(ctx *resttypes.Context) interface{} {
-	return getNodeSlice()
+	return getNodes()
 }
 
 func (m *NodeManager) Get(ctx *resttypes.Context) interface{} {
 	id := ctx.Object.GetID()
-	nodestmp := getNodeSlice()
+	nodestmp := getNodes()
 	var nodes []Node
 	for _, v := range nodestmp {
 		if id == v.Name {

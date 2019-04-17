@@ -4,7 +4,7 @@ RUN mkdir -p /go/src/github.com/zdnscloud/cluster-agent
 COPY . /go/src/github.com/zdnscloud/cluster-agent
 
 WORKDIR /go/src/github.com/zdnscloud/cluster-agent
-RUN CGO_ENABLED=0 GOOS=linux go build -o storage/storagemanager storage/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o storage/storagemanager cmd/storage/storage.go
 
 
 FROM alpine

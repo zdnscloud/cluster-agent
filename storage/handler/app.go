@@ -40,9 +40,6 @@ func (a *App) RegisterHandler(router gin.IRoutes) error {
 func (a *App) registerRestHandler(router gin.IRoutes) error {
 	schemas := resttypes.NewSchemas()
 	schemas.MustImportAndCustomize(&Version, Storage{}, a.storageManager, SetStorageSchema)
-	schemas.MustImportAndCustomize(&Version, Node{}, newNodeManager(a.storageManager), SetNodeSchema)
-	schemas.MustImportAndCustomize(&Version, VG{}, newVGManager(a.storageManager), SetVGSchema)
-	schemas.MustImportAndCustomize(&Version, LVM{}, newLVMManager(a.storageManager), SetLVMSchema)
 
 	server := api.NewAPIServer()
 	if err := server.AddSchemas(schemas); err != nil {
