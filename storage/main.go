@@ -34,7 +34,7 @@ func main() {
 		panic("create server failed:" + err.Error())
 	}
 
-	addr := "202.173.9.10:3456"
+	addr := "0.0.0.0:8090"
 	if err := server.Run(addr); err != nil {
 		panic("server run failed:" + err.Error())
 	}
