@@ -7,44 +7,44 @@ import (
 )
 
 type NetworkCache struct {
-	nodes    map[string]*Node
-	pods     map[string]*Pod
-	services map[string]*Service
+	nodeNetworks    map[string]*NodeNetwork
+	podNetworks     map[string]*PodNetwork
+	serviceNetworks map[string]*ServiceNetwork
 
 	cache cache.Cache
 }
 
 func newNetworkCache(cache cache.Cache) *NetworkCache {
 	return &NetworkCache{
-		cache:    cache,
-		nodes:    make(map[string]*Node),
-		pods:     make(map[string]*Pod),
-		services: make(map[string]*Service),
+		cache:           cache,
+		nodeNetworks:    make(map[string]*NodeNetwork),
+		podNetworks:     make(map[string]*PodNetwork),
+		serviceNetworks: make(map[string]*ServiceNetwork),
 	}
 }
 
-func (nc *NetworkCache) GetNodes() []Node {
-	var nodes []Node
-	for _, node := range nc.nodes {
-		nodes = append(nodes, *node)
+func (nc *NetworkCache) GetNodeNetworks() []NodeNetwork {
+	var nodeNetworks []NodeNetwork
+	for _, nodeNetwork := range nc.nodeNetworks {
+		nodeNetworks = append(nodeNetworks, *nodeNetwork)
 	}
-	return nodes
+	return nodeNetworks
 }
 
-func (nc *NetworkCache) GetPods() []Pod {
-	var pods []Pod
-	for _, pod := range nc.pods {
-		pods = append(pods, *pod)
+func (nc *NetworkCache) GetPodNetworks() []PodNetwork {
+	var podNetworks []PodNetwork
+	for _, podNetwork := range nc.podNetworks {
+		podNetworks = append(podNetworks, *podNetwork)
 	}
-	return pods
+	return podNetworks
 }
 
-func (nc *NetworkCache) GetServices() []Service {
-	var services []Service
-	for _, service := range nc.services {
-		services = append(services, *service)
+func (nc *NetworkCache) GetServiceNetworks() []ServiceNetwork {
+	var serviceNetworks []ServiceNetwork
+	for _, serviceNetwork := range nc.serviceNetworks {
+		serviceNetworks = append(serviceNetworks, *serviceNetwork)
 	}
-	return services
+	return serviceNetworks
 }
 
 func (nc *NetworkCache) OnNewNode(k8snode *corev1.Node) {
@@ -57,23 +57,23 @@ func (nc *NetworkCache) OnNewNode(k8snode *corev1.Node) {
 		}
 	}
 
-	nc.nodes[k8snode.Name] = &Node{
+	nc.nodeNetworks[k8snode.Name] = &NodeNetwork{
 		Name: k8snode.Name,
 		IP:   ip,
 	}
-	nc.pods[k8snode.Name] = &Pod{
+	nc.podNetworks[k8snode.Name] = &PodNetwork{
 		NodeName: k8snode.Name,
 		PodCIDR:  k8snode.Spec.PodCIDR,
 	}
 }
 
 func (nc *NetworkCache) OnNewPod(k8spod *corev1.Pod) {
-	pod, ok := nc.pods[k8spod.Spec.NodeName]
+	podNetwork, ok := nc.podNetworks[k8spod.Spec.NodeName]
 	if ok == false {
 		return
 	}
 
-	pod.PodIPs = append(pod.PodIPs, PodIP{
+	podNetwork.PodIPs = append(podNetwork.PodIPs, PodIP{
 		Namespace: k8spod.Namespace,
 		Name:      k8spod.Name,
 		IP:        k8spod.Status.PodIP,
@@ -81,7 +81,7 @@ func (nc *NetworkCache) OnNewPod(k8spod *corev1.Pod) {
 }
 
 func (nc *NetworkCache) OnNewService(k8ssvc *corev1.Service) {
-	nc.services[genServiceKey(k8ssvc)] = &Service{
+	nc.serviceNetworks[genServiceKey(k8ssvc)] = &ServiceNetwork{
 		Namespace: k8ssvc.Namespace,
 		Name:      k8ssvc.Name,
 		IP:        k8ssvc.Spec.ClusterIP,
@@ -93,14 +93,14 @@ func genServiceKey(k8ssvc *corev1.Service) string {
 }
 
 func (nc *NetworkCache) OnDeleteNode(k8snode *corev1.Node) {
-	delete(nc.nodes, k8snode.Name)
+	delete(nc.nodeNetworks, k8snode.Name)
 }
 
 func (nc *NetworkCache) OnDeletePod(k8spod *corev1.Pod) {
-	if pod, ok := nc.pods[k8spod.Spec.NodeName]; ok {
-		for i, podIP := range pod.PodIPs {
+	if podNetwork, ok := nc.podNetworks[k8spod.Spec.NodeName]; ok {
+		for i, podIP := range podNetwork.PodIPs {
 			if podIP.Namespace == k8spod.Namespace && podIP.Name == k8spod.Name {
-				pod.PodIPs = append(pod.PodIPs[:i], pod.PodIPs[i+1:]...)
+				podNetwork.PodIPs = append(podNetwork.PodIPs[:i], podNetwork.PodIPs[i+1:]...)
 				break
 			}
 		}
@@ -108,7 +108,7 @@ func (nc *NetworkCache) OnDeletePod(k8spod *corev1.Pod) {
 }
 
 func (nc *NetworkCache) OnDeleteService(k8ssvc *corev1.Service) {
-	delete(nc.services, genServiceKey(k8ssvc))
+	delete(nc.serviceNetworks, genServiceKey(k8ssvc))
 }
 
 func (nc *NetworkCache) OnUpdateService(k8ssvc *corev1.Service) {
@@ -116,7 +116,7 @@ func (nc *NetworkCache) OnUpdateService(k8ssvc *corev1.Service) {
 }
 
 func (nc *NetworkCache) OnUpdatePod(k8spod *corev1.Pod) {
-	pod, ok := nc.pods[k8spod.Spec.NodeName]
+	podNetwork, ok := nc.podNetworks[k8spod.Spec.NodeName]
 	if ok == false {
 		return
 	}
@@ -126,11 +126,11 @@ func (nc *NetworkCache) OnUpdatePod(k8spod *corev1.Pod) {
 		Name:      k8spod.Name,
 		IP:        k8spod.Status.PodIP,
 	}
-	for i, p := range pod.PodIPs {
+	for i, p := range podNetwork.PodIPs {
 		if p.Namespace == k8spod.Namespace && p.Name == k8spod.Name {
-			pod.PodIPs[i] = podIP
+			podNetwork.PodIPs[i] = podIP
 			return
 		}
 	}
-	pod.PodIPs = append(pod.PodIPs, podIP)
+	podNetwork.PodIPs = append(podNetwork.PodIPs, podIP)
 }

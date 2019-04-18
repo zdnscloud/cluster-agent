@@ -1,6 +1,6 @@
 {
-    "resourceType": "pod",
-    "collectionName": "pods",
+    "resourceType": "podnetwork",
+    "collectionName": "podnetworks",
 
     "resourceFields": {
         "nodeName": {"type": "string"},

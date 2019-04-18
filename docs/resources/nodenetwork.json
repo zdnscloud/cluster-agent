@@ -1,6 +1,6 @@
 {
-    "resourceType": "node",
-    "collectionName": "nodes",
+    "resourceType": "nodenetwork",
+    "collectionName": "nodenetworks",
 
     "resourceFields": {
         "name": {"type": "string"},
