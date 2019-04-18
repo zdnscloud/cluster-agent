@@ -1,0 +1,11 @@
+{
+    "resourceType": "servicenetwork",
+    "collectionName": "servicenetworks",
+
+    "resourceFields": {
+        "name": {"type": "string"},
+        "ip": {"type": "string"}
+    },
+
+    "collectionMethods": [ "GET" ]
+}
