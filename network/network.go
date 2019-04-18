@@ -162,6 +162,8 @@ func (m *NetworkManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.Service:
 		m.networks.OnUpdateService(newObj)
+	case *corev1.Pod:
+		m.networks.OnUpdatePod(newObj)
 	}
 
 	return handler.Result{}, nil

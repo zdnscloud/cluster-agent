@@ -114,3 +114,23 @@ func (nc *NetworkCache) OnDeleteService(k8ssvc *corev1.Service) {
 func (nc *NetworkCache) OnUpdateService(k8ssvc *corev1.Service) {
 	nc.OnNewService(k8ssvc)
 }
+
+func (nc *NetworkCache) OnUpdatePod(k8spod *corev1.Pod) {
+	pod, ok := nc.pods[k8spod.Spec.NodeName]
+	if ok == false {
+		return
+	}
+
+	podIP := PodIP{
+		Namespace: k8spod.Namespace,
+		Name:      k8spod.Name,
+		IP:        k8spod.Status.PodIP,
+	}
+	for i, p := range pod.PodIPs {
+		if p.Namespace == k8spod.Namespace && p.Name == k8spod.Name {
+			pod.PodIPs[i] = podIP
+			return
+		}
+	}
+	pod.PodIPs = append(pod.PodIPs, podIP)
+}
