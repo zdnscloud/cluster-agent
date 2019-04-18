@@ -4,29 +4,29 @@ import (
 	resttypes "github.com/zdnscloud/gorest/types"
 )
 
-func SetNodeNetworkSchema(schema *resttypes.Schema, handler resttypes.Handler) {
+func SetNodeSchema(schema *resttypes.Schema, handler resttypes.Handler) {
 	schema.Handler = handler
 	schema.CollectionMethods = []string{"GET"}
 }
 
-type NodeNetwork struct {
+type Node struct {
 	resttypes.Resource `json:",inline"`
 	Name               string `json:"name"`
 	IP                 string `json:"ip"`
 }
 
-var NodeNetworkType = resttypes.GetResourceType(NodeNetwork{})
+var NodeType = resttypes.GetResourceType(Node{})
 
-func SetPodNetworkSchema(schema *resttypes.Schema, handler resttypes.Handler) {
+func SetPodSchema(schema *resttypes.Schema, handler resttypes.Handler) {
 	schema.Handler = handler
 	schema.CollectionMethods = []string{"GET"}
 }
 
-type PodNetwork struct {
+type Pod struct {
 	resttypes.Resource `json:",inline"`
 	NodeName           string  `json:"nodeName"`
 	PodCIDR            string  `json:"podCIDR"`
-	PodIPs             []PodIP `json:"networks,omitempty"`
+	PodIPs             []PodIP `json:"podIPs,omitempty"`
 }
 
 type PodIP struct {
@@ -35,18 +35,18 @@ type PodIP struct {
 	IP        string `json:"ip"`
 }
 
-var PodNetworkType = resttypes.GetResourceType(PodNetwork{})
+var PodType = resttypes.GetResourceType(Pod{})
 
-func SetServiceNetworkSchema(schema *resttypes.Schema, handler resttypes.Handler) {
+func SetServiceSchema(schema *resttypes.Schema, handler resttypes.Handler) {
 	schema.Handler = handler
 	schema.CollectionMethods = []string{"GET"}
 }
 
-type ServiceNetwork struct {
+type Service struct {
 	resttypes.Resource `json:",inline"`
 	Namespace          string `json:"-"`
 	Name               string `json:"name"`
 	IP                 string `json:"ip"`
 }
 
-var ServiceNetworkType = resttypes.GetResourceType(ServiceNetwork{})
+var ServiceType = resttypes.GetResourceType(Service{})

@@ -1,16 +1,16 @@
 {
-    "resourceType": "podnetwork",
-    "collectionName": "podnetworks",
+    "resourceType": "pod",
+    "collectionName": "pods",
 
     "resourceFields": {
         "nodeName": {"type": "string"},
-        "podCIDR": {"type": "string"}
+        "podCIDR": {"type": "string"},
         "networks": {"type": "array", "elemType": "podIP"}
     },
 
     "subResources": {
         "podIP": {
-            "name": {"type": "string"}
+            "name": {"type": "string"},
             "ip": {"type": "string"}
         }
     },

@@ -38,9 +38,9 @@ func RegisterHandler(router gin.IRoutes) error {
 		return fmt.Errorf("create network handler failed: %s", err.Error())
 	}
 
-	schemas.MustImportAndCustomize(&Version, NodeNetwork{}, m, SetNodeNetworkSchema)
-	schemas.MustImportAndCustomize(&Version, PodNetwork{}, m, SetPodNetworkSchema)
-	schemas.MustImportAndCustomize(&Version, ServiceNetwork{}, m, SetServiceNetworkSchema)
+	schemas.MustImportAndCustomize(&Version, Node{}, m, SetNodeSchema)
+	schemas.MustImportAndCustomize(&Version, Pod{}, m, SetPodSchema)
+	schemas.MustImportAndCustomize(&Version, Service{}, m, SetServiceSchema)
 
 	server := api.NewAPIServer()
 	if err := server.AddSchemas(schemas); err != nil {
@@ -128,12 +128,12 @@ func (m *NetworkManager) List(ctx *resttypes.Context) interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	switch ctx.Object.GetType() {
-	case NodeNetworkType:
-		return m.networks.GetNodeNetworks()
-	case PodNetworkType:
-		return m.networks.GetPodNetworks()
-	case ServiceNetworkType:
-		return m.networks.GetServiceNetworks()
+	case NodeType:
+		return m.networks.GetNodes()
+	case PodType:
+		return m.networks.GetPods()
+	case ServiceType:
+		return m.networks.GetServices()
 	default:
 		return nil
 	}

@@ -7,9 +7,9 @@ import (
 )
 
 type NetworkCache struct {
-	nodes    map[string]*NodeNetwork
-	pods     map[string]*PodNetwork
-	services map[string]*ServiceNetwork
+	nodes    map[string]*Node
+	pods     map[string]*Pod
+	services map[string]*Service
 
 	cache cache.Cache
 }
@@ -17,30 +17,30 @@ type NetworkCache struct {
 func newNetworkCache(cache cache.Cache) *NetworkCache {
 	return &NetworkCache{
 		cache:    cache,
-		nodes:    make(map[string]*NodeNetwork),
-		pods:     make(map[string]*PodNetwork),
-		services: make(map[string]*ServiceNetwork),
+		nodes:    make(map[string]*Node),
+		pods:     make(map[string]*Pod),
+		services: make(map[string]*Service),
 	}
 }
 
-func (nc *NetworkCache) GetNodeNetworks() []NodeNetwork {
-	var nodes []NodeNetwork
+func (nc *NetworkCache) GetNodes() []Node {
+	var nodes []Node
 	for _, node := range nc.nodes {
 		nodes = append(nodes, *node)
 	}
 	return nodes
 }
 
-func (nc *NetworkCache) GetPodNetworks() []PodNetwork {
-	var pods []PodNetwork
+func (nc *NetworkCache) GetPods() []Pod {
+	var pods []Pod
 	for _, pod := range nc.pods {
 		pods = append(pods, *pod)
 	}
 	return pods
 }
 
-func (nc *NetworkCache) GetServiceNetworks() []ServiceNetwork {
-	var services []ServiceNetwork
+func (nc *NetworkCache) GetServices() []Service {
+	var services []Service
 	for _, service := range nc.services {
 		services = append(services, *service)
 	}
@@ -57,11 +57,11 @@ func (nc *NetworkCache) OnNewNode(k8snode *corev1.Node) {
 		}
 	}
 
-	nc.nodes[k8snode.Name] = &NodeNetwork{
+	nc.nodes[k8snode.Name] = &Node{
 		Name: k8snode.Name,
 		IP:   ip,
 	}
-	nc.pods[k8snode.Name] = &PodNetwork{
+	nc.pods[k8snode.Name] = &Pod{
 		NodeName: k8snode.Name,
 		PodCIDR:  k8snode.Spec.PodCIDR,
 	}
@@ -81,7 +81,7 @@ func (nc *NetworkCache) OnNewPod(k8spod *corev1.Pod) {
 }
 
 func (nc *NetworkCache) OnNewService(k8ssvc *corev1.Service) {
-	nc.services[genServiceKey(k8ssvc)] = &ServiceNetwork{
+	nc.services[genServiceKey(k8ssvc)] = &Service{
 		Namespace: k8ssvc.Namespace,
 		Name:      k8ssvc.Name,
 		IP:        k8ssvc.Spec.ClusterIP,

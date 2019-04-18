@@ -1,6 +1,6 @@
 {
-    "resourceType": "servicenetwork",
-    "collectionName": "servicenetworks",
+    "resourceType": "service",
+    "collectionName": "services",
 
     "resourceFields": {
         "name": {"type": "string"},
