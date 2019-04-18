@@ -161,9 +161,13 @@ func (m *NetworkManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.Service:
-		m.networks.OnUpdateService(newObj)
+		if e.ObjectOld.(*corev1.Service).Spec.ClusterIP != newObj.Spec.ClusterIP {
+			m.networks.OnUpdateService(newObj)
+		}
 	case *corev1.Pod:
-		m.networks.OnUpdatePod(newObj)
+		if e.ObjectOld.(*corev1.Pod).Status.PodIP != newObj.Status.PodIP {
+			m.networks.OnUpdatePod(newObj)
+		}
 	}
 
 	return handler.Result{}, nil
