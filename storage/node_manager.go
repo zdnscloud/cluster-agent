@@ -1,4 +1,4 @@
-package handler
+package storage
 
 import (
 	resttypes "github.com/zdnscloud/gorest/types"
