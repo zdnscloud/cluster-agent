@@ -1,4 +1,4 @@
-package handler
+package storage
 
 const (
 	ZkeStorageLabel     = "node-role.kubernetes.io/storage"

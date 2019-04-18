@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-demo
+  namespace: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storagemanager
+  template:
+    metadata:
+      name: storage-demo
+      labels:
+        app: storagemanager
+    spec:
+      serviceAccountName: storagemanager
+      containers:
+      - name: storage-demo
+        image: zdnscloud/storagemanager:v0.1
+        ports:
+        - name: storagemanager
+          containerPort: 8090

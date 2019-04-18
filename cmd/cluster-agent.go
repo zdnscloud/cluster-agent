@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/zdnscloud/cluster-agent/storage/handler"
+	"github.com/zdnscloud/cluster-agent/storage"
 )
 
 type Server struct {
@@ -11,10 +11,9 @@ type Server struct {
 
 func NewServer() (*Server, error) {
 	gin.SetMode(gin.ReleaseMode)
-
-	app := handler.NewApp()
 	router := gin.New()
 
+	app := storage.NewApp()
 	if err := app.RegisterHandler(router); err != nil {
 		panic("register handler failed:" + err.Error())
 	}

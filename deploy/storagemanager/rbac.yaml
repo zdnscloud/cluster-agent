@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: storagemanager
+  namespace: storage
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storagemanager-runner
+  namespace: storage
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: storagemanager-role
+  namespace: storage
+subjects:
+  - kind: ServiceAccount
+    name: storagemanager
+    namespace: storage
+roleRef:
+  kind: ClusterRole
+  name: storagemanager-runner
+  apiGroup: rbac.authorization.k8s.io
