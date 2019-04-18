@@ -52,7 +52,7 @@ func RegisterHandler(router gin.IRoutes) error {
 }
 
 type NetworkManager struct {
-	DefaultHandler
+	api.DefaultHandler
 	networks *NetworkCache
 	cache    cache.Cache
 	lock     sync.RWMutex
