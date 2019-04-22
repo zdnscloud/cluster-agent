@@ -19,7 +19,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0088695ce10ce08480101c462510af7e28d38ed950cbb863731bef8da4b19b31"
+  digest = "1:6f85ddcf1dd153fed208684e6d0be014691d581581c71b43b2f338aa9fd7bf79"
   name = "github.com/gin-gonic/gin"
   packages = [
     ".",
@@ -28,7 +28,7 @@
     "render",
   ]
   pruneopts = "UT"
-  revision = "ffcbe77b1e6222b4e0e97eb1920adc1813fb2224"
+  revision = "f9de6049cbf0820198708091e2b8e01696ec1473"
 
 [[projects]]
   digest = "1:4d02824a56d268f74a6b6fdd944b20b58a77c3d70e81008b3ee0c4f1a6777340"
@@ -195,7 +195,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d0f73363c9ee5eecc41e772e05b666467dee35ee32d0f3eabaf7cb890d6a0d1d"
+  digest = "1:61a9f494f5b5152527fe87dd95faaf6269ed0587e4044225f1993569a23f02cc"
   name = "github.com/zdnscloud/cement"
   packages = [
     "log",
@@ -204,7 +204,7 @@
     "slice",
   ]
   pruneopts = "UT"
-  revision = "3e9edaca4e5a437983a7968f818829084d30a77a"
+  revision = "dbe599d3f012f8c64527e2b40affb252bf95afe3"
 
 [[projects]]
   branch = "master"
@@ -247,7 +247,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "88737f569e3a9c7ab309cdc09a07fe7fc87233c3"
+  revision = "df01cb2cc480549d72034218dd98bf97671450ac"
 
 [[projects]]
   branch = "master"
@@ -264,7 +264,7 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "1da14a5a36f220ea3f03470682b737b1dfd5de22"
+  revision = "afa5a82059c6356159f699d81beff22a81842231"
 
 [[projects]]
   branch = "master"
@@ -279,14 +279,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:788df6ab16e3b77c72cc916185de590254d2498027337005e0ed3e2c1f10ff7b"
+  digest = "1:a29b488ff122fd8033d43c7cfcc5a0f5b2b1faf5256e8b3bd1568c451f8c6b64"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "3fd5a3612ccd7907f26270fa92579a0f2f76f734"
+  revision = "e8e3143a4f4a00f1fafef0dd82ba78223281b01b"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -341,10 +341,10 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "d1146b9035b912113a38af3b138eb2af567b2c67"
+  revision = "e7d98fc518a78c9f8b5ee77be7b0b317475d89e1"
 
 [[projects]]
-  digest = "1:31d87f39886fb38a2b6c097ff3b9f985d6960772170d64a68246f7790e955746"
+  digest = "1:707c3a5d10ed430ea767d73df122d9eb3dfb6312bbacc9f2e39204390686d1d0"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -381,8 +381,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "236199dd5f8031d698fb64091194aecd1c3895b2"
-  version = "v1.20.0"
+  revision = "25c4f928eaa6d96443009bd842389fb4fa48664e"
+  version = "v1.20.1"
 
 [[projects]]
   digest = "1:cbc72c4c4886a918d6ab4b95e347ffe259846260f99ebdd8a198c2331cf2b2e9"
