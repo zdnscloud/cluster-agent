@@ -17,6 +17,7 @@ type Storage struct {
 	Name               string `json:"name,omitempty"`
 	TotalSize          int    `json:"totalsize,omitempty"`
 	FreeSize           int    `json:"freesize,omitempty"`
+	UsePods            []Pod  `json:"usepod,omitempty"`
 	Nodes              []Node `json:"nodes,omitempty"`
 }
 
@@ -36,4 +37,12 @@ type VG struct {
 	FreeSize           int      `json:"free_size,omitempty"`
 	Uuid               string   `json:"uuid,omitempty"`
 	Tags               []string `json:"tags,omitempty"`
+}
+
+type Pod struct {
+	resttypes.Resource `json:",inline"`
+	Name               string `json:"name,omitempty"`
+	TotalSize          int    `json:"totalsize,omitempty"`
+	FreeSize           int    `json:"freesize,omitempty"`
+	Ip                 string `json:"ip",omitempty`
 }

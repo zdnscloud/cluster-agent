@@ -32,7 +32,7 @@ func getLocalStorage(classname string, storage Storage) Storage {
 	storage.Name = classname
 	storage.TotalSize = tsize
 	storage.FreeSize = fszie
-	storage.Nodes = nodes
+	//storage.Nodes = nodes
 	storage.SetID(storage.Name)
 	return storage
 }
@@ -44,43 +44,43 @@ func getNodes() []Node {
 		return nil
 	}
 	for _, v := range noderes {
-		addr := v.Annotations[ZkeInternalIPAnnKey]
+		//addr := v.Annotations[ZkeInternalIPAnnKey]
 		node := Node{
 			Name: v.Name,
 		}
-		vgs := getVgs(addr)
-		for _, v := range vgs {
-			if v.Name == DefaultVgName {
-				node.TotalSize = v.Size
-				node.FreeSize = v.FreeSize
-			}
-		}
+		/*
+			vgs := getVgs(addr)
+			for _, v := range vgs {
+				if v.Name == DefaultVgName {
+					node.TotalSize = v.Size
+					node.FreeSize = v.FreeSize
+				}
+			}*/
 		node.SetID(node.Name)
 		nodes = append(nodes, node)
 	}
 	return nodes
 }
 
-func getVgs(node string) []VG {
-	var vgs []VG
+func getVg(node string) VG {
 	vgres, err := GetVG(node)
 	if err != nil {
-		return nil
+		return VG{}
 	}
 	for _, v := range vgres {
 		if v.Name == DefaultVgName {
-			vg := VG{
-				Name:     v.Name,
-				Size:     byteToGb(v.Size),
-				Uuid:     v.Uuid,
-				Tags:     v.Tags,
+			return VG{
+				Name: v.Name,
+				Size: byteToGb(v.Size),
+				//		Uuid:     v.Uuid,
+				//		Tags:     v.Tags,
 				FreeSize: byteToGb(v.FreeSize),
 			}
-			vg.SetID(vg.Name)
-			vgs = append(vgs, vg)
+			//	vg.SetID(vg.Name)
+			//	vgs = append(vgs, vg)
 		}
 	}
-	return vgs
+	return VG{}
 }
 
 func nameToAddr(name string) string {
