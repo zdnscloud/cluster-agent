@@ -89,6 +89,7 @@ func genServiceKey(k8ssvc *corev1.Service) string {
 
 func (nc *NetworkCache) OnDeleteNode(k8snode *corev1.Node) {
 	delete(nc.nodeNetworks, k8snode.Name)
+	delete(nc.podNetworks, k8snode.Name)
 }
 
 func (nc *NetworkCache) OnDeletePod(k8spod *corev1.Pod) {
