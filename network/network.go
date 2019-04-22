@@ -115,7 +115,7 @@ func (m *NetworkManager) initNetworkManagers() error {
 		return err
 	}
 
-	nc := newNetworkCache(m.cache)
+	nc := newNetworkCache()
 	for _, node := range nodes.Items {
 		nc.OnNewNode(&node)
 	}

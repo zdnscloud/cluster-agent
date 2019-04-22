@@ -2,21 +2,16 @@ package network
 
 import (
 	corev1 "k8s.io/api/core/v1"
-
-	"github.com/zdnscloud/gok8s/cache"
 )
 
 type NetworkCache struct {
 	nodeNetworks    map[string]*NodeNetwork
 	podNetworks     map[string]*PodNetwork
 	serviceNetworks map[string]*ServiceNetwork
-
-	cache cache.Cache
 }
 
-func newNetworkCache(cache cache.Cache) *NetworkCache {
+func newNetworkCache() *NetworkCache {
 	return &NetworkCache{
-		cache:           cache,
 		nodeNetworks:    make(map[string]*NodeNetwork),
 		podNetworks:     make(map[string]*PodNetwork),
 		serviceNetworks: make(map[string]*ServiceNetwork),
