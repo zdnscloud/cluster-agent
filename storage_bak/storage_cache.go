@@ -97,7 +97,7 @@ func (sc *StorageCache) OnNewPV(k8spv *corev1.PersistentVolume) {
 	sc.storages[stc].PVs = pvs
 }
 
-func (sc *StorageCache) OnUpdatePod(k8spod *corev1.Pod) {
+func (sc *StorageCache) OnNewPod(k8spod *corev1.Pod) {
 	pvc := k8spod.Spec.Volumes
 	for _, v := range pvc {
 		if v.PersistentVolumeClaim == nil {

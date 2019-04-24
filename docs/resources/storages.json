@@ -1,0 +1,29 @@
+{
+    "resourceType": "storage",
+    "collectionName": "storages",
+
+    "resourceFields": {
+        "name": {"type": "string"},
+        "totalsize": {"type": "int"},
+        "freesize": {"type": "int"},
+        "pvs": {"type": "array", "elemType": "pv"},
+        "nodes": {"type": "array", "elemType": "node"}
+    },
+    "subResources": {
+	"pv": {
+	    "name": {"type": "string"},
+	    "size": {"type": "int"},
+	    "pods": {"type": "array", "elemType": "string"},
+	    "pvc": {"type": "string"},
+	    "status": {"type": "string"}
+	},
+	"node": {
+	    "name": {"type": "string"},
+	    "totalsize": {"type": "int"},
+	    "freesize": {"type": "int"}
+	}
+    },
+
+
+    "collectionMethods": [ "GET" ]
+}

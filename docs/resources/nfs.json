@@ -1,0 +1,23 @@
+{
+    "resourceType": "nfs",
+    "parentResource": "storage",
+
+    "resourceFields": {
+        "name": {"type": "string"},
+        "totalsize": {"type": "int"},
+        "freesize": {"type": "int"},
+        "pvs": {"type": "array", "elemType": "pv"}
+    },
+    "subResources": {
+	"pv": {
+	    "name": {"type": "string"},
+	    "size": {"type": "int"},
+	    "pods": {"type": "array", "elemType": "string"},
+	    "pvc": {"type": "string"},
+	    "status": {"type": "string"}
+	}
+    },
+
+
+    "collectionMethods": [ "GET" ]
+}

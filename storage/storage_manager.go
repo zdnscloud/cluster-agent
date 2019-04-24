@@ -15,7 +15,6 @@ import (
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sync"
-	"time"
 )
 
 type StorageManager struct {
@@ -31,9 +30,6 @@ var (
 		Version: "v1",
 		Group:   "storage.zcloud.cn",
 	}
-
-	tokenSecret        = []byte("hello storage")
-	tokenValidDuration = 24 * 3600 * time.Second
 )
 
 func RegisterHandler(router gin.IRoutes, cache cache.Cache) error {
@@ -51,7 +47,7 @@ func RegisterHandler(router gin.IRoutes, cache cache.Cache) error {
 }
 
 func newStorageManager(c cache.Cache) (*StorageManager, error) {
-	ctrl := controller.New("storageCache", c, scheme.Scheme)
+	ctrl := controller.New(CtrlName, c, scheme.Scheme)
 	ctrl.Watch(&corev1.Node{})
 	ctrl.Watch(&storagev1.StorageClass{})
 	ctrl.Watch(&corev1.PersistentVolume{})
@@ -104,7 +100,7 @@ func (m *StorageManager) initStorageManagers() error {
 		sc.OnNewPV(&pv)
 	}
 	for _, pod := range pods.Items {
-		sc.OnNewPod(&pod)
+		sc.OnUpdatePod(&pod)
 	}
 	sc.OnInitNFS()
 	m.storages = sc
@@ -133,8 +129,6 @@ func (m *StorageManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
 		m.storages.OnNewNode(obj)
 	case *corev1.PersistentVolume:
 		m.storages.OnNewPV(obj)
-	case *corev1.Pod:
-		m.storages.OnNewPod(obj)
 	}
 	return handler.Result{}, nil
 }
@@ -148,7 +142,7 @@ func (m *StorageManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 		}
 	case *corev1.Pod:
 		if e.ObjectOld.(*corev1.Pod).Status.Phase != newObj.Status.Phase {
-			m.storages.OnNewPod(newObj)
+			m.storages.OnUpdatePod(newObj)
 		}
 	}
 	return handler.Result{}, nil

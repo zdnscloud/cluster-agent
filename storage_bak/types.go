@@ -42,6 +42,6 @@ type Pv struct {
 	Name   string                       `json:"name,omitempty"`
 	Size   int                          `json:"size,omitempty"`
 	Pods   []string                     `json:"pods,omitempty"`
-	Pvc    string                       `json:"_"`
-	Status corev1.PersistentVolumePhase `json:"_"`
+	Pvc    string                       `json:"pvc,omitempty"`
+	Status corev1.PersistentVolumePhase `json:"status,omitempty"`
 }
