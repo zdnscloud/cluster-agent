@@ -2,6 +2,7 @@ package storage
 
 import (
 	resttypes "github.com/zdnscloud/gorest/types"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func SetStorageSchema(schema *resttypes.Schema, handler resttypes.Handler) {
@@ -17,32 +18,30 @@ type Storage struct {
 	Name               string `json:"name,omitempty"`
 	TotalSize          int    `json:"totalsize,omitempty"`
 	FreeSize           int    `json:"freesize,omitempty"`
-	UsePods            []Pod  `json:"usepod,omitempty"`
 	Nodes              []Node `json:"nodes,omitempty"`
+	PVs                []Pv   `json:"pvs,omitempty"`
 }
 
 type Node struct {
-	resttypes.Resource `json:",inline"`
-	Name               string `json:"name,omitempty"`
-	Addr               string `json:"addr,omitempty"`
-	TotalSize          int    `json:"totalsize,omitempty"`
-	FreeSize           int    `json:"freesize,omitempty"`
-	Vgs                []VG   `json:"vgs,omitempty"`
+	Name      string `json:"name,omitempty"`
+	Addr      string `json:"addr,omitempty"`
+	TotalSize int    `json:"totalsize,omitempty"`
+	FreeSize  int    `json:"freesize,omitempty"`
+	Vgs       []VG   `json:"vgs,omitempty"`
 }
 
 type VG struct {
-	resttypes.Resource `json:",inline"`
-	Name               string   `json:"name,omitempty"`
-	Size               int      `json:"size,omitempty"`
-	FreeSize           int      `json:"free_size,omitempty"`
-	Uuid               string   `json:"uuid,omitempty"`
-	Tags               []string `json:"tags,omitempty"`
+	Name     string   `json:"name,omitempty"`
+	Size     int      `json:"size,omitempty"`
+	FreeSize int      `json:"free_size,omitempty"`
+	Uuid     string   `json:"uuid,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
 }
 
-type Pod struct {
-	resttypes.Resource `json:",inline"`
-	Name               string `json:"name,omitempty"`
-	TotalSize          int    `json:"totalsize,omitempty"`
-	FreeSize           int    `json:"freesize,omitempty"`
-	Ip                 string `json:"ip",omitempty`
+type Pv struct {
+	Name   string                       `json:"name,omitempty"`
+	Size   int                          `json:"size,omitempty"`
+	Pods   []string                     `json:"pods,omitempty"`
+	Pvc    string                       `json:"pvc,omitempty"`
+	Status corev1.PersistentVolumePhase `json:"status,omitempty"`
 }

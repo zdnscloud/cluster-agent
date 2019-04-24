@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	//"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/controller"
@@ -76,7 +77,6 @@ func (m *StorageManager) initStorageManagers() error {
 	if err != nil {
 		return err
 	}
-
 	nodes := corev1.NodeList{}
 	err = m.cache.List(context.TODO(), nil, &nodes)
 	if err != nil {
@@ -106,7 +106,7 @@ func (m *StorageManager) initStorageManagers() error {
 	for _, pod := range pods.Items {
 		sc.OnNewPod(&pod)
 	}
-	sc.OnInitNFS()
+
 	m.storages = sc
 	return nil
 }
@@ -115,12 +115,6 @@ func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	return m.storages.GetStorages()
-}
-
-func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-	return m.storages.GetStorage(ctx)
 }
 
 func (m *StorageManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
@@ -141,16 +135,6 @@ func (m *StorageManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
 func (m *StorageManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	switch newObj := e.ObjectNew.(type) {
-	case *corev1.PersistentVolume:
-		if e.ObjectOld.(*corev1.PersistentVolume).Status.Phase != newObj.Status.Phase || e.ObjectOld.(*corev1.PersistentVolume).Spec.Capacity["storage"] != newObj.Spec.Capacity["storage"] || e.ObjectOld.(*corev1.PersistentVolume).Spec.StorageClassName != newObj.Spec.StorageClassName {
-			m.storages.OnUpdatePV(newObj)
-		}
-	case *corev1.Pod:
-		if e.ObjectOld.(*corev1.Pod).Status.Phase != newObj.Status.Phase {
-			m.storages.OnNewPod(newObj)
-		}
-	}
 	return handler.Result{}, nil
 }
 
@@ -164,8 +148,6 @@ func (m *StorageManager) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 		m.storages.OnDelNode(obj)
 	case *corev1.PersistentVolume:
 		m.storages.OnDelPV(obj)
-	case *corev1.Pod:
-		m.storages.OnDelPod(obj)
 	}
 
 	return handler.Result{}, nil
