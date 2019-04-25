@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/storage/storageclass"
@@ -60,7 +59,6 @@ func newStorageManager(c cache.Cache) *StorageManager {
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	cls := ctx.Object.GetID()
-	fmt.Println(cls)
 	for _, s := range m.storages {
 		if s.GetStorageClass() == cls {
 			return s.GetStroageInfo(cls)
