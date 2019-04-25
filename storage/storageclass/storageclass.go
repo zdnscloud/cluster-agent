@@ -41,7 +41,7 @@ func New(c cache.Cache, n string) (*Storage, error) {
 }
 
 func getNodes(c cache.Cache) []types.Node {
-	nm := lvmd.NewNodeManager(c, "k8s")
+	nm := lvmd.NewNodeManager(c, CSIDefaultVgName)
 	ns := nm.GetNodes()
 	var nodes []types.Node
 	for _, v := range ns {

@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	CtrlName      = "storagecontroller"
-	ZKENFSPvcName = "nfs-data-nfs-provisioner-0"
+	CtrlName         = "storagecontroller"
+	ZKENFSPvcName    = "nfs-data-nfs-provisioner-0"
+	CSIDefaultVgName = "k8s"
 )
 
 func SetStorageSchema(schema *resttypes.Schema, handler resttypes.Handler) {
