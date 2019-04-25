@@ -49,10 +49,9 @@ func New(c cache.Cache) *StorageManager {
 	if err != nil {
 		panic("Init NFS Storage falied")
 	}
-	m := &StorageManager{
+	return &StorageManager{
 		storages: []Storage{lvm, nfs},
 	}
-	return m
 }
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {

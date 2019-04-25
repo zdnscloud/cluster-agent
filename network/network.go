@@ -2,11 +2,6 @@ package network
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"os/user"
-	"path/filepath"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +9,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/gok8s/client/config"
 	"github.com/zdnscloud/gok8s/controller"
 	"github.com/zdnscloud/gok8s/event"
 	"github.com/zdnscloud/gok8s/handler"
@@ -31,26 +25,6 @@ var (
 	}
 )
 
-func RegisterHandler(router gin.IRoutes) error {
-	schemas := resttypes.NewSchemas()
-	m, err := newNetworkManager()
-	if err != nil {
-		return fmt.Errorf("create network handler failed: %s", err.Error())
-	}
-
-	schemas.MustImportAndCustomize(&Version, NodeNetwork{}, m, SetNodeNetworkSchema)
-	schemas.MustImportAndCustomize(&Version, PodNetwork{}, m, SetPodNetworkSchema)
-	schemas.MustImportAndCustomize(&Version, ServiceNetwork{}, m, SetServiceNetworkSchema)
-
-	server := api.NewAPIServer()
-	if err := server.AddSchemas(schemas); err != nil {
-		return err
-	}
-	server.Use(api.RestHandler)
-	adaptor.RegisterHandler(router, server, server.Schemas.UrlMethods())
-	return nil
-}
-
 type NetworkManager struct {
 	api.DefaultHandler
 	networks *NetworkCache
@@ -59,37 +33,7 @@ type NetworkManager struct {
 	stopCh   chan struct{}
 }
 
-func newNetworkManager() (*NetworkManager, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return nil, fmt.Errorf("get current user failed:%s", err.Error())
-	}
-
-	k8sconfig := filepath.Join(usr.HomeDir, ".kube", "config")
-	f, err := os.Open(k8sconfig)
-	if err != nil {
-		return nil, fmt.Errorf("open %s failed:%s", k8sconfig, err.Error())
-	}
-	defer f.Close()
-
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, fmt.Errorf("read %s failed:%s", k8sconfig, err.Error())
-	}
-
-	k8sconf, err := config.BuildConfig(data)
-	if err != nil {
-		return nil, fmt.Errorf("invalid cluster config:%s", err.Error())
-	}
-
-	stop := make(chan struct{})
-	c, err := cache.New(k8sconf, cache.Options{})
-	if err != nil {
-		return nil, fmt.Errorf("create cache failed:%s", err.Error())
-	}
-	go c.Start(stop)
-	c.WaitForCacheSync(stop)
-
+func New(c cache.Cache) (*NetworkManager, error) {
 	ctrl := controller.New("networkCache", c, scheme.Scheme)
 	ctrl.Watch(&corev1.Node{})
 	ctrl.Watch(&corev1.Pod{})
@@ -106,6 +50,21 @@ func newNetworkManager() (*NetworkManager, error) {
 
 	go ctrl.Start(stopCh, m, predicate.NewIgnoreUnchangedUpdate())
 	return m, nil
+}
+
+func (m *NetworkManager) RegisterHandler(router gin.IRoutes) error {
+	schemas := resttypes.NewSchemas()
+	schemas.MustImportAndCustomize(&Version, NodeNetwork{}, m, SetNodeNetworkSchema)
+	schemas.MustImportAndCustomize(&Version, PodNetwork{}, m, SetPodNetworkSchema)
+	schemas.MustImportAndCustomize(&Version, ServiceNetwork{}, m, SetServiceNetworkSchema)
+
+	server := api.NewAPIServer()
+	if err := server.AddSchemas(schemas); err != nil {
+		return err
+	}
+	server.Use(api.RestHandler)
+	adaptor.RegisterHandler(router, server, server.Schemas.UrlMethods())
+	return nil
 }
 
 func (m *NetworkManager) initNetworkManagers() error {
