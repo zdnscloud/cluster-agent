@@ -1,6 +1,6 @@
 {
-    "resourceType": "storage",
-    "collectionName": "storages",
+    "resourceType": "storageinfo",
+    "collectionName": "storageinfos",
 
     "resourceFields": {
         "name": {"type": "string"},

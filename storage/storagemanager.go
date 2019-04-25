@@ -2,7 +2,6 @@ package storage
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/storage/storageclass"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/gok8s/cache"
@@ -28,10 +27,9 @@ type StorageManager struct {
 	storages []Storage
 }
 
-func RegisterHandler(router gin.IRoutes, cache cache.Cache) error {
+func (m *StorageManager) RegisterHandler(router gin.IRoutes) error {
 	schemas := resttypes.NewSchemas()
-	m := newStorageManager(cache)
-	schemas.MustImportAndCustomize(&Version, storageclass.Storage{}, m, storageclass.SetStorageSchema)
+	schemas.MustImportAndCustomize(&Version, types.StorageInfo{}, m, types.SetStorageInfoSchema)
 
 	server := api.NewAPIServer()
 	if err := server.AddSchemas(schemas); err != nil {
@@ -42,14 +40,14 @@ func RegisterHandler(router gin.IRoutes, cache cache.Cache) error {
 	return nil
 }
 
-func newStorageManager(c cache.Cache) *StorageManager {
+func New(c cache.Cache) *StorageManager {
 	lvm, err := storageclass.New(c, "lvm")
 	if err != nil {
-		log.Errorf("Init LVM Storage falied:%s", err.Error())
+		panic("Init LVM Storage falied")
 	}
 	nfs, err := storageclass.New(c, "nfs")
 	if err != nil {
-		log.Errorf("Init NFS Storage falied:%s", err.Error())
+		panic("Init NFS Storage falied")
 	}
 	m := &StorageManager{
 		storages: []Storage{lvm, nfs},

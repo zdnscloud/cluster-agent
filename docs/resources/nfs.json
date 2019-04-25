@@ -1,6 +1,6 @@
 {
-    "resourceType": "lvm",
-    "parentResource": "storage",
+    "resourceType": "nfs",
+    "parentResource": "storageinfo",
 
     "resourceFields": {
         "name": {"type": "string"},

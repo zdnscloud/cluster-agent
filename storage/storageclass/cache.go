@@ -5,7 +5,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (s *Storage) OnNewPV(pv *corev1.PersistentVolume) {
+func (s *StorageCache) OnNewPV(pv *corev1.PersistentVolume) {
 	quantity := pv.Spec.Capacity["storage"]
 	pvsize := sizetog(quantity)
 	p := types.PV{
@@ -17,7 +17,7 @@ func (s *Storage) OnNewPV(pv *corev1.PersistentVolume) {
 	s.PVs = append(pvs, p)
 }
 
-func (s *Storage) OnNewPvc(pvc *corev1.PersistentVolumeClaim) {
+func (s *StorageCache) OnNewPvc(pvc *corev1.PersistentVolumeClaim) {
 	pods := s.PvcAndPod[pvc.Name]
 	p := types.Pvc{
 		Name:       pvc.Name,
@@ -27,7 +27,7 @@ func (s *Storage) OnNewPvc(pvc *corev1.PersistentVolumeClaim) {
 	s.PvAndPvc[pvc.Spec.VolumeName] = p
 }
 
-func (s *Storage) OnNewPod(pod *corev1.Pod) {
+func (s *StorageCache) OnNewPod(pod *corev1.Pod) {
 	vs := pod.Spec.Volumes
 	for _, v := range vs {
 		if v.PersistentVolumeClaim == nil {
@@ -53,7 +53,7 @@ func (s *Storage) OnNewPod(pod *corev1.Pod) {
 	}
 }
 
-func (s *Storage) OnDelPV(pv *corev1.PersistentVolume) {
+func (s *StorageCache) OnDelPV(pv *corev1.PersistentVolume) {
 	pvs := s.PVs
 	for i, v := range pvs {
 		if v.Name == pv.Name {
@@ -62,11 +62,11 @@ func (s *Storage) OnDelPV(pv *corev1.PersistentVolume) {
 	}
 }
 
-func (s *Storage) OnDelPvc(pvc *corev1.PersistentVolumeClaim) {
+func (s *StorageCache) OnDelPvc(pvc *corev1.PersistentVolumeClaim) {
 	delete(s.PvAndPvc, pvc.Spec.VolumeName)
 }
 
-func (s *Storage) OnDelPod(pod *corev1.Pod) {
+func (s *StorageCache) OnDelPod(pod *corev1.Pod) {
 	vs := pod.Spec.Volumes
 	for _, v := range vs {
 		if v.PersistentVolumeClaim == nil {

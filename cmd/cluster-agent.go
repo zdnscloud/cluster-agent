@@ -36,7 +36,8 @@ func main() {
 	go cache.Start(stop)
 	cache.WaitForCacheSync(stop)
 
-	if err := storage.RegisterHandler(router, cache); err != nil {
+	storageMgr := storage.New(cache)
+	if err := storageMgr.RegisterHandler(router); err != nil {
 		log.Errorf("register storage handler failed:%s", err.Error())
 		panic("Register storage handler failed")
 	}

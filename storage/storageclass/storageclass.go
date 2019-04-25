@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-func New(c cache.Cache, n string) (*Storage, error) {
+func New(c cache.Cache, n string) (*StorageCache, error) {
 	ctrl := controller.New(CtrlName, c, scheme.Scheme)
 	ctrl.Watch(&corev1.Node{})
 	ctrl.Watch(&storagev1.StorageClass{})
@@ -27,7 +27,7 @@ func New(c cache.Cache, n string) (*Storage, error) {
 	if n == "lvm" {
 		nodes = getNodes(c)
 	}
-	res := &Storage{
+	res := &StorageCache{
 		Name:      n,
 		Nodes:     nodes,
 		PvAndPvc:  make(map[string]types.Pvc),
@@ -55,7 +55,7 @@ func getNodes(c cache.Cache) []types.Node {
 	return nodes
 }
 
-func (s *Storage) initStorage(c cache.Cache) error {
+func (s *StorageCache) initStorage(c cache.Cache) error {
 	pods := corev1.PodList{}
 	err := c.List(context.TODO(), nil, &pods)
 	if err != nil {
@@ -76,11 +76,11 @@ func (s *Storage) initStorage(c cache.Cache) error {
 	return nil
 }
 
-func (s *Storage) GetStorageClass() string {
+func (s *StorageCache) GetStorageClass() string {
 	return s.Name
 }
 
-func (s *Storage) GetStroageInfo(cls string) types.StorageInfo {
+func (s *StorageCache) GetStroageInfo(cls string) types.StorageInfo {
 	pvs := s.PVs
 	var res []types.PV
 	for _, p := range pvs {
@@ -113,7 +113,7 @@ func (s *Storage) GetStroageInfo(cls string) types.StorageInfo {
 	return *tmp
 }
 
-func (s *Storage) getLVMSize(nodes []types.Node) (int, int) {
+func (s *StorageCache) getLVMSize(nodes []types.Node) (int, int) {
 	var tsize, fsize int
 	for _, n := range nodes {
 		tsize += n.Size
@@ -122,7 +122,7 @@ func (s *Storage) getLVMSize(nodes []types.Node) (int, int) {
 	return tsize, fsize
 }
 
-func (s *Storage) getNFSSize(n string) (int, int) {
+func (s *StorageCache) getNFSSize(n string) (int, int) {
 	var pv types.PV
 	for k, v := range s.PvAndPvc {
 		if v.Name == n {
@@ -137,7 +137,7 @@ func (s *Storage) getNFSSize(n string) (int, int) {
 	return pv.Size, pv.Size
 }
 
-func (s *Storage) OnCreate(e event.CreateEvent) (handler.Result, error) {
+func (s *StorageCache) OnCreate(e event.CreateEvent) (handler.Result, error) {
 	switch obj := e.Object.(type) {
 	case *corev1.PersistentVolume:
 		s.OnNewPV(obj)
@@ -148,7 +148,7 @@ func (s *Storage) OnCreate(e event.CreateEvent) (handler.Result, error) {
 	}
 	return handler.Result{}, nil
 }
-func (s *Storage) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
+func (s *StorageCache) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.PersistentVolumeClaim:
 		s.OnNewPvc(newObj)
@@ -156,7 +156,7 @@ func (s *Storage) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 	return handler.Result{}, nil
 }
 
-func (s *Storage) OnDelete(e event.DeleteEvent) (handler.Result, error) {
+func (s *StorageCache) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 	switch obj := e.Object.(type) {
 	case *corev1.PersistentVolume:
 		s.OnDelPV(obj)
@@ -168,6 +168,6 @@ func (s *Storage) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 	return handler.Result{}, nil
 }
 
-func (s *Storage) OnGeneric(e event.GenericEvent) (handler.Result, error) {
+func (s *StorageCache) OnGeneric(e event.GenericEvent) (handler.Result, error) {
 	return handler.Result{}, nil
 }
