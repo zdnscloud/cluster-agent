@@ -1,46 +1,61 @@
-package nfs
+package storageclass
 
 import (
 	"context"
-	//"fmt"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/controller"
 	"github.com/zdnscloud/gok8s/event"
 	"github.com/zdnscloud/gok8s/handler"
 	"github.com/zdnscloud/gok8s/predicate"
+	"github.com/zdnscloud/lvmd.git"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-func New(c cache.Cache) *Storage {
+func New(c cache.Cache, n string) (*Storage, error) {
 	ctrl := controller.New(CtrlName, c, scheme.Scheme)
 	ctrl.Watch(&corev1.Node{})
 	ctrl.Watch(&storagev1.StorageClass{})
 	ctrl.Watch(&corev1.PersistentVolume{})
 	ctrl.Watch(&corev1.Pod{})
 	ctrl.Watch(&corev1.PersistentVolumeClaim{})
-
 	stopCh := make(chan struct{})
 
-	//nm := lvmd.NewNodeManager(c, "k8s")
-	//a := nm.GetNodes()
-	//fmt.Println(a)
-
+	var nodes []types.Node
+	if n == "lvm" {
+		nodes = getNodes(c)
+	}
 	res := &Storage{
-		Name:      "nfs",
+		Name:      n,
+		Nodes:     nodes,
 		PvAndPvc:  make(map[string]types.Pvc),
 		PvcAndPod: make(map[string][]types.Pod),
 	}
-	if err := res.initLvm(c); err != nil {
-		return nil
+	if err := res.initStorage(c); err != nil {
+		return nil, err
 	}
 	go ctrl.Start(stopCh, res, predicate.NewIgnoreUnchangedUpdate())
-	return res
+	return res, nil
 }
 
-func (s *Storage) initLvm(c cache.Cache) error {
+func getNodes(c cache.Cache) []types.Node {
+	nm := lvmd.NewNodeManager(c, "k8s")
+	ns := nm.GetNodes()
+	var nodes []types.Node
+	for _, v := range ns {
+		node := types.Node{
+			Name:     v.Name,
+			Size:     byteToGb(v.Size),
+			FreeSize: byteToGb(v.FreeSize),
+		}
+		nodes = append(nodes, node)
+	}
+	return nodes
+}
+
+func (s *Storage) initStorage(c cache.Cache) error {
 	pods := corev1.PodList{}
 	err := c.List(context.TODO(), nil, &pods)
 	if err != nil {
@@ -62,28 +77,64 @@ func (s *Storage) initLvm(c cache.Cache) error {
 }
 
 func (s *Storage) GetStorageClass() string {
-	return "nfs"
+	return s.Name
 }
 
-func (s *Storage) GetStroageInfo() types.StorageInfo {
-	//fmt.Println(s.PvcAndPod)
+func (s *Storage) GetStroageInfo(cls string) types.StorageInfo {
 	pvs := s.PVs
 	var res []types.PV
 	for _, p := range pvs {
 		pvc := s.PvAndPvc[p.Name].Name
-		pods := s.PvcAndPod[pvc]
-		pv := types.PV{
-			Name: p.Name,
-			Size: p.Size,
-			Pods: pods,
+		if p.StorageClassName == cls {
+			pods := s.PvcAndPod[pvc]
+			pv := types.PV{
+				Name: p.Name,
+				Size: p.Size,
+				Pods: pods,
+			}
+			res = append(res, pv)
 		}
-		res = append(res, pv)
 	}
+	var tsize, fsize int
+	switch cls {
+	case "lvm":
+		tsize, fsize = s.getLVMSize(s.Nodes)
+	case "nfs":
+		tsize, fsize = s.getNFSSize(ZKENFSPvcName)
+	}
+
 	tmp := &types.StorageInfo{
-		Name: "nfs",
-		PVs:  res,
+		Name:     s.Name,
+		Size:     tsize,
+		FreeSize: fsize,
+		Nodes:    s.Nodes,
+		PVs:      res,
 	}
 	return *tmp
+}
+
+func (s *Storage) getLVMSize(nodes []types.Node) (int, int) {
+	var tsize, fsize int
+	for _, n := range nodes {
+		tsize += n.Size
+		fsize += n.FreeSize
+	}
+	return tsize, fsize
+}
+
+func (s *Storage) getNFSSize(n string) (int, int) {
+	var pv types.PV
+	for k, v := range s.PvAndPvc {
+		if v.Name == n {
+			for i, p := range s.PVs {
+				if p.Name == k {
+					pv = s.PVs[i]
+				}
+			}
+			break
+		}
+	}
+	return pv.Size, pv.Size
 }
 
 func (s *Storage) OnCreate(e event.CreateEvent) (handler.Result, error) {
@@ -98,11 +149,10 @@ func (s *Storage) OnCreate(e event.CreateEvent) (handler.Result, error) {
 	return handler.Result{}, nil
 }
 func (s *Storage) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
-	/*
-		switch newObj := e.ObjectNew.(type) {
-		case *corev1.PersistentVolumeClaim:
-			s.OnUpdatePvc(newObj)
-		}*/
+	switch newObj := e.ObjectNew.(type) {
+	case *corev1.PersistentVolumeClaim:
+		s.OnNewPvc(newObj)
+	}
 	return handler.Result{}, nil
 }
 

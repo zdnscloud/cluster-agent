@@ -1,10 +1,10 @@
 {
-    "resourceType": "nfs",
+    "resourceType": "lvm",
     "parentResource": "storage",
 
     "resourceFields": {
         "name": {"type": "string"},
-        "totalsize": {"type": "int"},
+        "size": {"type": "int"},
         "freesize": {"type": "int"},
         "pvs": {"type": "array", "elemType": "pv"}
     },
@@ -12,9 +12,10 @@
 	"pv": {
 	    "name": {"type": "string"},
 	    "size": {"type": "int"},
-	    "pods": {"type": "array", "elemType": "string"},
-	    "pvc": {"type": "string"},
-	    "status": {"type": "string"}
+	    "pods": {"type": "array", "elemType": "pod"}
+	},
+	"pod": {
+	    "name": {"type": "string"}
 	}
     },
 

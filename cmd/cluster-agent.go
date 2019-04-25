@@ -9,35 +9,40 @@ import (
 	"github.com/zdnscloud/gok8s/client/config"
 )
 
-func createCache() cache.Cache {
+func createCache() (cache.Cache, error) {
 	config, err := config.GetConfig()
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	c, err := cache.New(config, cache.Options{})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return c
+	return c, nil
 }
 
 func main() {
-	log.InitLogger(storage.LogLevel)
+	log.InitLogger("debug")
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 
-	cache := createCache()
+	cache, err := createCache()
+	if err != nil {
+		panic("Create cache Error")
+	}
 	stop := make(chan struct{})
 	go cache.Start(stop)
 	cache.WaitForCacheSync(stop)
 
 	if err := storage.RegisterHandler(router, cache); err != nil {
 		log.Errorf("register storage handler failed:%s", err.Error())
+		panic("Register storage handler failed")
 	}
 	if err := network.RegisterHandler(router); err != nil {
 		log.Errorf("register network handler failed:%s", err.Error())
+		panic("Register network handler failed")
 	}
 
 	addr := "0.0.0.0:8090"
