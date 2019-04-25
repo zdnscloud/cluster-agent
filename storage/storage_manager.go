@@ -1,29 +1,20 @@
 package storage
 
 import (
-	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/zdnscloud/cluster-agent/storage/lvm"
+	"github.com/zdnscloud/cluster-agent/storage/nfs"
+	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/gok8s/controller"
-	"github.com/zdnscloud/gok8s/event"
-	"github.com/zdnscloud/gok8s/handler"
-	"github.com/zdnscloud/gok8s/predicate"
 	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
-	corev1 "k8s.io/api/core/v1"
-	storagev1 "k8s.io/api/storage/v1"
-	"k8s.io/client-go/kubernetes/scheme"
-	"sync"
 )
 
-type StorageManager struct {
-	api.DefaultHandler
-	storages *StorageCache
-	cache    cache.Cache
-	lock     sync.RWMutex
-	stopCh   chan struct{}
-}
+const (
+	LogLevel = "debug"
+)
 
 var (
 	Version = resttypes.APIVersion{
@@ -32,10 +23,20 @@ var (
 	}
 )
 
+type Storage interface {
+	GetStorageClass() string
+	GetStroageInfo() types.StorageInfo
+}
+
+type StorageManager struct {
+	api.DefaultHandler
+	storages []Storage
+}
+
 func RegisterHandler(router gin.IRoutes, cache cache.Cache) error {
 	schemas := resttypes.NewSchemas()
 	m, _ := newStorageManager(cache)
-	schemas.MustImportAndCustomize(&Version, Storage{}, m, SetStorageSchema)
+	schemas.MustImportAndCustomize(&Version, lvm.Storage{}, m, lvm.SetStorageSchema)
 
 	server := api.NewAPIServer()
 	if err := server.AddSchemas(schemas); err != nil {
@@ -47,124 +48,29 @@ func RegisterHandler(router gin.IRoutes, cache cache.Cache) error {
 }
 
 func newStorageManager(c cache.Cache) (*StorageManager, error) {
-	ctrl := controller.New(CtrlName, c, scheme.Scheme)
-	ctrl.Watch(&corev1.Node{})
-	ctrl.Watch(&storagev1.StorageClass{})
-	ctrl.Watch(&corev1.PersistentVolume{})
-	ctrl.Watch(&corev1.Pod{})
-
-	stopCh := make(chan struct{})
+	lvm := lvm.New(c)
+	nfs := nfs.New(c)
 	m := &StorageManager{
-		stopCh: stopCh,
-		cache:  c,
+		storages: []Storage{lvm, nfs},
 	}
-	if err := m.initStorageManagers(); err != nil {
-		return nil, err
-	}
-
-	go ctrl.Start(stopCh, m, predicate.NewIgnoreUnchangedUpdate())
 	return m, nil
 }
 
-func (m *StorageManager) initStorageManagers() error {
-	storages := storagev1.StorageClassList{}
-	err := m.cache.List(context.TODO(), nil, &storages)
-	if err != nil {
-		return err
+func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
+	cls := ctx.Object.GetID()
+	fmt.Println(cls)
+	for _, s := range m.storages {
+		if s.GetStorageClass() == cls {
+			return s.GetStroageInfo()
+		}
 	}
-
-	nodes := corev1.NodeList{}
-	err = m.cache.List(context.TODO(), nil, &nodes)
-	if err != nil {
-		return err
-	}
-	pvs := corev1.PersistentVolumeList{}
-	err = m.cache.List(context.TODO(), nil, &pvs)
-	if err != nil {
-		return err
-	}
-	pods := corev1.PodList{}
-	err = m.cache.List(context.TODO(), nil, &pods)
-	if err != nil {
-		return err
-	}
-
-	sc := newStorageCache(m.cache)
-	for _, storage := range storages.Items {
-		sc.OnInit(&storage)
-	}
-	for _, node := range nodes.Items {
-		sc.OnNewNode(&node)
-	}
-	for _, pv := range pvs.Items {
-		sc.OnNewPV(&pv)
-	}
-	for _, pod := range pods.Items {
-		sc.OnUpdatePod(&pod)
-	}
-	sc.OnInitNFS()
-	m.storages = sc
 	return nil
 }
 
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-	return m.storages.GetStorages()
-}
-
-func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-	return m.storages.GetStorage(ctx)
-}
-
-func (m *StorageManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	switch obj := e.Object.(type) {
-	case *storagev1.StorageClass:
-		m.storages.OnNewStorageClass(obj)
-	case *corev1.Node:
-		m.storages.OnNewNode(obj)
-	case *corev1.PersistentVolume:
-		m.storages.OnNewPV(obj)
+	var infos []types.StorageInfo
+	for _, s := range m.storages {
+		infos = append(infos, s.GetStroageInfo())
 	}
-	return handler.Result{}, nil
-}
-func (m *StorageManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	switch newObj := e.ObjectNew.(type) {
-	case *corev1.PersistentVolume:
-		if e.ObjectOld.(*corev1.PersistentVolume).Status.Phase != newObj.Status.Phase || e.ObjectOld.(*corev1.PersistentVolume).Spec.Capacity["storage"] != newObj.Spec.Capacity["storage"] || e.ObjectOld.(*corev1.PersistentVolume).Spec.StorageClassName != newObj.Spec.StorageClassName {
-			m.storages.OnUpdatePV(newObj)
-		}
-	case *corev1.Pod:
-		if e.ObjectOld.(*corev1.Pod).Status.Phase != newObj.Status.Phase {
-			m.storages.OnUpdatePod(newObj)
-		}
-	}
-	return handler.Result{}, nil
-}
-
-func (m *StorageManager) OnDelete(e event.DeleteEvent) (handler.Result, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	switch obj := e.Object.(type) {
-	case *storagev1.StorageClass:
-		m.storages.OnDelStorageClass(obj)
-	case *corev1.Node:
-		m.storages.OnDelNode(obj)
-	case *corev1.PersistentVolume:
-		m.storages.OnDelPV(obj)
-	case *corev1.Pod:
-		m.storages.OnDelPod(obj)
-	}
-
-	return handler.Result{}, nil
-}
-
-func (m *StorageManager) OnGeneric(e event.GenericEvent) (handler.Result, error) {
-	return handler.Result{}, nil
+	return infos
 }

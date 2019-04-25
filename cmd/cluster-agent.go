@@ -7,38 +7,17 @@ import (
 	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client/config"
-	"io/ioutil"
-	"os"
-	"os/user"
-	"path/filepath"
 )
 
 func createCache() cache.Cache {
-	usr, err := user.Current()
+	config, err := config.GetConfig()
 	if err != nil {
-		log.Errorf("Get user failed:%s", err.Error())
+		return nil
 	}
 
-	k8sconfig := filepath.Join(usr.HomeDir, ".kube", "config")
-	f, err := os.Open(k8sconfig)
+	c, err := cache.New(config, cache.Options{})
 	if err != nil {
-		log.Errorf("Get k8s config failed:%s", err.Error())
-	}
-	defer f.Close()
-
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		log.Errorf("Load k8s config failed:%s", err.Error())
-	}
-
-	k8sconf, err := config.BuildConfig(data)
-	if err != nil {
-		log.Errorf("Build config failed:%s", err.Error())
-	}
-
-	c, err := cache.New(k8sconf, cache.Options{})
-	if err != nil {
-		log.Errorf("Create cache failed:%s", err.Error())
+		return nil
 	}
 	return c
 }
@@ -62,6 +41,5 @@ func main() {
 	}
 
 	addr := "0.0.0.0:8090"
-
 	router.Run(addr)
 }
