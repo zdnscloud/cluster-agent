@@ -19,25 +19,12 @@ var (
 
 type Storage interface {
 	GetStorageClass() string
-	GetStroageInfo(string) types.StorageInfo
+	GetStroageInfo(string) types.Storage
 }
 
 type StorageManager struct {
 	api.DefaultHandler
 	storages []Storage
-}
-
-func (m *StorageManager) RegisterHandler(router gin.IRoutes) error {
-	schemas := resttypes.NewSchemas()
-	schemas.MustImportAndCustomize(&Version, types.StorageInfo{}, m, types.SetStorageInfoSchema)
-
-	server := api.NewAPIServer()
-	if err := server.AddSchemas(schemas); err != nil {
-		return err
-	}
-	server.Use(api.RestHandler)
-	adaptor.RegisterHandler(router, server, server.Schemas.UrlMethods())
-	return nil
 }
 
 func New(c cache.Cache) *StorageManager {
@@ -49,10 +36,22 @@ func New(c cache.Cache) *StorageManager {
 	if err != nil {
 		panic("Init NFS Storage falied")
 	}
-	m := &StorageManager{
+	return &StorageManager{
 		storages: []Storage{lvm, nfs},
 	}
-	return m
+}
+
+func (m *StorageManager) RegisterHandler(router gin.IRoutes) error {
+	schemas := resttypes.NewSchemas()
+	schemas.MustImportAndCustomize(&Version, types.Storage{}, m, types.SetStorageSchema)
+
+	server := api.NewAPIServer()
+	if err := server.AddSchemas(schemas); err != nil {
+		return err
+	}
+	server.Use(api.RestHandler)
+	adaptor.RegisterHandler(router, server, server.Schemas.UrlMethods())
+	return nil
 }
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
@@ -66,7 +65,7 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 }
 
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
-	var infos []types.StorageInfo
+	var infos []types.Storage
 	for _, s := range m.storages {
 		cls := s.GetStorageClass()
 		info := s.GetStroageInfo(cls)

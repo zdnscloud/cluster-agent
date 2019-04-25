@@ -30,7 +30,7 @@ func New(c cache.Cache, n string) (*StorageCache, error) {
 	res := &StorageCache{
 		Name:      n,
 		Nodes:     nodes,
-		PvAndPvc:  make(map[string]types.Pvc),
+		PvAndPvc:  make(map[string]PVC),
 		PvcAndPod: make(map[string][]types.Pod),
 	}
 	if err := res.initStorage(c); err != nil {
@@ -80,7 +80,7 @@ func (s *StorageCache) GetStorageClass() string {
 	return s.Name
 }
 
-func (s *StorageCache) GetStroageInfo(cls string) types.StorageInfo {
+func (s *StorageCache) GetStroageInfo(cls string) types.Storage {
 	pvs := s.PVs
 	var res []types.PV
 	for _, p := range pvs {
@@ -103,7 +103,7 @@ func (s *StorageCache) GetStroageInfo(cls string) types.StorageInfo {
 		tsize, fsize = s.getNFSSize(ZKENFSPvcName)
 	}
 
-	tmp := &types.StorageInfo{
+	tmp := &types.Storage{
 		Name:     s.Name,
 		Size:     tsize,
 		FreeSize: fsize,

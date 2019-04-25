@@ -19,7 +19,7 @@ func (s *StorageCache) OnNewPV(pv *corev1.PersistentVolume) {
 
 func (s *StorageCache) OnNewPvc(pvc *corev1.PersistentVolumeClaim) {
 	pods := s.PvcAndPod[pvc.Name]
-	p := types.Pvc{
+	p := PVC{
 		Name:       pvc.Name,
 		VolumeName: pvc.Spec.VolumeName,
 		Pods:       pods,

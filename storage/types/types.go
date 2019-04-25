@@ -4,15 +4,15 @@ import (
 	resttypes "github.com/zdnscloud/gorest/types"
 )
 
-func SetStorageInfoSchema(schema *resttypes.Schema, handler resttypes.Handler) {
+func SetStorageSchema(schema *resttypes.Schema, handler resttypes.Handler) {
 	schema.Handler = handler
 	schema.CollectionMethods = []string{"GET"}
 	schema.ResourceMethods = []string{"GET"}
 }
 
-var StorageInfoType = resttypes.GetResourceType(StorageInfo{})
+var StorageType = resttypes.GetResourceType(Storage{})
 
-type StorageInfo struct {
+type Storage struct {
 	resttypes.Resource `json:",inline"`
 	Name               string `json:"name,omitempty"`
 	Size               int    `json:"size,omitempty"`
@@ -36,11 +36,4 @@ type Node struct {
 
 type Pod struct {
 	Name string `json:"name,omitempty"`
-}
-
-type Pvc struct {
-	Name         string
-	StorageClass string
-	VolumeName   string
-	Pods         []Pod
 }
