@@ -1,0 +1,8 @@
+{
+    "resourceType": "namespace",
+    "collectionName": "namespaces",
+
+    "resourceFields": {
+        "name": {"type": "string"}
+    }
+}
