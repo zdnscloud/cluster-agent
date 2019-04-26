@@ -2,7 +2,8 @@ package storage
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/zdnscloud/cluster-agent/storage/storageclass"
+	"github.com/zdnscloud/cluster-agent/storage/lvm"
+	"github.com/zdnscloud/cluster-agent/storage/nfs"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gorest/adaptor"
@@ -18,8 +19,8 @@ var (
 )
 
 type Storage interface {
-	GetStorageClass() string
-	GetStroageInfo(string) types.Storage
+	GetType() string
+	GetInfo() types.Storage
 }
 
 type StorageManager struct {
@@ -27,18 +28,18 @@ type StorageManager struct {
 	storages []Storage
 }
 
-func New(c cache.Cache) *StorageManager {
-	lvm, err := storageclass.New(c, "lvm")
+func New(c cache.Cache) (*StorageManager, error) {
+	lvm, err := lvm.New(c)
 	if err != nil {
-		panic("Init LVM Storage falied")
+		return nil, err
 	}
-	nfs, err := storageclass.New(c, "nfs")
+	nfs, err := nfs.New(c)
 	if err != nil {
-		panic("Init NFS Storage falied")
+		return nil, err
 	}
 	return &StorageManager{
 		storages: []Storage{lvm, nfs},
-	}
+	}, nil
 }
 
 func (m *StorageManager) RegisterHandler(router gin.IRoutes) error {
@@ -57,8 +58,8 @@ func (m *StorageManager) RegisterHandler(router gin.IRoutes) error {
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	cls := ctx.Object.GetID()
 	for _, s := range m.storages {
-		if s.GetStorageClass() == cls {
-			return s.GetStroageInfo(cls)
+		if s.GetType() == cls {
+			return s.GetInfo()
 		}
 	}
 	return nil
@@ -67,8 +68,7 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
 	var infos []types.Storage
 	for _, s := range m.storages {
-		cls := s.GetStorageClass()
-		info := s.GetStroageInfo(cls)
+		info := s.GetInfo()
 		infos = append(infos, info)
 	}
 	return infos

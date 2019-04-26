@@ -25,9 +25,6 @@ func createCache() (cache.Cache, error) {
 func main() {
 	log.InitLogger("debug")
 
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.New()
-
 	cache, err := createCache()
 	if err != nil {
 		panic("Create cache Error")
@@ -36,14 +33,24 @@ func main() {
 	go cache.Start(stop)
 	cache.WaitForCacheSync(stop)
 
-	storageMgr := storage.New(cache)
-	if err := storageMgr.RegisterHandler(router); err != nil {
-		log.Errorf("register storage handler failed:%s", err.Error())
-		panic("Register storage handler failed")
+	storageMgr, err := storage.New(cache)
+	if err != nil {
+		log.Fatalf("Create storage manager failed:%s", err.Error())
 	}
-	if err := network.RegisterHandler(router); err != nil {
-		log.Errorf("register network handler failed:%s", err.Error())
-		panic("Register network handler failed")
+	networkMgr, err := network.New(cache)
+	if err != nil {
+		log.Fatalf("Create network manager failed:%s", err.Error())
+	}
+
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	if err := storageMgr.RegisterHandler(router); err != nil {
+		log.Errorf("storage manager register handler failed:%s", err.Error())
+		panic("storage manager register handler failed")
+	}
+	if err := networkMgr.RegisterHandler(router); err != nil {
+		log.Fatalf("network manager register handler failed:%s", err.Error())
+		panic("network manager register handler failed")
 	}
 
 	addr := "0.0.0.0:8090"
