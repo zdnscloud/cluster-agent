@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/network"
+	"github.com/zdnscloud/cluster-agent/service"
 	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client/config"
@@ -41,6 +42,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Create network manager failed:%s", err.Error())
 	}
+	serviceMgr, err := service.New(cache)
+	if err != nil {
+		log.Fatalf("Create service manager failed:%s", err.Error())
+	}
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -49,6 +54,9 @@ func main() {
 	}
 	if err := networkMgr.RegisterHandler(router); err != nil {
 		log.Fatalf("network manager register handler failed:%s", err.Error())
+	}
+	if err := serviceMgr.RegisterHandler(router); err != nil {
+		log.Fatalf("service manager register handler failed:%s", err.Error())
 	}
 
 	addr := "0.0.0.0:8090"
