@@ -25,6 +25,7 @@ type Storage interface {
 
 type StorageManager struct {
 	api.DefaultHandler
+
 	storages []Storage
 }
 
@@ -68,8 +69,7 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
 	var infos []types.Storage
 	for _, s := range m.storages {
-		info := s.GetInfo()
-		infos = append(infos, info)
+		infos = append(infos, s.GetInfo())
 	}
 	return infos
 }

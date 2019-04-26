@@ -2,7 +2,6 @@ package pvmonitor
 
 import (
 	"context"
-	//"fmt"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/controller"
@@ -10,31 +9,42 @@ import (
 	"github.com/zdnscloud/gok8s/handler"
 	"github.com/zdnscloud/gok8s/predicate"
 	corev1 "k8s.io/api/core/v1"
-	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
+type PVMonitor struct {
+	Name      string
+	PVs       []types.PV
+	PvAndPvc  map[string]PVC
+	PvcAndPod map[string][]types.Pod
+	PVCAndSc  map[string]string
+}
+
+type PVC struct {
+	Name       string
+	VolumeName string
+	Pods       []types.Pod
+}
+
 func New(c cache.Cache, n string) (*PVMonitor, error) {
 	ctrl := controller.New(n, c, scheme.Scheme)
-	ctrl.Watch(&corev1.Node{})
-	ctrl.Watch(&storagev1.StorageClass{})
+	ctrl.Watch(&corev1.PersistentVolumeClaim{})
 	ctrl.Watch(&corev1.PersistentVolume{})
 	ctrl.Watch(&corev1.Pod{})
-	ctrl.Watch(&corev1.PersistentVolumeClaim{})
 	stopCh := make(chan struct{})
 
-	res := &PVMonitor{
+	pm := &PVMonitor{
 		Name:      n,
 		PVs:       make([]types.PV, 0),
 		PvAndPvc:  make(map[string]PVC),
 		PvcAndPod: make(map[string][]types.Pod),
 		PVCAndSc:  make(map[string]string),
 	}
-	if err := res.initStorage(c); err != nil {
+	if err := pm.initStorage(c); err != nil {
 		return nil, err
 	}
-	go ctrl.Start(stopCh, res, predicate.NewIgnoreUnchangedUpdate())
-	return res, nil
+	go ctrl.Start(stopCh, pm, predicate.NewIgnoreUnchangedUpdate())
+	return pm, nil
 }
 
 func (s *PVMonitor) initStorage(c cache.Cache) error {

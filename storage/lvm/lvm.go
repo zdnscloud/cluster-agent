@@ -8,26 +8,36 @@ import (
 	"github.com/zdnscloud/lvmd.git"
 )
 
+const (
+	LVMStorageClassName = "lvm"
+	CSIDefaultVgName    = "k8s"
+)
+
+type LVM struct {
+	Nodes    []types.Node
+	Size     int
+	FreeSize int
+	PVData   *pvmonitor.PVMonitor
+	Cache    cache.Cache
+}
+
 func New(c cache.Cache) (*LVM, error) {
-	pm, err := pvmonitor.New(c, SourceName)
+	pm, err := pvmonitor.New(c, LVMStorageClassName)
 	if err != nil {
 		return nil, err
 	}
-	nodes := getNodes(c)
-	tsize, fsize := getLVMSize(nodes)
-	res := &LVM{
-		Name:     SourceName,
-		Nodes:    nodes,
-		Size:     tsize,
-		FreeSize: fsize,
-		PVData:   pm,
-		Cache:    c,
+	lvm := &LVM{
+		PVData: pm,
+		Cache:  c,
 	}
-	return res, nil
+	lvm.SetNodes()
+	lvm.SetSize()
+
+	return lvm, nil
 }
 
 func (s *LVM) GetType() string {
-	return s.Name
+	return LVMStorageClassName
 }
 
 func (s *LVM) GetInfo() types.Storage {
@@ -44,18 +54,17 @@ func (s *LVM) GetInfo() types.Storage {
 		res = append(res, pv)
 	}
 
-	tmp := &types.Storage{
-		Name:     s.Name,
+	return types.Storage{
+		Name:     LVMStorageClassName,
 		Size:     s.Size,
 		FreeSize: s.FreeSize,
 		Nodes:    s.Nodes,
 		PVs:      res,
 	}
-	return *tmp
 }
 
-func getNodes(c cache.Cache) []types.Node {
-	nm := lvmd.NewNodeManager(c, CSIDefaultVgName)
+func (s *LVM) SetNodes() {
+	nm := lvmd.NewNodeManager(s.Cache, CSIDefaultVgName)
 	ns := nm.GetNodes()
 	var nodes []types.Node
 	for _, v := range ns {
@@ -66,14 +75,15 @@ func getNodes(c cache.Cache) []types.Node {
 		}
 		nodes = append(nodes, node)
 	}
-	return nodes
+	s.Nodes = nodes
 }
 
-func getLVMSize(nodes []types.Node) (int, int) {
+func (s *LVM) SetSize() {
 	var tsize, fsize int
-	for _, n := range nodes {
+	for _, n := range s.Nodes {
 		tsize += n.Size
 		fsize += n.FreeSize
 	}
-	return tsize, fsize
+	s.Size = tsize
+	s.FreeSize = fsize
 }

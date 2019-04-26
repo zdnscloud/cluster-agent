@@ -45,12 +45,10 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	if err := storageMgr.RegisterHandler(router); err != nil {
-		log.Errorf("storage manager register handler failed:%s", err.Error())
-		panic("storage manager register handler failed")
+		log.Fatalf("storage manager register handler failed:%s", err.Error())
 	}
 	if err := networkMgr.RegisterHandler(router); err != nil {
 		log.Fatalf("network manager register handler failed:%s", err.Error())
-		panic("network manager register handler failed")
 	}
 
 	addr := "0.0.0.0:8090"
