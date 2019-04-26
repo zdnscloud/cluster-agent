@@ -7,7 +7,7 @@ import (
 )
 
 func (s *PVMonitor) OnNewPV(pv *corev1.PersistentVolume) {
-	if pv.Spec.StorageClassName != s.Name {
+	if pv.Spec.StorageClassName != s.StorageClassName {
 		return
 	}
 	quantity := pv.Spec.Capacity["storage"]
@@ -21,19 +21,17 @@ func (s *PVMonitor) OnNewPV(pv *corev1.PersistentVolume) {
 	s.PVs = append(pvs, p)
 }
 
-func (s *PVMonitor) OnNewPvc(pvc *corev1.PersistentVolumeClaim) {
+func (s *PVMonitor) OnNewPVC(pvc *corev1.PersistentVolumeClaim) {
 	cls := *pvc.Spec.StorageClassName
-	if cls != s.Name {
+	if cls != s.StorageClassName {
 		return
 	}
-	pods := s.PvcAndPod[pvc.Name]
+	pvcns := pvc.Namespace + "/" + pvc.Name
 	p := PVC{
-		Name:       pvc.Name,
-		VolumeName: pvc.Spec.VolumeName,
-		Pods:       pods,
+		Name:           pvc.Name,
+		NamespacedName: pvcns,
 	}
-	s.PvAndPvc[pvc.Spec.VolumeName] = p
-	s.PVCAndSc[pvc.Name] = cls
+	s.PvAndPVC[pvc.Spec.VolumeName] = p
 }
 
 func (s *PVMonitor) OnNewPod(pod *corev1.Pod) {
@@ -43,15 +41,8 @@ func (s *PVMonitor) OnNewPod(pod *corev1.Pod) {
 			continue
 		}
 		pvcName := v.PersistentVolumeClaim.ClaimName
-		cls, ok := s.PVCAndSc[pvcName]
-		if !ok {
-			return
-		}
-		if cls != s.Name {
-			return
-		}
 		hasPod := false
-		for _, m := range s.PvcAndPod[pvcName] {
+		for _, m := range s.PVCAndPod[pvcName] {
 			if m.Name == pod.Name {
 				hasPod = true
 				break
@@ -61,13 +52,13 @@ func (s *PVMonitor) OnNewPod(pod *corev1.Pod) {
 			Name: pod.Name,
 		}
 		if !hasPod {
-			s.PvcAndPod[pvcName] = append(s.PvcAndPod[pvcName], p)
+			s.PVCAndPod[pvcName] = append(s.PVCAndPod[pvcName], p)
 		}
 	}
 }
 
 func (s *PVMonitor) OnDelPV(pv *corev1.PersistentVolume) {
-	if pv.Spec.StorageClassName != s.Name {
+	if pv.Spec.StorageClassName != s.StorageClassName {
 		return
 	}
 	pvs := s.PVs
@@ -78,12 +69,12 @@ func (s *PVMonitor) OnDelPV(pv *corev1.PersistentVolume) {
 	}
 }
 
-func (s *PVMonitor) OnDelPvc(pvc *corev1.PersistentVolumeClaim) {
+func (s *PVMonitor) OnDelPVC(pvc *corev1.PersistentVolumeClaim) {
 	cls := *pvc.Spec.StorageClassName
-	if cls != s.Name {
+	if cls != s.StorageClassName {
 		return
 	}
-	delete(s.PvAndPvc, pvc.Spec.VolumeName)
+	delete(s.PvAndPVC, pvc.Spec.VolumeName)
 }
 
 func (s *PVMonitor) OnDelPod(pod *corev1.Pod) {
@@ -93,18 +84,11 @@ func (s *PVMonitor) OnDelPod(pod *corev1.Pod) {
 			continue
 		}
 		pvcName := v.PersistentVolumeClaim.ClaimName
-		cls, ok := s.PVCAndSc[pvcName]
-		if !ok {
-			return
-		}
-		if cls != s.Name {
-			return
-		}
-		for i, p := range s.PvcAndPod[pvcName] {
+		for i, p := range s.PVCAndPod[pvcName] {
 			if p.Name == pod.Name {
-				s.PvcAndPod[pvcName] = append(s.PvcAndPod[pvcName][:i], s.PvcAndPod[pvcName][i+1:]...)
-				if len(s.PvcAndPod[pvcName]) == 0 {
-					delete(s.PvcAndPod, pvcName)
+				s.PVCAndPod[pvcName] = append(s.PVCAndPod[pvcName][:i], s.PVCAndPod[pvcName][i+1:]...)
+				if len(s.PVCAndPod[pvcName]) == 0 {
+					delete(s.PVCAndPod, pvcName)
 				}
 				break
 			}

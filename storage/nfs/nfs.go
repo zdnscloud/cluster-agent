@@ -44,8 +44,8 @@ func (s *NFS) GetInfo() types.Storage {
 	pvs := s.PVData.PVs
 	var res []types.PV
 	for _, p := range pvs {
-		pvc := s.PVData.PvAndPvc[p.Name].Name
-		pods := s.PVData.PvcAndPod[pvc]
+		pvc := s.PVData.PvAndPVC[p.Name].Name
+		pods := s.PVData.PVCAndPod[pvc]
 		pv := types.PV{
 			Name: p.Name,
 			Size: p.Size,

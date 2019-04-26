@@ -2,6 +2,7 @@ package pvmonitor
 
 import (
 	"context"
+	//"fmt"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/controller"
@@ -13,17 +14,15 @@ import (
 )
 
 type PVMonitor struct {
-	Name      string
-	PVs       []types.PV
-	PvAndPvc  map[string]PVC
-	PvcAndPod map[string][]types.Pod
-	PVCAndSc  map[string]string
+	StorageClassName string
+	PVs              []types.PV
+	PvAndPVC         map[string]PVC
+	PVCAndPod        map[string][]types.Pod
 }
 
 type PVC struct {
-	Name       string
-	VolumeName string
-	Pods       []types.Pod
+	Name           string
+	NamespacedName string
 }
 
 func New(c cache.Cache, n string) (*PVMonitor, error) {
@@ -34,36 +33,26 @@ func New(c cache.Cache, n string) (*PVMonitor, error) {
 	stopCh := make(chan struct{})
 
 	pm := &PVMonitor{
-		Name:      n,
-		PVs:       make([]types.PV, 0),
-		PvAndPvc:  make(map[string]PVC),
-		PvcAndPod: make(map[string][]types.Pod),
-		PVCAndSc:  make(map[string]string),
+		StorageClassName: n,
+		PVs:              make([]types.PV, 0),
+		PvAndPVC:         make(map[string]PVC),
+		PVCAndPod:        make(map[string][]types.Pod),
 	}
-	if err := pm.initStorage(c); err != nil {
+	if err := pm.initPVC(c); err != nil {
 		return nil, err
 	}
 	go ctrl.Start(stopCh, pm, predicate.NewIgnoreUnchangedUpdate())
 	return pm, nil
 }
 
-func (s *PVMonitor) initStorage(c cache.Cache) error {
-	pods := corev1.PodList{}
-	err := c.List(context.TODO(), nil, &pods)
-	if err != nil {
-		return err
-	}
-	for _, pod := range pods.Items {
-		s.OnNewPod(&pod)
-	}
-
+func (s *PVMonitor) initPVC(c cache.Cache) error {
 	pvcs := corev1.PersistentVolumeClaimList{}
-	err = c.List(context.TODO(), nil, &pvcs)
+	err := c.List(context.TODO(), nil, &pvcs)
 	if err != nil {
 		return err
 	}
 	for _, pvc := range pvcs.Items {
-		s.OnNewPvc(&pvc)
+		s.OnNewPVC(&pvc)
 	}
 	return nil
 }
@@ -73,7 +62,7 @@ func (s *PVMonitor) OnCreate(e event.CreateEvent) (handler.Result, error) {
 	case *corev1.PersistentVolume:
 		s.OnNewPV(obj)
 	case *corev1.PersistentVolumeClaim:
-		s.OnNewPvc(obj)
+		s.OnNewPVC(obj)
 	case *corev1.Pod:
 		s.OnNewPod(obj)
 	}
@@ -82,7 +71,7 @@ func (s *PVMonitor) OnCreate(e event.CreateEvent) (handler.Result, error) {
 func (s *PVMonitor) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.PersistentVolumeClaim:
-		s.OnNewPvc(newObj)
+		s.OnNewPVC(newObj)
 	}
 	return handler.Result{}, nil
 }
@@ -92,7 +81,7 @@ func (s *PVMonitor) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 	case *corev1.PersistentVolume:
 		s.OnDelPV(obj)
 	case *corev1.PersistentVolumeClaim:
-		s.OnDelPvc(obj)
+		s.OnDelPVC(obj)
 	case *corev1.Pod:
 		s.OnDelPod(obj)
 	}
