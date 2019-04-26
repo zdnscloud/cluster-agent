@@ -1,19 +1,9 @@
 package service
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
-)
-
-var (
-	Version = resttypes.APIVersion{
-		Version: "v1",
-		Group:   "service.zcloud.cn",
-	}
 )
 
 type ServiceManager struct {
@@ -44,18 +34,8 @@ func (m *ServiceManager) List(ctx *resttypes.Context) interface{} {
 	return nil
 }
 
-func (m *ServiceManager) RegisterHandler(router gin.IRoutes) error {
-	schemas := resttypes.NewSchemas()
-
-	schemas.MustImport(&Version, Namespace{})
-	schemas.MustImportAndCustomize(&Version, InnerService{}, m, SetInnerServiceSchema)
-	schemas.MustImportAndCustomize(&Version, OuterService{}, m, SetOuterServiceSchema)
-
-	server := api.NewAPIServer()
-	if err := server.AddSchemas(schemas); err != nil {
-		return err
-	}
-	server.Use(api.RestHandler)
-	adaptor.RegisterHandler(router, server, server.Schemas.UrlMethods())
-	return nil
+func (m *ServiceManager) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
+	schemas.MustImport(version, Namespace{})
+	schemas.MustImportAndCustomize(version, InnerService{}, m, SetInnerServiceSchema)
+	schemas.MustImportAndCustomize(version, OuterService{}, m, SetOuterServiceSchema)
 }

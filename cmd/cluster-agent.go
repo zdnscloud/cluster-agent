@@ -2,12 +2,23 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/network"
 	"github.com/zdnscloud/cluster-agent/service"
 	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client/config"
+	"github.com/zdnscloud/gorest/adaptor"
+	"github.com/zdnscloud/gorest/api"
+	resttypes "github.com/zdnscloud/gorest/types"
+)
+
+var (
+	Version = resttypes.APIVersion{
+		Version: "v1",
+		Group:   "agent.zcloud.cn",
+	}
 )
 
 func createCache() (cache.Cache, error) {
@@ -47,17 +58,19 @@ func main() {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
 
+	schemas := resttypes.NewSchemas()
+	storageMgr.RegisterSchemas(&Version, schemas)
+	networkMgr.RegisterSchemas(&Version, schemas)
+	serviceMgr.RegisterSchemas(&Version, schemas)
+
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
-	if err := storageMgr.RegisterHandler(router); err != nil {
-		log.Fatalf("storage manager register handler failed:%s", err.Error())
+	server := api.NewAPIServer()
+	if err := server.AddSchemas(schemas); err != nil {
+		log.Fatalf("add schemas failed:%s", err.Error())
 	}
-	if err := networkMgr.RegisterHandler(router); err != nil {
-		log.Fatalf("network manager register handler failed:%s", err.Error())
-	}
-	if err := serviceMgr.RegisterHandler(router); err != nil {
-		log.Fatalf("service manager register handler failed:%s", err.Error())
-	}
+	server.Use(api.RestHandler)
+	adaptor.RegisterHandler(router, server, server.Schemas.UrlMethods())
 
 	addr := "0.0.0.0:8090"
 	router.Run(addr)
