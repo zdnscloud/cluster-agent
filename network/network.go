@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/gin-gonic/gin"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 
@@ -13,16 +12,8 @@ import (
 	"github.com/zdnscloud/gok8s/event"
 	"github.com/zdnscloud/gok8s/handler"
 	"github.com/zdnscloud/gok8s/predicate"
-	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
-)
-
-var (
-	Version = resttypes.APIVersion{
-		Version: "v1",
-		Group:   "network.zcloud.cn",
-	}
 )
 
 type NetworkManager struct {
@@ -52,19 +43,10 @@ func New(c cache.Cache) (*NetworkManager, error) {
 	return m, nil
 }
 
-func (m *NetworkManager) RegisterHandler(router gin.IRoutes) error {
-	schemas := resttypes.NewSchemas()
-	schemas.MustImportAndCustomize(&Version, NodeNetwork{}, m, SetNodeNetworkSchema)
-	schemas.MustImportAndCustomize(&Version, PodNetwork{}, m, SetPodNetworkSchema)
-	schemas.MustImportAndCustomize(&Version, ServiceNetwork{}, m, SetServiceNetworkSchema)
-
-	server := api.NewAPIServer()
-	if err := server.AddSchemas(schemas); err != nil {
-		return err
-	}
-	server.Use(api.RestHandler)
-	adaptor.RegisterHandler(router, server, server.Schemas.UrlMethods())
-	return nil
+func (m *NetworkManager) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
+	schemas.MustImportAndCustomize(version, NodeNetwork{}, m, SetNodeNetworkSchema)
+	schemas.MustImportAndCustomize(version, PodNetwork{}, m, SetPodNetworkSchema)
+	schemas.MustImportAndCustomize(version, ServiceNetwork{}, m, SetServiceNetworkSchema)
 }
 
 func (m *NetworkManager) initNetworkManagers() error {

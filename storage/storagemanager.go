@@ -1,21 +1,12 @@
 package storage
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/zdnscloud/cluster-agent/storage/lvm"
 	"github.com/zdnscloud/cluster-agent/storage/nfs"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
-)
-
-var (
-	Version = resttypes.APIVersion{
-		Version: "v1",
-		Group:   "storage.zcloud.cn",
-	}
 )
 
 type Storage interface {
@@ -43,17 +34,8 @@ func New(c cache.Cache) (*StorageManager, error) {
 	}, nil
 }
 
-func (m *StorageManager) RegisterHandler(router gin.IRoutes) error {
-	schemas := resttypes.NewSchemas()
-	schemas.MustImportAndCustomize(&Version, types.Storage{}, m, types.SetStorageSchema)
-
-	server := api.NewAPIServer()
-	if err := server.AddSchemas(schemas); err != nil {
-		return err
-	}
-	server.Use(api.RestHandler)
-	adaptor.RegisterHandler(router, server, server.Schemas.UrlMethods())
-	return nil
+func (m *StorageManager) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
+	schemas.MustImportAndCustomize(version, types.Storage{}, m, types.SetStorageSchema)
 }
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
