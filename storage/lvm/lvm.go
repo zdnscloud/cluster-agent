@@ -30,8 +30,6 @@ func New(c cache.Cache) (*LVM, error) {
 		PVData: pm,
 		Cache:  c,
 	}
-	lvm.SetNodes()
-	lvm.SetSize()
 
 	return lvm, nil
 }
@@ -53,6 +51,8 @@ func (s *LVM) GetInfo() types.Storage {
 		}
 		res = append(res, pv)
 	}
+	s.SetNodes()
+	s.SetSize()
 
 	return types.Storage{
 		Name:     LVMStorageClassName,
