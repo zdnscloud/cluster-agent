@@ -12,7 +12,7 @@ import (
 
 const (
 	NFSStorageClassName = "nfs"
-	ZKEStorageNamespace = "zcloud"
+	ZKEStorageNamespace = "kube-storage"
 	ZKENFSPvcName       = "nfs-data-nfs-provisioner-0"
 )
 
