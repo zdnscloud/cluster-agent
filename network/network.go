@@ -106,9 +106,7 @@ func (m *NetworkManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 			m.networks.OnUpdateService(newObj)
 		}
 	case *corev1.Pod:
-		if e.ObjectOld.(*corev1.Pod).Status.PodIP != newObj.Status.PodIP {
-			m.networks.OnUpdatePod(newObj)
-		}
+		m.networks.OnUpdatePod(e.ObjectOld.(*corev1.Pod), newObj)
 	}
 
 	return handler.Result{}, nil

@@ -63,6 +63,10 @@ func (nc *NetworkCache) OnNewNode(k8snode *corev1.Node) {
 }
 
 func (nc *NetworkCache) OnNewPod(k8spod *corev1.Pod) {
+	if k8spod.Status.PodIP == "" || k8spod.Status.Phase != corev1.PodRunning {
+		return
+	}
+
 	podNetwork, ok := nc.podNetworks[k8spod.Spec.NodeName]
 	if ok == false {
 		return
@@ -111,19 +115,26 @@ func (nc *NetworkCache) OnUpdateService(k8ssvc *corev1.Service) {
 	nc.OnNewService(k8ssvc)
 }
 
-func (nc *NetworkCache) OnUpdatePod(k8spod *corev1.Pod) {
-	podNetwork, ok := nc.podNetworks[k8spod.Spec.NodeName]
+func (nc *NetworkCache) OnUpdatePod(k8spodOld, k8spodNew *corev1.Pod) {
+	if k8spodOld.Status.PodIP == k8spodNew.Status.PodIP {
+		if k8spodNew.Status.Phase == corev1.PodSucceeded || k8spodNew.Status.Phase == corev1.PodFailed {
+			nc.OnDeletePod(k8spodNew)
+		}
+		return
+	}
+
+	podNetwork, ok := nc.podNetworks[k8spodNew.Spec.NodeName]
 	if ok == false {
 		return
 	}
 
 	podIP := PodIP{
-		Namespace: k8spod.Namespace,
-		Name:      k8spod.Name,
-		IP:        k8spod.Status.PodIP,
+		Namespace: k8spodNew.Namespace,
+		Name:      k8spodNew.Name,
+		IP:        k8spodNew.Status.PodIP,
 	}
 	for i, p := range podNetwork.PodIPs {
-		if p.Namespace == k8spod.Namespace && p.Name == k8spod.Name {
+		if p.Namespace == k8spodNew.Namespace && p.Name == k8spodNew.Name {
 			podNetwork.PodIPs[i] = podIP
 			return
 		}
