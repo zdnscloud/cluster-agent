@@ -3,7 +3,7 @@
     "collectionName": "storages",
 
     "resourceFields": {
-        "name": {"type": "string"},
+	"name": {"type": "enum", "validValues": ["lvm", "nfs"]},
         "size": {"type": "int"},
         "freesize": {"type": "int"},
         "nodes": {"type": "array", "elemType": "node"},
