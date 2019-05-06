@@ -134,6 +134,10 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 		Name: k8ssvc.Name,
 	}
 
+	if len(k8ssvc.Spec.Selector) == 0 {
+		return svc, nil
+	}
+
 	ls := metav1.LabelSelector{
 		MatchLabels: k8ssvc.Spec.Selector,
 	}
