@@ -149,9 +149,17 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 
 	workerLoads := make(map[string]Workload)
 	for _, k8spod := range k8spods.Items {
+		isReady := true
+		for _, cs := range k8spod.Status.ContainerStatuses {
+			if cs.Ready == false {
+				isReady = false
+				break
+			}
+		}
+
 		pod := Pod{
 			Name:    k8spod.Name,
-			IsReady: k8spod.Status.Phase == corev1.PodRunning,
+			IsReady: isReady,
 		}
 
 		if len(k8spod.OwnerReferences) == 1 {
