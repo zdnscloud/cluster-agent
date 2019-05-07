@@ -43,6 +43,10 @@ func (nc *NetworkCache) GetServiceNetworks() []ServiceNetwork {
 }
 
 func (nc *NetworkCache) OnNewNode(k8snode *corev1.Node) {
+	if _, ok := nc.nodeNetworks[k8snode.Name]; ok {
+		return
+	}
+
 	var ip string
 	for _, addr := range k8snode.Status.Addresses {
 		if addr.Type == corev1.NodeInternalIP || addr.Type == corev1.NodeExternalIP {
