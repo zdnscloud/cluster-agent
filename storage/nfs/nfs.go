@@ -17,8 +17,8 @@ const (
 )
 
 type NFS struct {
-	Size     int
-	FreeSize int
+	Size     string
+	FreeSize string
 	PVData   *pvmonitor.PVMonitor
 	Cache    cache.Cache
 }
@@ -63,7 +63,7 @@ func (s *NFS) GetInfo() types.Storage {
 }
 
 func (s *NFS) setNFSSize() {
-	var pvsize int
+	var pvsize string
 	pvcs := corev1.PersistentVolumeClaimList{}
 	err := s.Cache.List(context.TODO(), nil, &pvcs)
 	if err != nil {

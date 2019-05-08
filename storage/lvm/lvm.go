@@ -6,6 +6,7 @@ import (
 	"github.com/zdnscloud/cluster-agent/storage/utils"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/lvmd.git"
+	"strconv"
 )
 
 const (
@@ -15,8 +16,8 @@ const (
 
 type LVM struct {
 	Nodes    []types.Node
-	Size     int
-	FreeSize int
+	Size     string
+	FreeSize string
 	PVData   *pvmonitor.PVMonitor
 	Cache    cache.Cache
 }
@@ -79,11 +80,13 @@ func (s *LVM) SetNodes() {
 }
 
 func (s *LVM) SetSize() {
-	var tsize, fsize int
+	var tsize, fsize float64
 	for _, n := range s.Nodes {
-		tsize += n.Size
-		fsize += n.FreeSize
+		t, _ := strconv.ParseFloat(n.Size, 64)
+		f, _ := strconv.ParseFloat(n.FreeSize, 64)
+		tsize += t
+		fsize += f
 	}
-	s.Size = tsize
-	s.FreeSize = fsize
+	s.Size = strconv.FormatFloat(tsize, 'f', -1, 64)
+	s.FreeSize = strconv.FormatFloat(fsize, 'f', -1, 64)
 }

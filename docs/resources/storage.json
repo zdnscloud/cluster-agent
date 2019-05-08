@@ -4,20 +4,20 @@
 
     "resourceFields": {
 	"name": {"type": "enum", "validValues": ["lvm", "nfs"]},
-        "size": {"type": "int"},
-        "freesize": {"type": "int"},
+        "size": {"type": "string"},
+        "freesize": {"type": "string"},
         "nodes": {"type": "array", "elemType": "node"},
         "pvs": {"type": "array", "elemType": "pv"}
     },
     "subResources": {
 	"pv": {
 	    "name": {"type": "string"},
-	    "size": {"type": "int"},
+	    "size": {"type": "string"},
 	    "pods": {"type": "array", "elemType": "pod"}
 	},
 	"node": {
 	    "name": {"type": "string"},
-	    "size": {"type": "int"},
+	    "size": {"type": "string"},
 	    "freesize": {"type": "int"}
 	},
 	"pod": {
