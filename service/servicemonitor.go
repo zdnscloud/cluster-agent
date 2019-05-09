@@ -16,7 +16,10 @@ import (
 	"github.com/zdnscloud/gok8s/client"
 )
 
-const AnnkeyForUDPIngress = "zcloud_ingress_udp"
+const (
+	AnnkeyForUDPIngress = "zcloud_ingress_udp"
+	RunningState        = "Running"
+)
 
 type Service struct {
 	Name      string
@@ -153,17 +156,9 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 
 	workerLoads := make(map[string]Workload)
 	for _, k8spod := range k8spods.Items {
-		isReady := true
-		for _, cs := range k8spod.Status.ContainerStatuses {
-			if cs.Ready == false {
-				isReady = false
-				break
-			}
-		}
-
 		pod := Pod{
-			Name:    k8spod.Name,
-			IsReady: isReady,
+			Name:  k8spod.Name,
+			State: getPodState(&k8spod),
 		}
 
 		if len(k8spod.OwnerReferences) == 1 {
@@ -188,6 +183,17 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 		svc.Workloads = append(svc.Workloads, wl)
 	}
 	return svc, nil
+}
+
+func getPodState(pod *corev1.Pod) string {
+	for _, cs := range pod.Status.ContainerStatuses {
+		if cs.State.Waiting != nil {
+			return cs.State.Waiting.Reason
+		} else if cs.State.Terminated != nil {
+			return cs.State.Terminated.Reason
+		}
+	}
+	return RunningState
 }
 
 func (s *ServiceMonitor) getPodOwner(namespace string, owner metav1.OwnerReference) (string, string, bool) {
@@ -270,7 +276,7 @@ func (s *ServiceMonitor) hasPodNameChange(eps *corev1.Endpoints) bool {
 				if p, ok := pods[n]; ok == false {
 					return true
 				} else {
-					p.IsReady = true
+					p.State = RunningState
 				}
 			}
 		}
@@ -281,7 +287,15 @@ func (s *ServiceMonitor) hasPodNameChange(eps *corev1.Endpoints) bool {
 				if p, ok := pods[n]; ok == false {
 					return true
 				} else {
-					p.IsReady = false
+					if p.State == RunningState {
+						var pod corev1.Pod
+						err := s.cache.Get(context.TODO(), k8stypes.NamespacedName{eps.Namespace, n}, &pod)
+						if err != nil {
+							log.Warnf("get pod %s in namespace %s failed", n, eps.Namespace)
+						} else {
+							p.State = getPodState(&pod)
+						}
+					}
 				}
 			}
 		}

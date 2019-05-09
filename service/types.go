@@ -33,8 +33,8 @@ type Workload struct {
 }
 
 type Pod struct {
-	Name    string `json:"name"`
-	IsReady bool   `json:"isReady"`
+	Name  string `json:"name"`
+	State string `json:"state"`
 }
 
 var InnerServiceType = resttypes.GetResourceType(InnerService{})
