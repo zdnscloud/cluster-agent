@@ -17,7 +17,7 @@
 
         "simplepod": {
             "name": {"type": "string"},
-            "isReady": {"type": "bool"}
+            "state": {"type": "string"}
         }
     },
 
