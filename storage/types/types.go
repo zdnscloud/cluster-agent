@@ -17,6 +17,7 @@ type Storage struct {
 	Name               string `json:"name"`
 	Size               string `json:"size"`
 	FreeSize           string `json:"freesize"`
+	UsedSize           string `json:"usedsize"`
 	Nodes              []Node `json:"nodes"`
 	PVs                []PV   `json:"pvs"`
 }
@@ -32,6 +33,7 @@ type Node struct {
 	Name     string `json:"name"`
 	Size     string `json:"size"`
 	FreeSize string `json:"freesize"`
+	UsedSize string `json:"usedsize"`
 }
 
 type Pod struct {

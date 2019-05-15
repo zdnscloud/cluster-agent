@@ -18,6 +18,7 @@ type LVM struct {
 	Nodes    []types.Node
 	Size     string
 	FreeSize string
+	UsedSize string
 	PVData   *pvmonitor.PVMonitor
 	Cache    cache.Cache
 }
@@ -59,6 +60,7 @@ func (s *LVM) GetInfo() types.Storage {
 		Name:     LVMStorageClassName,
 		Size:     s.Size,
 		FreeSize: s.FreeSize,
+		UsedSize: s.UsedSize,
 		Nodes:    s.Nodes,
 		PVs:      res,
 	}
@@ -73,6 +75,7 @@ func (s *LVM) SetNodes() {
 			Name:     v.Name,
 			Size:     utils.ByteToGb(v.Size),
 			FreeSize: utils.ByteToGb(v.FreeSize),
+			UsedSize: utils.ByteToGb((v.Size - v.FreeSize)),
 		}
 		nodes = append(nodes, node)
 	}
@@ -80,13 +83,16 @@ func (s *LVM) SetNodes() {
 }
 
 func (s *LVM) SetSize() {
-	var tsize, fsize float64
+	var tsize, fsize, usize float64
 	for _, n := range s.Nodes {
 		t, _ := strconv.ParseFloat(n.Size, 64)
 		f, _ := strconv.ParseFloat(n.FreeSize, 64)
+		u, _ := strconv.ParseFloat(n.UsedSize, 64)
 		tsize += t
 		fsize += f
+		usize += u
 	}
 	s.Size = strconv.FormatFloat(tsize, 'f', -1, 64)
 	s.FreeSize = strconv.FormatFloat(fsize, 'f', -1, 64)
+	s.UsedSize = strconv.FormatFloat(usize, 'f', -1, 64)
 }

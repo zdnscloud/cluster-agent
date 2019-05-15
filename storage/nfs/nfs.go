@@ -19,6 +19,7 @@ const (
 type NFS struct {
 	Size     string
 	FreeSize string
+	UsedSize string
 	PVData   *pvmonitor.PVMonitor
 	Cache    cache.Cache
 }
@@ -58,6 +59,7 @@ func (s *NFS) GetInfo() types.Storage {
 		Name:     NFSStorageClassName,
 		Size:     s.Size,
 		FreeSize: s.FreeSize,
+		UsedSize: s.UsedSize,
 		PVs:      res,
 	}
 }
@@ -76,5 +78,6 @@ func (s *NFS) setNFSSize() {
 		}
 	}
 	s.Size = pvsize
-	s.FreeSize = pvsize
+	s.FreeSize = "0.00"
+	s.UsedSize = pvsize
 }
