@@ -1,6 +1,6 @@
 REGISTRY_NAME = zdnscloud
 IMAGE_Name = cluster-agent
-IMAGE_VERSION = v0.5
+IMAGE_VERSION = v0.7
 
 .PHONY: all container
 
