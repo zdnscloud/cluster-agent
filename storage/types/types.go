@@ -14,26 +14,26 @@ var StorageType = resttypes.GetResourceType(Storage{})
 
 type Storage struct {
 	resttypes.Resource `json:",inline"`
-	Name               string `json:"name,omitempty"`
-	Size               string `json:"size,omitempty"`
-	FreeSize           string `json:"freesize,omitempty"`
-	Nodes              []Node `json:"nodes,omitempty"`
-	PVs                []PV   `json:"pvs,omitempty"`
+	Name               string `json:"name"`
+	Size               string `json:"size"`
+	FreeSize           string `json:"freesize"`
+	Nodes              []Node `json:"nodes"`
+	PVs                []PV   `json:"pvs"`
 }
 
 type PV struct {
-	Name             string `json:"name,omitempty"`
-	Size             string `json:"size,omitempty"`
-	Pods             []Pod  `json:"pods,omitempty"`
+	Name             string `json:"name"`
+	Size             string `json:"size"`
+	Pods             []Pod  `json:"pods"`
 	StorageClassName string `json:"-"`
 }
 
 type Node struct {
-	Name     string `json:"name,omitempty"`
-	Size     string `json:"size,omitempty"`
-	FreeSize string `json:"freesize,omitempty"`
+	Name     string `json:"name"`
+	Size     string `json:"size"`
+	FreeSize string `json:"freesize"`
 }
 
 type Pod struct {
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
