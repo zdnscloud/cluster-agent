@@ -19,7 +19,7 @@
 	"node": {
 	    "name": {"type": "string"},
 	    "size": {"type": "string"},
-	    "freesize": {"type": "string"}
+	    "freesize": {"type": "string"},
 	    "usedsize": {"type": "string"}
 	},
 	"pod": {
