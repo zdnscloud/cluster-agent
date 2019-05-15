@@ -14,6 +14,7 @@ import (
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client"
+	"github.com/zdnscloud/gok8s/helper"
 )
 
 const (
@@ -158,7 +159,7 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 	for _, k8spod := range k8spods.Items {
 		pod := Pod{
 			Name:  k8spod.Name,
-			State: getPodState(&k8spod),
+			State: helper.GetPodState(&k8spod),
 		}
 
 		if len(k8spod.OwnerReferences) == 1 {
@@ -183,17 +184,6 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 		svc.Workloads = append(svc.Workloads, wl)
 	}
 	return svc, nil
-}
-
-func getPodState(pod *corev1.Pod) string {
-	for _, cs := range pod.Status.ContainerStatuses {
-		if cs.State.Waiting != nil {
-			return cs.State.Waiting.Reason
-		} else if cs.State.Terminated != nil {
-			return cs.State.Terminated.Reason
-		}
-	}
-	return RunningState
 }
 
 func (s *ServiceMonitor) getPodOwner(namespace string, owner metav1.OwnerReference) (string, string, bool) {
@@ -293,7 +283,7 @@ func (s *ServiceMonitor) hasPodNameChange(eps *corev1.Endpoints) bool {
 						if err != nil {
 							log.Warnf("get pod %s in namespace %s failed", n, eps.Namespace)
 						} else {
-							p.State = getPodState(&pod)
+							p.State = helper.GetPodState(&pod)
 						}
 					}
 				}

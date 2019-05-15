@@ -42,14 +42,6 @@
   version = "v1.2.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:1ba1d79f2810270045c328ae5d674321db34e3aae468eb4233883b473c5c0467"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
-
-[[projects]]
   digest = "1:239c4c7fd2159585454003d9be7207167970194216193a8a210b8d29576f19c9"
   name = "github.com/golang/protobuf"
   packages = [
@@ -208,7 +200,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b40f9249bb99e2434b7616f910f24821305e6f36f34afc9e9249497cd809b59a"
+  digest = "1:9165aaee9914ee00b5d296a59d61ceda123318ecbbd9af0ce3186dd3b5d7d7b2"
   name = "github.com/zdnscloud/gok8s"
   packages = [
     "cache",
@@ -220,11 +212,12 @@
     "event",
     "eventsource",
     "handler",
+    "helper",
     "predicate",
     "util",
   ]
   pruneopts = "UT"
-  revision = "61cf0b25644b9c6e248f43cf6e4662a7cd8a3e14"
+  revision = "7635f5a2255193aeda2fffc5e851c3321556d2d1"
 
 [[projects]]
   branch = "master"
@@ -579,8 +572,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/gin-gonic/gin",
-    "github.com/golang/glog",
-    "github.com/google/lvmd/proto",
     "github.com/zdnscloud/cement/log",
     "github.com/zdnscloud/gok8s/cache",
     "github.com/zdnscloud/gok8s/client",
@@ -588,15 +579,18 @@
     "github.com/zdnscloud/gok8s/controller",
     "github.com/zdnscloud/gok8s/event",
     "github.com/zdnscloud/gok8s/handler",
+    "github.com/zdnscloud/gok8s/helper",
     "github.com/zdnscloud/gok8s/predicate",
     "github.com/zdnscloud/gorest/adaptor",
     "github.com/zdnscloud/gorest/api",
     "github.com/zdnscloud/gorest/types",
     "github.com/zdnscloud/lvmd.git",
-    "google.golang.org/grpc",
-    "google.golang.org/grpc/connectivity",
+    "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
-    "k8s.io/api/storage/v1",
+    "k8s.io/api/extensions/v1beta1",
+    "k8s.io/apimachinery/pkg/api/resource",
+    "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/types",
     "k8s.io/client-go/kubernetes/scheme",
   ]
   solver-name = "gps-cdcl"
