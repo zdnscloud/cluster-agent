@@ -81,11 +81,13 @@ func (nc *NetworkCache) OnNewPod(k8spod *corev1.Pod) {
 		return
 	}
 
-	podNetwork.PodIPs = append(podNetwork.PodIPs, PodIP{
-		Namespace: k8spod.Namespace,
-		Name:      k8spod.Name,
-		IP:        k8spod.Status.PodIP,
-	})
+	if k8spod.Spec.HostNetwork == false {
+		podNetwork.PodIPs = append(podNetwork.PodIPs, PodIP{
+			Namespace: k8spod.Namespace,
+			Name:      k8spod.Name,
+			IP:        k8spod.Status.PodIP,
+		})
+	}
 }
 
 func (nc *NetworkCache) OnNewService(k8ssvc *corev1.Service) {
