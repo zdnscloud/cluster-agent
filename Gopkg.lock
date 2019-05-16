@@ -187,16 +187,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:61a9f494f5b5152527fe87dd95faaf6269ed0587e4044225f1993569a23f02cc"
+  digest = "1:363352317a1c8dde099a8601120db5c8e7a0512d25fe98185dfa61ed3701d902"
   name = "github.com/zdnscloud/cement"
   packages = [
     "log",
     "log/log4go",
     "reflector",
     "slice",
+    "uuid",
   ]
   pruneopts = "UT"
-  revision = "dbe599d3f012f8c64527e2b40affb252bf95afe3"
+  revision = "62c37a539f2035178d4b185e53c4778da8ca8c8e"
 
 [[projects]]
   branch = "master"
@@ -573,6 +574,7 @@
   input-imports = [
     "github.com/gin-gonic/gin",
     "github.com/zdnscloud/cement/log",
+    "github.com/zdnscloud/cement/uuid",
     "github.com/zdnscloud/gok8s/cache",
     "github.com/zdnscloud/gok8s/client",
     "github.com/zdnscloud/gok8s/client/config",

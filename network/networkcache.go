@@ -56,14 +56,19 @@ func (nc *NetworkCache) OnNewNode(k8snode *corev1.Node) {
 		}
 	}
 
-	nc.nodeNetworks[k8snode.Name] = &NodeNetwork{
+	nn := &NodeNetwork{
 		Name: k8snode.Name,
 		IP:   ip,
 	}
-	nc.podNetworks[k8snode.Name] = &PodNetwork{
+	nn.SetID(GenUUID())
+	nc.nodeNetworks[k8snode.Name] = nn
+
+	pn := &PodNetwork{
 		NodeName: k8snode.Name,
 		PodCIDR:  k8snode.Spec.PodCIDR,
 	}
+	pn.SetID(GenUUID())
+	nc.podNetworks[k8snode.Name] = pn
 }
 
 func (nc *NetworkCache) OnNewPod(k8spod *corev1.Pod) {
@@ -84,11 +89,13 @@ func (nc *NetworkCache) OnNewPod(k8spod *corev1.Pod) {
 }
 
 func (nc *NetworkCache) OnNewService(k8ssvc *corev1.Service) {
-	nc.serviceNetworks[genServiceKey(k8ssvc)] = &ServiceNetwork{
+	sn := &ServiceNetwork{
 		Namespace: k8ssvc.Namespace,
 		Name:      k8ssvc.Name,
 		IP:        k8ssvc.Spec.ClusterIP,
 	}
+	sn.SetID(GenUUID())
+	nc.serviceNetworks[genServiceKey(k8ssvc)] = sn
 }
 
 func genServiceKey(k8ssvc *corev1.Service) string {
