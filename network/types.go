@@ -26,7 +26,7 @@ type PodNetwork struct {
 	resttypes.Resource `json:",inline"`
 	NodeName           string  `json:"nodeName"`
 	PodCIDR            string  `json:"podCIDR"`
-	PodIPs             []PodIP `json:"podIPs,omitempty"`
+	PodIPs             []PodIP `json:"podIPs"`
 }
 
 type PodIP struct {
