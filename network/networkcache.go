@@ -66,6 +66,7 @@ func (nc *NetworkCache) OnNewNode(k8snode *corev1.Node) {
 	pn := &PodNetwork{
 		NodeName: k8snode.Name,
 		PodCIDR:  k8snode.Spec.PodCIDR,
+		PodIPs:   make([]PodIP, 0),
 	}
 	pn.SetID(GenUUID())
 	nc.podNetworks[k8snode.Name] = pn
