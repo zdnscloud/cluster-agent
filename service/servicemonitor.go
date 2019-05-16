@@ -25,7 +25,7 @@ const (
 type Service struct {
 	Name      string
 	Ingress   *Ingress
-	Workloads []Workload
+	Workloads []*Workload
 }
 
 type Ingress struct {
@@ -155,7 +155,7 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 		return nil, err
 	}
 
-	workerLoads := make(map[string]Workload)
+	workerLoads := make(map[string]*Workload)
 	for _, k8spod := range k8spods.Items {
 		pod := Pod{
 			Name:  k8spod.Name,
@@ -170,7 +170,7 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 
 			wl, ok := workerLoads[name]
 			if ok == false {
-				wl = Workload{
+				wl = &Workload{
 					Name: name,
 					Kind: kind,
 				}
@@ -223,6 +223,27 @@ func (s *ServiceMonitor) OnUpdateService(old, new *corev1.Service) {
 		return
 	}
 	s.OnNewService(new)
+}
+
+func (s *ServiceMonitor) OnUpdatePod(old, new *corev1.Pod) {
+	oldState := helper.GetPodState(old)
+	newState := helper.GetPodState(new)
+	if newState == oldState {
+		return
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	for _, s := range s.services {
+		for _, wl := range s.Workloads {
+			for i, pod := range wl.Pods {
+				if pod.Name == new.Name {
+					wl.Pods[i].State = newState
+					return
+				}
+			}
+		}
+	}
 }
 
 func (s *ServiceMonitor) OnUpdateEndpoints(old, new *corev1.Endpoints) {

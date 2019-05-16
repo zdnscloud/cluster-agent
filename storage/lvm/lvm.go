@@ -5,7 +5,7 @@ import (
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/lvmd.git"
+	"github.com/zdnscloud/lvmd"
 	"strconv"
 	"sync"
 )

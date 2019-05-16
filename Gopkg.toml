@@ -24,11 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/google/lvmd"
-
 [[constraint]]
   branch = "master"
   name = "github.com/zdnscloud/cement"
@@ -59,4 +54,4 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/zdnscloud/lvmd.git"
+  name = "github.com/zdnscloud/lvmd"

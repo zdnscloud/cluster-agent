@@ -238,7 +238,7 @@
 [[projects]]
   branch = "master"
   digest = "1:778a24d577b22e9fb8040dac223c4e908ba434355e1c63ea4cc28a3240ac70a6"
-  name = "github.com/zdnscloud/lvmd.git"
+  name = "github.com/zdnscloud/lvmd"
   packages = ["."]
   pruneopts = "UT"
   revision = "3fbe864d10c16cb6a73388c98aee5dfeb4c11706"
@@ -586,7 +586,7 @@
     "github.com/zdnscloud/gorest/adaptor",
     "github.com/zdnscloud/gorest/api",
     "github.com/zdnscloud/gorest/types",
-    "github.com/zdnscloud/lvmd.git",
+    "github.com/zdnscloud/lvmd",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",

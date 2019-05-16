@@ -22,8 +22,8 @@ func SetInnerServiceSchema(schema *resttypes.Schema, handler resttypes.Handler) 
 
 type InnerService struct {
 	resttypes.Resource `json:",inline"`
-	Name               string     `json:"name"`
-	Workloads          []Workload `json:"workloads"`
+	Name               string      `json:"name"`
+	Workloads          []*Workload `json:"workloads"`
 }
 
 type Workload struct {
