@@ -7,6 +7,7 @@ import (
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/lvmd.git"
 	"strconv"
+	"sync"
 )
 
 const (
@@ -21,6 +22,7 @@ type LVM struct {
 	UsedSize string
 	PVData   *pvmonitor.PVMonitor
 	Cache    cache.Cache
+	lock     sync.RWMutex
 }
 
 func New(c cache.Cache) (*LVM, error) {
@@ -41,6 +43,8 @@ func (s *LVM) GetType() string {
 }
 
 func (s *LVM) GetInfo() types.Storage {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	pvs := s.PVData.PVs
 	var res []types.PV
 	for _, p := range pvs {

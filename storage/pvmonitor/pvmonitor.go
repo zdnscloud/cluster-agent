@@ -11,6 +11,7 @@ import (
 	"github.com/zdnscloud/gok8s/predicate"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sync"
 )
 
 type PVMonitor struct {
@@ -18,6 +19,7 @@ type PVMonitor struct {
 	PVs              []types.PV
 	PvAndPVC         map[string]PVC
 	PVCAndPod        map[string][]types.Pod
+	lock             sync.RWMutex
 }
 
 type PVC struct {
@@ -58,6 +60,8 @@ func (s *PVMonitor) initPVC(c cache.Cache) error {
 }
 
 func (s *PVMonitor) OnCreate(e event.CreateEvent) (handler.Result, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	switch obj := e.Object.(type) {
 	case *corev1.PersistentVolume:
 		s.OnNewPV(obj)
@@ -69,6 +73,8 @@ func (s *PVMonitor) OnCreate(e event.CreateEvent) (handler.Result, error) {
 	return handler.Result{}, nil
 }
 func (s *PVMonitor) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.PersistentVolumeClaim:
 		s.OnNewPVC(newObj)
@@ -77,6 +83,8 @@ func (s *PVMonitor) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 }
 
 func (s *PVMonitor) OnDelete(e event.DeleteEvent) (handler.Result, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	switch obj := e.Object.(type) {
 	case *corev1.PersistentVolume:
 		s.OnDelPV(obj)

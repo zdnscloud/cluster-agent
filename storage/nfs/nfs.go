@@ -8,6 +8,7 @@ import (
 	"github.com/zdnscloud/cluster-agent/storage/utils"
 	"github.com/zdnscloud/gok8s/cache"
 	corev1 "k8s.io/api/core/v1"
+	"sync"
 )
 
 const (
@@ -22,6 +23,7 @@ type NFS struct {
 	UsedSize string
 	PVData   *pvmonitor.PVMonitor
 	Cache    cache.Cache
+	lock     sync.RWMutex
 }
 
 func New(c cache.Cache) (*NFS, error) {
@@ -42,6 +44,8 @@ func (s *NFS) GetType() string {
 }
 
 func (s *NFS) GetInfo() types.Storage {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	pvs := s.PVData.PVs
 	var res []types.PV
 	for _, p := range pvs {
