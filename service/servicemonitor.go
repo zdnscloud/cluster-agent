@@ -81,9 +81,14 @@ func (s *ServiceMonitor) GetOuterServices() []OuterService {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	outerSvcs := make([]OuterService, 0, len(s.services))
+	//handle several services shared same ingress
+	returnedIngress := make(map[string]struct{})
 	for _, svc := range s.services {
 		if svc.Ingress != nil {
-			outerSvcs = append(outerSvcs, s.toOuterService(svc.Ingress)...)
+			if _, ok := returnedIngress[svc.Ingress.Name]; ok == false {
+				outerSvcs = append(outerSvcs, s.toOuterService(svc.Ingress)...)
+				returnedIngress[svc.Ingress.Name] = struct{}{}
+			}
 		}
 	}
 	return outerSvcs
