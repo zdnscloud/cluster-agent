@@ -41,8 +41,7 @@ var InnerServiceType = resttypes.GetResourceType(InnerService{})
 
 type OuterService struct {
 	resttypes.Resource `json:",inline"`
-	Domain             string                  `json:"domain"`
-	Port               int                     `json:"port"`
+	EntryPoint         string                  `json:"entryPoint"`
 	Services           map[string]InnerService `json:"services"`
 }
 

@@ -29,6 +29,7 @@ func NewServiceCache(c cache.Cache) (*ServiceCache, error) {
 	ctrl.Watch(&corev1.Service{})
 	ctrl.Watch(&corev1.Endpoints{})
 	ctrl.Watch(&corev1.Pod{})
+	ctrl.Watch(&corev1.ConfigMap{})
 	ctrl.Watch(&extv1beta1.Ingress{})
 
 	stopCh := make(chan struct{})
@@ -98,6 +99,8 @@ func (r *ServiceCache) OnCreate(e event.CreateEvent) (handler.Result, error) {
 		} else {
 			s.OnNewService(obj)
 		}
+	case *corev1.ConfigMap:
+		r.onNewTransportLayerIngress(obj)
 	case *extv1beta1.Ingress:
 		s, ok := r.services[obj.Namespace]
 		if ok == false {
@@ -133,6 +136,8 @@ func (r *ServiceCache) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 		} else {
 			s.OnUpdateEndpoints(e.ObjectOld.(*corev1.Endpoints), newObj)
 		}
+	case *corev1.ConfigMap:
+		r.onUpdateTransportLayerIngress(e.ObjectOld.(*corev1.ConfigMap), newObj)
 	case *extv1beta1.Ingress:
 		s, ok := r.services[newObj.Namespace]
 		if ok == false {
@@ -178,4 +183,81 @@ func (r *ServiceCache) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 
 func (r *ServiceCache) OnGeneric(e event.GenericEvent) (handler.Result, error) {
 	return handler.Result{}, nil
+}
+
+func (r *ServiceCache) onNewTransportLayerIngress(cm *corev1.ConfigMap) {
+	if cm.Namespace == NginxIngressNamespace &&
+		(cm.Name == NginxUDPConfigMapName || cm.Name == NginxTCPConfigMapName) {
+		protocol := protocolForConfigMap(cm.Name)
+		namespaceAndIngs, err := configMapToIngresses(cm.Data, protocol)
+		if err != nil {
+			log.Errorf("invalid configmap:%s", err.Error())
+			return
+		}
+
+		for namespace, ings := range namespaceAndIngs {
+			s, ok := r.services[namespace]
+			if ok == false {
+				log.Errorf("namespace %s is unknown", namespace)
+			} else {
+				for _, ing := range ings {
+					s.OnNewTransportLayerIngress(ing)
+				}
+			}
+		}
+	}
+}
+
+func (r *ServiceCache) onUpdateTransportLayerIngress(old, new *corev1.ConfigMap) {
+	if new.Namespace == NginxIngressNamespace &&
+		(new.Name == NginxUDPConfigMapName || new.Name == NginxTCPConfigMapName) {
+		protocol := protocolForConfigMap(new.Name)
+
+		oldNamespaceAndIngs, err := configMapToIngresses(old.Data, protocol)
+		if err != nil {
+			log.Errorf("invalid transport ingress config %s with err %s", old.Name, err.Error())
+			return
+		}
+
+		newNamespaceAndIngs, err := configMapToIngresses(new.Data, protocol)
+		if err != nil {
+			log.Errorf("invalid transport ingress config %s with err %s", new.Name, err.Error())
+			return
+		}
+
+		for namespace, newIngs := range newNamespaceAndIngs {
+			s, ok := r.services[namespace]
+			if ok == false {
+				log.Errorf("namespace %s is unknown", namespace)
+				continue
+			}
+
+			oldIngs, ok := oldNamespaceAndIngs[namespace]
+			if ok == false {
+				for _, ing := range newIngs {
+					s.OnNewTransportLayerIngress(ing)
+				}
+			} else {
+				for name, ing := range newIngs {
+					if old, ok := oldIngs[name]; ok {
+						delete(oldIngs, name)
+						s.OnReplaceTransportLayerIngress(old, ing)
+					} else {
+						s.OnNewTransportLayerIngress(ing)
+					}
+				}
+			}
+		}
+
+		for namespace, oldIngs := range oldNamespaceAndIngs {
+			s, ok := r.services[namespace]
+			if ok == false {
+				log.Errorf("namespace %s is unknown", namespace)
+				continue
+			}
+			for _, ing := range oldIngs {
+				s.OnDeleteTransportLayerIngress(ing)
+			}
+		}
+	}
 }
