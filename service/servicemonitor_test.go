@@ -25,16 +25,16 @@ func TestMonitorHandleIngressEvent(t *testing.T) {
 	ut.Equal(t, len(innerServices), 1)
 
 	httpIng := &Ingress{
-		Name: "vanguard",
-		Rules: []IngressRule{
+		name: "vanguard",
+		rules: []IngressRule{
 			IngressRule{
-				Host:     "www.knet.cn",
-				Protocol: IngressProtocolHTTP,
-				Paths: []IngressPath{
+				host:     "www.knet.cn",
+				protocol: IngressProtocolHTTP,
+				paths: []IngressPath{
 					IngressPath{
-						Path:        "/v1",
-						ServiceName: "vanguard",
-						ServicePort: 8000,
+						path:        "/v1",
+						serviceName: "vanguard",
+						servicePort: 8000,
 					},
 				},
 			},
@@ -52,15 +52,15 @@ func TestMonitorHandleIngressEvent(t *testing.T) {
 	ut.Equal(t, outerServices[0].Services["/v1"].Name, "vanguard")
 
 	udpIng := &Ingress{
-		Name: "vanguard",
-		Rules: []IngressRule{
+		name: "vanguard",
+		rules: []IngressRule{
 			IngressRule{
-				Port:     5553,
-				Protocol: IngressProtocolUDP,
-				Paths: []IngressPath{
+				port:     5553,
+				protocol: IngressProtocolUDP,
+				paths: []IngressPath{
 					IngressPath{
-						ServiceName: "vanguard",
-						ServicePort: 8000,
+						serviceName: "vanguard",
+						servicePort: 8000,
 					},
 				},
 			},

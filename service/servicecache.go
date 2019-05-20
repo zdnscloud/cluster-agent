@@ -27,7 +27,6 @@ func NewServiceCache(c cache.Cache) (*ServiceCache, error) {
 	ctrl := controller.New("serviceCache", c, scheme.Scheme)
 	ctrl.Watch(&corev1.Namespace{})
 	ctrl.Watch(&corev1.Service{})
-	ctrl.Watch(&corev1.Endpoints{})
 	ctrl.Watch(&corev1.Pod{})
 	ctrl.Watch(&corev1.ConfigMap{})
 	ctrl.Watch(&extv1beta1.Ingress{})
@@ -99,6 +98,13 @@ func (r *ServiceCache) OnCreate(e event.CreateEvent) (handler.Result, error) {
 		} else {
 			s.OnNewService(obj)
 		}
+	case *corev1.Pod:
+		s, ok := r.services[obj.Namespace]
+		if ok == false {
+			log.Errorf("namespace %s is unknown", obj.Namespace)
+		} else {
+			s.OnNewPod(obj)
+		}
 	case *corev1.ConfigMap:
 		r.onNewTransportLayerIngress(obj)
 	case *extv1beta1.Ingress:
@@ -128,13 +134,6 @@ func (r *ServiceCache) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 			log.Errorf("namespace %s is unknown", newObj.Namespace)
 		} else {
 			s.OnUpdatePod(e.ObjectOld.(*corev1.Pod), newObj)
-		}
-	case *corev1.Endpoints:
-		s, ok := r.services[newObj.Namespace]
-		if ok == false {
-			log.Errorf("namespace %s is unknown", newObj.Namespace)
-		} else {
-			s.OnUpdateEndpoints(e.ObjectOld.(*corev1.Endpoints), newObj)
 		}
 	case *corev1.ConfigMap:
 		r.onUpdateTransportLayerIngress(e.ObjectOld.(*corev1.ConfigMap), newObj)
@@ -168,6 +167,13 @@ func (r *ServiceCache) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 			log.Errorf("namespace %s is unknown", obj.Namespace)
 		} else {
 			s.OnDeleteService(obj)
+		}
+	case *corev1.Pod:
+		s, ok := r.services[obj.Namespace]
+		if ok == false {
+			log.Errorf("namespace %s is unknown", obj.Namespace)
+		} else {
+			s.OnDeletePod(obj)
 		}
 	case *extv1beta1.Ingress:
 		s, ok := r.services[obj.Namespace]

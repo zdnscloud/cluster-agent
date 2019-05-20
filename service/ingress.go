@@ -37,10 +37,10 @@ func configMapToIngresses(configs map[string]string, protocol IngressProtocol) (
 			ings = make(map[string]*Ingress)
 			namespaceAndIngs[namespace] = ings
 		}
-		if old, ok := ings[ing.Name]; ok {
-			ing.Rules = append(ing.Rules, old.Rules...)
+		if old, ok := ings[ing.name]; ok {
+			ing.rules = append(ing.rules, old.rules...)
 		}
-		ings[ing.Name] = ing
+		ings[ing.name] = ing
 	}
 	return namespaceAndIngs, nil
 }
@@ -59,15 +59,15 @@ func configToIngress(ingressPort int, data string, protocol IngressProtocol) (st
 	servicePort, _ := strconv.Atoi(serviceAndPort[1])
 	serviceName := namespaceAndSvc[1]
 	return namespaceAndSvc[0], &Ingress{
-		Name: serviceName,
-		Rules: []IngressRule{
+		name: serviceName,
+		rules: []IngressRule{
 			IngressRule{
-				Port:     ingressPort,
-				Protocol: protocol,
-				Paths: []IngressPath{
+				port:     ingressPort,
+				protocol: protocol,
+				paths: []IngressPath{
 					IngressPath{
-						ServiceName: serviceName,
-						ServicePort: servicePort,
+						serviceName: serviceName,
+						servicePort: servicePort,
 					},
 				},
 			},
@@ -77,9 +77,9 @@ func configToIngress(ingressPort int, data string, protocol IngressProtocol) (st
 
 func ingressLinkedServices(ing *Ingress) StringSet {
 	ss := NewStringSet()
-	for _, rule := range ing.Rules {
-		for _, path := range rule.Paths {
-			ss.Add(path.ServiceName)
+	for _, rule := range ing.rules {
+		for _, path := range rule.paths {
+			ss.Add(path.serviceName)
 		}
 	}
 	return ss
@@ -87,12 +87,12 @@ func ingressLinkedServices(ing *Ingress) StringSet {
 
 func ingressRemoveRules(ing *Ingress, protocol IngressProtocol) {
 	var rulesToKeep []IngressRule
-	for _, rule := range ing.Rules {
-		if rule.Protocol != protocol {
+	for _, rule := range ing.rules {
+		if rule.protocol != protocol {
 			rulesToKeep = append(rulesToKeep, rule)
 		}
 	}
-	ing.Rules = rulesToKeep
+	ing.rules = rulesToKeep
 }
 
 func protocolForConfigMap(name string) IngressProtocol {
