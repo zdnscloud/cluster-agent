@@ -5,8 +5,7 @@
 
     "resourceFields": {
         "name": {"type": "string"},
-        "domain": {"type": "string"},
-        "port": {"type": "int"}, 
+        "entryPoint": {"type": "string"},
         "services": {"type": "map", "keyType": "string", "valueType": "innerservice"}
     },
     "collectionMethods": [ "GET" ]
