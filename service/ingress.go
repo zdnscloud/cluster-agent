@@ -20,6 +20,29 @@ const (
 	NginxTCPConfigMapName = "tcp-services"
 )
 
+//from business logic
+//when update ingress rule
+//either http rule will be updated, or none-http rule
+//they cann't be mixed in one update
+
+type Ingress struct {
+	name  string
+	rules []IngressRule
+}
+
+type IngressRule struct {
+	host     string
+	port     int
+	protocol IngressProtocol
+	paths    []IngressPath
+}
+
+type IngressPath struct {
+	path        string
+	serviceName string
+	servicePort int
+}
+
 func configMapToIngresses(configs map[string]string, protocol IngressProtocol) (map[string]map[string]*Ingress, error) {
 	namespaceAndIngs := make(map[string]map[string]*Ingress)
 	for port, conf := range configs {
@@ -88,8 +111,14 @@ func ingressLinkedServices(ing *Ingress) StringSet {
 func ingressRemoveRules(ing *Ingress, protocol IngressProtocol) {
 	var rulesToKeep []IngressRule
 	for _, rule := range ing.rules {
-		if rule.protocol != protocol {
-			rulesToKeep = append(rulesToKeep, rule)
+		if protocol == IngressProtocolHTTP {
+			if rule.protocol != protocol {
+				rulesToKeep = append(rulesToKeep, rule)
+			}
+		} else {
+			if rule.protocol == IngressProtocolHTTP {
+				rulesToKeep = append(rulesToKeep, rule)
+			}
 		}
 	}
 	ing.rules = rulesToKeep

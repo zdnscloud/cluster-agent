@@ -28,24 +28,6 @@ type Service struct {
 	workloads []Workload
 }
 
-type Ingress struct {
-	name  string
-	rules []IngressRule
-}
-
-type IngressRule struct {
-	host     string
-	port     int
-	protocol IngressProtocol
-	paths    []IngressPath
-}
-
-type IngressPath struct {
-	path        string
-	serviceName string
-	servicePort int
-}
-
 type ServiceMonitor struct {
 	services  map[string]*Service
 	ings      map[string]*Ingress
