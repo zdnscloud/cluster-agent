@@ -38,6 +38,10 @@
 
 [[constraint]]
  branch = "master"
+ name = "github.com/zdnscloud/node-agent"
+
+[[constraint]]
+ branch = "master"
  name = "github.com/gin-gonic/gin"
 
 [[constraint]]

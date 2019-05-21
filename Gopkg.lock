@@ -187,13 +187,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:363352317a1c8dde099a8601120db5c8e7a0512d25fe98185dfa61ed3701d902"
+  digest = "1:9ed629b66289fde1dcf45162179c3832440672d11c68b3e87c63b8473a27f9a8"
   name = "github.com/zdnscloud/cement"
   packages = [
     "log",
     "log/log4go",
     "reflector",
     "slice",
+    "unittest",
     "uuid",
   ]
   pruneopts = "UT"
@@ -242,6 +243,17 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "3fbe864d10c16cb6a73388c98aee5dfeb4c11706"
+
+[[projects]]
+  branch = "master"
+  digest = "1:46ffbbfaf96ddd515d1e30636fca7cd29edd59f79cdf891b1c9afbd9f541fdc4"
+  name = "github.com/zdnscloud/node-agent"
+  packages = [
+    "client",
+    "proto",
+  ]
+  pruneopts = "UT"
+  revision = "b679bda0781c6acca75dedd4084e13361ff88738"
 
 [[projects]]
   branch = "master"
@@ -574,6 +586,7 @@
   input-imports = [
     "github.com/gin-gonic/gin",
     "github.com/zdnscloud/cement/log",
+    "github.com/zdnscloud/cement/unittest",
     "github.com/zdnscloud/cement/uuid",
     "github.com/zdnscloud/gok8s/cache",
     "github.com/zdnscloud/gok8s/client",
@@ -587,13 +600,18 @@
     "github.com/zdnscloud/gorest/api",
     "github.com/zdnscloud/gorest/types",
     "github.com/zdnscloud/lvmd",
+    "github.com/zdnscloud/node-agent/client",
+    "github.com/zdnscloud/node-agent/proto",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/runtime",
+    "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/client-go/kubernetes/scheme",
+    "k8s.io/client-go/tools/cache",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
