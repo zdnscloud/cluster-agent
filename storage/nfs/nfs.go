@@ -43,7 +43,7 @@ func (s *NFS) GetType() string {
 	return NFSStorageClassName
 }
 
-func (s *NFS) GetInfo() types.Storage {
+func (s *NFS) GetInfo(mountpoints map[string]int64) types.Storage {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	pvs := s.PVData.PVs

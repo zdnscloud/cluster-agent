@@ -13,3 +13,8 @@ func ByteToGb(num uint64) string {
 	f := float64(num) / (1024 * 1024 * 1024)
 	return fmt.Sprintf("%.2f", f)
 }
+
+func ByteToGbiTos(num int64) string {
+	f := float64(num) / (1024 * 1024 * 1024)
+	return fmt.Sprintf("%.2f", f)
+}

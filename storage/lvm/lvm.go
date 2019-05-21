@@ -7,6 +7,7 @@ import (
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/lvmd"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -42,18 +43,28 @@ func (s *LVM) GetType() string {
 	return LVMStorageClassName
 }
 
-func (s *LVM) GetInfo() types.Storage {
+func (s *LVM) GetInfo(mountpoints map[string]int64) types.Storage {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	pvs := s.PVData.PVs
 	var res []types.PV
 	for _, p := range pvs {
+		var uSize, fSize string
+		tSize, _ := strconv.ParseFloat(p.Size, 64)
+		for k, v := range mountpoints {
+			if strings.Contains(k, p.Name) {
+				uSize = utils.ByteToGbiTos(v)
+				fSize = strconv.FormatFloat(tSize-float64(v)/(1024*1024*1024), 'f', -1, 64)
+			}
+		}
 		pvc := s.PVData.PvAndPVC[p.Name].Name
 		pods := s.PVData.PVCAndPod[pvc]
 		pv := types.PV{
-			Name: p.Name,
-			Size: p.Size,
-			Pods: pods,
+			Name:     p.Name,
+			Size:     p.Size,
+			UsedSize: uSize,
+			FreeSize: fSize,
+			Pods:     pods,
 		}
 		res = append(res, pv)
 	}

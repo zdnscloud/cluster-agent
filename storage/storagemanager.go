@@ -4,6 +4,7 @@ import (
 	"github.com/zdnscloud/cluster-agent/storage/lvm"
 	"github.com/zdnscloud/cluster-agent/storage/nfs"
 	"github.com/zdnscloud/cluster-agent/storage/types"
+	"github.com/zdnscloud/cluster-agent/storage/utils"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
@@ -11,7 +12,7 @@ import (
 
 type Storage interface {
 	GetType() string
-	GetInfo() types.Storage
+	GetInfo(map[string]int64) types.Storage
 }
 
 type StorageManager struct {
@@ -40,9 +41,10 @@ func (m *StorageManager) RegisterSchemas(version *resttypes.APIVersion, schemas 
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	cls := ctx.Object.GetID()
+	mountpoints := utils.GetAllPvUsedSize()
 	for _, s := range m.storages {
 		if s.GetType() == cls {
-			return s.GetInfo()
+			return s.GetInfo(mountpoints)
 		}
 	}
 	return nil
@@ -50,8 +52,9 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
 	var infos []types.Storage
+	mountpoints := utils.GetAllPvUsedSize()
 	for _, s := range m.storages {
-		infos = append(infos, s.GetInfo())
+		infos = append(infos, s.GetInfo(mountpoints))
 	}
 	return infos
 }
