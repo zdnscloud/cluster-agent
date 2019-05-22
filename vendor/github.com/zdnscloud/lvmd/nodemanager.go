@@ -27,8 +27,9 @@ var (
 )
 
 const (
-	ZkeStorageLabel     = "node-role.kubernetes.io/storage"
-	ZkeInternalIPAnnKey = "zdnscloud.cn/internal-ip"
+	ZkeStorageLabel      = "storage.zcloud.cn/storagetype"
+	ZkeStorageLabelValue = "Lvm"
+	ZkeInternalIPAnnKey  = "zdnscloud.cn/internal-ip"
 )
 
 type Node struct {
@@ -143,7 +144,7 @@ func (m *NodeManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
 
 func (m *NodeManager) addNode(n *corev1.Node, checkExists bool) {
 	v, ok := n.Labels[ZkeStorageLabel]
-	if ok && v == "true" {
+	if ok && v == ZkeStorageLabelValue {
 		addr := n.Annotations[ZkeInternalIPAnnKey]
 		if checkExists {
 			old := m.getNode(n.Name)
@@ -176,7 +177,7 @@ func (m *NodeManager) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 
 	node := e.Object.(*corev1.Node)
 	v, ok := node.Labels[ZkeStorageLabel]
-	if ok && v == "true" {
+	if ok && v == ZkeStorageLabelValue {
 		m.deleteNode(node.Name)
 	}
 	return handler.Result{}, nil

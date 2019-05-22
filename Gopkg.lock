@@ -238,11 +238,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:778a24d577b22e9fb8040dac223c4e908ba434355e1c63ea4cc28a3240ac70a6"
+  digest = "1:6a17a2b21d030df1585b044fb5234747e5c103e28cd16ad6200b7ef31ed039e4"
   name = "github.com/zdnscloud/lvmd"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3fbe864d10c16cb6a73388c98aee5dfeb4c11706"
+  revision = "d4275a7986ea72bb423f3c52e818a9cf7142b99b"
 
 [[projects]]
   branch = "master"
