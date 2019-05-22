@@ -246,14 +246,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:46ffbbfaf96ddd515d1e30636fca7cd29edd59f79cdf891b1c9afbd9f541fdc4"
+  digest = "1:c3e02059703482dfca6614a88297abd028d4c96ff6c1ed7aa360e96d76945dad"
   name = "github.com/zdnscloud/node-agent"
   packages = [
     "client",
     "proto",
   ]
   pruneopts = "UT"
-  revision = "b679bda0781c6acca75dedd4084e13361ff88738"
+  revision = "0f0bad8368717b7ecb7ac62bdf5da8c875d8541d"
 
 [[projects]]
   branch = "master"
