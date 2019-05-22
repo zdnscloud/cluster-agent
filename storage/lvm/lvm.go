@@ -50,11 +50,10 @@ func (s *LVM) GetInfo(mountpoints map[string]int64) types.Storage {
 	var res []types.PV
 	for _, p := range pvs {
 		var uSize, fSize string
-		tSize, _ := strconv.ParseFloat(p.Size, 64)
 		for k, v := range mountpoints {
 			if strings.Contains(k, p.Name) {
 				uSize = utils.ByteToGbiTos(v)
-				fSize = strconv.FormatFloat(tSize-float64(v)/(1024*1024*1024), 'f', -1, 64)
+				fSize = utils.GetFree(p.Size, v)
 			}
 		}
 		pvc := s.PVData.PvAndPVC[p.Name].Name

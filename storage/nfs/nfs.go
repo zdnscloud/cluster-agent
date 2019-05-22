@@ -1,13 +1,11 @@
 package nfs
 
 import (
-	"context"
-	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/storage/pvmonitor"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
 	"github.com/zdnscloud/gok8s/cache"
-	corev1 "k8s.io/api/core/v1"
+	"strings"
 	"sync"
 )
 
@@ -35,7 +33,6 @@ func New(c cache.Cache) (*NFS, error) {
 		PVData: pm,
 		Cache:  c,
 	}
-	nfs.setNFSSize()
 	return nfs, nil
 }
 
@@ -49,39 +46,30 @@ func (s *NFS) GetInfo(mountpoints map[string]int64) types.Storage {
 	pvs := s.PVData.PVs
 	var res []types.PV
 	for _, p := range pvs {
+		var uSize, fSize string
+		for k, v := range mountpoints {
+			if strings.Contains(k, p.Name) {
+				uSize = utils.ByteToGbiTos(v)
+				fSize = utils.GetFree(p.Size, v)
+			}
+		}
 		pvc := s.PVData.PvAndPVC[p.Name].Name
 		pods := s.PVData.PVCAndPod[pvc]
 		pv := types.PV{
-			Name: p.Name,
-			Size: p.Size,
-			Pods: pods,
+			Name:     p.Name,
+			Size:     p.Size,
+			UsedSize: uSize,
+			FreeSize: fSize,
+			Pods:     pods,
 		}
 		res = append(res, pv)
 	}
-
+	tSize, uSize, fSize, _ := utils.GetNFSSize()
 	return types.Storage{
 		Name:     NFSStorageClassName,
-		Size:     s.Size,
-		FreeSize: s.FreeSize,
-		UsedSize: s.UsedSize,
+		Size:     tSize,
+		FreeSize: uSize,
+		UsedSize: fSize,
 		PVs:      res,
 	}
-}
-
-func (s *NFS) setNFSSize() {
-	var pvsize string
-	pvcs := corev1.PersistentVolumeClaimList{}
-	err := s.Cache.List(context.TODO(), nil, &pvcs)
-	if err != nil {
-		log.Errorf("List pvc failed:%s", err.Error())
-	}
-	for _, pvc := range pvcs.Items {
-		if pvc.Namespace == ZKEStorageNamespace && pvc.Name == ZKENFSPvcName {
-			quantity := pvc.Spec.Resources.Requests["storage"]
-			pvsize = utils.SizetoGb(quantity)
-		}
-	}
-	s.Size = pvsize
-	s.FreeSize = "0.00"
-	s.UsedSize = pvsize
 }

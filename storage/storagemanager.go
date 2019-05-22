@@ -41,7 +41,7 @@ func (m *StorageManager) RegisterSchemas(version *resttypes.APIVersion, schemas 
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	cls := ctx.Object.GetID()
-	mountpoints := utils.GetAllPvUsedSize()
+	mountpoints, _ := utils.GetAllPvUsedSize()
 	for _, s := range m.storages {
 		if s.GetType() == cls {
 			return s.GetInfo(mountpoints)
@@ -52,7 +52,7 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
 	var infos []types.Storage
-	mountpoints := utils.GetAllPvUsedSize()
+	mountpoints, _ := utils.GetAllPvUsedSize()
 	for _, s := range m.storages {
 		infos = append(infos, s.GetInfo(mountpoints))
 	}
