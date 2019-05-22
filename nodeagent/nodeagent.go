@@ -30,6 +30,7 @@ func (m *NodeAgentManager) List(ctx *resttypes.Context) interface{} {
 func (m *NodeAgentManager) GetNodeAgents() []*NodeAgent {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+
 	var nodes []*NodeAgent
 	for _, node := range m.nodeAgents {
 		nodes = append(nodes, node)
@@ -40,6 +41,7 @@ func (m *NodeAgentManager) GetNodeAgents() []*NodeAgent {
 func (m *NodeAgentManager) GetNodeAgent(name string) (*NodeAgent, bool) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+
 	agent, ok := m.nodeAgents[name]
 	return agent, ok
 }
