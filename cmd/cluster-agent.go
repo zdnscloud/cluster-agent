@@ -4,14 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/zdnscloud/cement/log"
-	"github.com/zdnscloud/cluster-agent/network"
-	"github.com/zdnscloud/cluster-agent/service"
-	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client/config"
 	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
+
+	"github.com/zdnscloud/cluster-agent/network"
+	"github.com/zdnscloud/cluster-agent/nodeagent"
+	"github.com/zdnscloud/cluster-agent/service"
+	"github.com/zdnscloud/cluster-agent/storage"
 )
 
 var (
@@ -39,7 +41,7 @@ func main() {
 
 	cache, err := createCache()
 	if err != nil {
-		panic("Create cache Error")
+		log.Fatalf("Create cache failed:%s", err.Error())
 	}
 	stop := make(chan struct{})
 	go cache.Start(stop)
@@ -57,11 +59,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
+	nodeAgentMgr := nodeagent.New()
 
 	schemas := resttypes.NewSchemas()
 	storageMgr.RegisterSchemas(&Version, schemas)
 	networkMgr.RegisterSchemas(&Version, schemas)
 	serviceMgr.RegisterSchemas(&Version, schemas)
+	nodeAgentMgr.RegisterSchemas(&Version, schemas)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
