@@ -47,7 +47,9 @@ func main() {
 	go cache.Start(stop)
 	cache.WaitForCacheSync(stop)
 
-	storageMgr, err := storage.New(cache)
+	nodeAgentMgr := nodeagent.New()
+
+	storageMgr, err := storage.New(cache, nodeAgentMgr)
 	if err != nil {
 		log.Fatalf("Create storage manager failed:%s", err.Error())
 	}
@@ -59,7 +61,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
-	nodeAgentMgr := nodeagent.New()
 
 	schemas := resttypes.NewSchemas()
 	storageMgr.RegisterSchemas(&Version, schemas)

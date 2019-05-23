@@ -7,7 +7,6 @@ import (
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/lvmd"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -43,19 +42,13 @@ func (s *LVM) GetType() string {
 	return LVMStorageClassName
 }
 
-func (s *LVM) GetInfo(mountpoints map[string]int64) types.Storage {
+func (s *LVM) GetInfo(mountpoints map[string][]int64) types.Storage {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	pvs := s.PVData.PVs
 	var res []types.PV
 	for _, p := range pvs {
-		var uSize, fSize string
-		for k, v := range mountpoints {
-			if strings.Contains(k, p.Name) {
-				uSize = utils.ByteToGbiTos(v)
-				fSize = utils.GetFree(p.Size, v)
-			}
-		}
+		uSize, fSize := utils.GetPVSize(p, mountpoints)
 		pvc := s.PVData.PvAndPVC[p.Name].Name
 		pods := s.PVData.PVCAndPod[pvc]
 		pv := types.PV{
@@ -73,8 +66,8 @@ func (s *LVM) GetInfo(mountpoints map[string]int64) types.Storage {
 	return types.Storage{
 		Name:     LVMStorageClassName,
 		Size:     s.Size,
-		FreeSize: s.FreeSize,
 		UsedSize: s.UsedSize,
+		FreeSize: s.FreeSize,
 		Nodes:    s.Nodes,
 		PVs:      res,
 	}
@@ -88,8 +81,8 @@ func (s *LVM) SetNodes() {
 		node := types.Node{
 			Name:     v.Name,
 			Size:     utils.ByteToGb(v.Size),
-			FreeSize: utils.ByteToGb(v.FreeSize),
 			UsedSize: utils.ByteToGb((v.Size - v.FreeSize)),
+			FreeSize: utils.ByteToGb(v.FreeSize),
 		}
 		nodes = append(nodes, node)
 	}

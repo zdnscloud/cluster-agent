@@ -64,10 +64,10 @@ func (m *GetDirectorySizeRequest) GetPath() string {
 }
 
 type GetDirectorySizeReply struct {
-	Size                 int64    `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Infos                map[string]int64 `protobuf:"bytes,1,rep,name=infos,proto3" json:"infos,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
 }
 
 func (m *GetDirectorySizeReply) Reset()         { *m = GetDirectorySizeReply{} }
@@ -95,129 +95,181 @@ func (m *GetDirectorySizeReply) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetDirectorySizeReply proto.InternalMessageInfo
 
-func (m *GetDirectorySizeReply) GetSize() int64 {
-	if m != nil {
-		return m.Size
-	}
-	return 0
-}
-
-type GetBlockUsedSizeRequest struct {
-	Paths                []string `protobuf:"bytes,1,rep,name=paths,proto3" json:"paths,omitempty"`
-	Type                 string   `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *GetBlockUsedSizeRequest) Reset()         { *m = GetBlockUsedSizeRequest{} }
-func (m *GetBlockUsedSizeRequest) String() string { return proto.CompactTextString(m) }
-func (*GetBlockUsedSizeRequest) ProtoMessage()    {}
-func (*GetBlockUsedSizeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_b5331ae4b8115762, []int{2}
-}
-
-func (m *GetBlockUsedSizeRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetBlockUsedSizeRequest.Unmarshal(m, b)
-}
-func (m *GetBlockUsedSizeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetBlockUsedSizeRequest.Marshal(b, m, deterministic)
-}
-func (m *GetBlockUsedSizeRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetBlockUsedSizeRequest.Merge(m, src)
-}
-func (m *GetBlockUsedSizeRequest) XXX_Size() int {
-	return xxx_messageInfo_GetBlockUsedSizeRequest.Size(m)
-}
-func (m *GetBlockUsedSizeRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetBlockUsedSizeRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_GetBlockUsedSizeRequest proto.InternalMessageInfo
-
-func (m *GetBlockUsedSizeRequest) GetPaths() []string {
-	if m != nil {
-		return m.Paths
-	}
-	return nil
-}
-
-func (m *GetBlockUsedSizeRequest) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
-type GetBlockUsedSizeReply struct {
-	Infos                map[string]int64 `protobuf:"bytes,1,rep,name=infos,proto3" json:"infos,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
-	XXX_unrecognized     []byte           `json:"-"`
-	XXX_sizecache        int32            `json:"-"`
-}
-
-func (m *GetBlockUsedSizeReply) Reset()         { *m = GetBlockUsedSizeReply{} }
-func (m *GetBlockUsedSizeReply) String() string { return proto.CompactTextString(m) }
-func (*GetBlockUsedSizeReply) ProtoMessage()    {}
-func (*GetBlockUsedSizeReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_b5331ae4b8115762, []int{3}
-}
-
-func (m *GetBlockUsedSizeReply) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetBlockUsedSizeReply.Unmarshal(m, b)
-}
-func (m *GetBlockUsedSizeReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetBlockUsedSizeReply.Marshal(b, m, deterministic)
-}
-func (m *GetBlockUsedSizeReply) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetBlockUsedSizeReply.Merge(m, src)
-}
-func (m *GetBlockUsedSizeReply) XXX_Size() int {
-	return xxx_messageInfo_GetBlockUsedSizeReply.Size(m)
-}
-func (m *GetBlockUsedSizeReply) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetBlockUsedSizeReply.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_GetBlockUsedSizeReply proto.InternalMessageInfo
-
-func (m *GetBlockUsedSizeReply) GetInfos() map[string]int64 {
+func (m *GetDirectorySizeReply) GetInfos() map[string]int64 {
 	if m != nil {
 		return m.Infos
 	}
 	return nil
 }
 
+type GetMountpointsSizeRequest struct {
+	Paths                []string `protobuf:"bytes,1,rep,name=paths,proto3" json:"paths,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetMountpointsSizeRequest) Reset()         { *m = GetMountpointsSizeRequest{} }
+func (m *GetMountpointsSizeRequest) String() string { return proto.CompactTextString(m) }
+func (*GetMountpointsSizeRequest) ProtoMessage()    {}
+func (*GetMountpointsSizeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b5331ae4b8115762, []int{2}
+}
+
+func (m *GetMountpointsSizeRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetMountpointsSizeRequest.Unmarshal(m, b)
+}
+func (m *GetMountpointsSizeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetMountpointsSizeRequest.Marshal(b, m, deterministic)
+}
+func (m *GetMountpointsSizeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetMountpointsSizeRequest.Merge(m, src)
+}
+func (m *GetMountpointsSizeRequest) XXX_Size() int {
+	return xxx_messageInfo_GetMountpointsSizeRequest.Size(m)
+}
+func (m *GetMountpointsSizeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetMountpointsSizeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetMountpointsSizeRequest proto.InternalMessageInfo
+
+func (m *GetMountpointsSizeRequest) GetPaths() []string {
+	if m != nil {
+		return m.Paths
+	}
+	return nil
+}
+
+type GetMountpointsSizeReply struct {
+	Infos                map[string]*Sizes `protobuf:"bytes,1,rep,name=infos,proto3" json:"infos,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *GetMountpointsSizeReply) Reset()         { *m = GetMountpointsSizeReply{} }
+func (m *GetMountpointsSizeReply) String() string { return proto.CompactTextString(m) }
+func (*GetMountpointsSizeReply) ProtoMessage()    {}
+func (*GetMountpointsSizeReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b5331ae4b8115762, []int{3}
+}
+
+func (m *GetMountpointsSizeReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetMountpointsSizeReply.Unmarshal(m, b)
+}
+func (m *GetMountpointsSizeReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetMountpointsSizeReply.Marshal(b, m, deterministic)
+}
+func (m *GetMountpointsSizeReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetMountpointsSizeReply.Merge(m, src)
+}
+func (m *GetMountpointsSizeReply) XXX_Size() int {
+	return xxx_messageInfo_GetMountpointsSizeReply.Size(m)
+}
+func (m *GetMountpointsSizeReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetMountpointsSizeReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetMountpointsSizeReply proto.InternalMessageInfo
+
+func (m *GetMountpointsSizeReply) GetInfos() map[string]*Sizes {
+	if m != nil {
+		return m.Infos
+	}
+	return nil
+}
+
+type Sizes struct {
+	Tsize                int64    `protobuf:"varint,1,opt,name=Tsize,proto3" json:"Tsize,omitempty"`
+	Usize                int64    `protobuf:"varint,2,opt,name=Usize,proto3" json:"Usize,omitempty"`
+	Fsize                int64    `protobuf:"varint,3,opt,name=Fsize,proto3" json:"Fsize,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Sizes) Reset()         { *m = Sizes{} }
+func (m *Sizes) String() string { return proto.CompactTextString(m) }
+func (*Sizes) ProtoMessage()    {}
+func (*Sizes) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b5331ae4b8115762, []int{4}
+}
+
+func (m *Sizes) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Sizes.Unmarshal(m, b)
+}
+func (m *Sizes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Sizes.Marshal(b, m, deterministic)
+}
+func (m *Sizes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Sizes.Merge(m, src)
+}
+func (m *Sizes) XXX_Size() int {
+	return xxx_messageInfo_Sizes.Size(m)
+}
+func (m *Sizes) XXX_DiscardUnknown() {
+	xxx_messageInfo_Sizes.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Sizes proto.InternalMessageInfo
+
+func (m *Sizes) GetTsize() int64 {
+	if m != nil {
+		return m.Tsize
+	}
+	return 0
+}
+
+func (m *Sizes) GetUsize() int64 {
+	if m != nil {
+		return m.Usize
+	}
+	return 0
+}
+
+func (m *Sizes) GetFsize() int64 {
+	if m != nil {
+		return m.Fsize
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*GetDirectorySizeRequest)(nil), "nodeagent.GetDirectorySizeRequest")
 	proto.RegisterType((*GetDirectorySizeReply)(nil), "nodeagent.GetDirectorySizeReply")
-	proto.RegisterType((*GetBlockUsedSizeRequest)(nil), "nodeagent.GetBlockUsedSizeRequest")
-	proto.RegisterType((*GetBlockUsedSizeReply)(nil), "nodeagent.GetBlockUsedSizeReply")
-	proto.RegisterMapType((map[string]int64)(nil), "nodeagent.GetBlockUsedSizeReply.InfosEntry")
+	proto.RegisterMapType((map[string]int64)(nil), "nodeagent.GetDirectorySizeReply.InfosEntry")
+	proto.RegisterType((*GetMountpointsSizeRequest)(nil), "nodeagent.GetMountpointsSizeRequest")
+	proto.RegisterType((*GetMountpointsSizeReply)(nil), "nodeagent.GetMountpointsSizeReply")
+	proto.RegisterMapType((map[string]*Sizes)(nil), "nodeagent.GetMountpointsSizeReply.InfosEntry")
+	proto.RegisterType((*Sizes)(nil), "nodeagent.sizes")
 }
 
 func init() { proto.RegisterFile("nodeagent.proto", fileDescriptor_b5331ae4b8115762) }
 
 var fileDescriptor_b5331ae4b8115762 = []byte{
-	// 283 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xcf, 0xcb, 0x4f, 0x49,
-	0x4d, 0x4c, 0x4f, 0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x84, 0x0b, 0x28,
-	0xe9, 0x72, 0x89, 0xbb, 0xa7, 0x96, 0xb8, 0x64, 0x16, 0xa5, 0x26, 0x97, 0xe4, 0x17, 0x55, 0x06,
-	0x67, 0x56, 0xa5, 0x06, 0xa5, 0x16, 0x96, 0xa6, 0x16, 0x97, 0x08, 0x09, 0x71, 0xb1, 0x14, 0x24,
-	0x96, 0x64, 0x48, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0x81, 0xd9, 0x4a, 0xda, 0x5c, 0xa2, 0x98,
-	0xca, 0x0b, 0x72, 0x2a, 0x41, 0x8a, 0x8b, 0x33, 0xab, 0x52, 0xc1, 0x8a, 0x99, 0x83, 0xc0, 0x6c,
-	0x25, 0x67, 0xb0, 0xd9, 0x4e, 0x39, 0xf9, 0xc9, 0xd9, 0xa1, 0xc5, 0xa9, 0x29, 0xc8, 0x66, 0x8b,
-	0x70, 0xb1, 0x82, 0xcc, 0x2b, 0x96, 0x60, 0x54, 0x60, 0xd6, 0xe0, 0x0c, 0x82, 0x70, 0x40, 0x86,
-	0x94, 0x54, 0x16, 0xa4, 0x4a, 0x30, 0x41, 0x6c, 0x04, 0xb1, 0x95, 0xa6, 0x30, 0x82, 0xad, 0x44,
-	0x33, 0x05, 0x64, 0xa5, 0x23, 0x17, 0x6b, 0x66, 0x5e, 0x5a, 0x3e, 0xc4, 0x0c, 0x6e, 0x23, 0x6d,
-	0x3d, 0x84, 0x37, 0xb1, 0x6a, 0xd0, 0xf3, 0x04, 0xa9, 0x76, 0xcd, 0x2b, 0x29, 0xaa, 0x0c, 0x82,
-	0xe8, 0x94, 0xb2, 0xe0, 0xe2, 0x42, 0x08, 0x0a, 0x09, 0x70, 0x31, 0x67, 0xa7, 0x56, 0x42, 0xfd,
-	0x0b, 0x62, 0x82, 0x9c, 0x59, 0x96, 0x98, 0x53, 0x0a, 0x71, 0x11, 0x73, 0x10, 0x84, 0x63, 0xc5,
-	0x64, 0xc1, 0x68, 0x74, 0x9c, 0x91, 0x8b, 0xd3, 0x2f, 0x3f, 0x25, 0xd5, 0x11, 0x64, 0x9f, 0x50,
-	0x14, 0x97, 0x00, 0x7a, 0xb0, 0x08, 0x29, 0xa1, 0xba, 0x07, 0x5b, 0x10, 0x4b, 0x29, 0xe0, 0x55,
-	0x53, 0x90, 0x53, 0xa9, 0xc4, 0x20, 0x14, 0xc7, 0x25, 0x82, 0xee, 0x1d, 0x6c, 0xe6, 0x63, 0x0b,
-	0x66, 0x74, 0xf3, 0x31, 0xc3, 0x44, 0x89, 0x21, 0x89, 0x0d, 0x9c, 0x26, 0x8c, 0x01, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0x22, 0x06, 0x8a, 0xef, 0x26, 0x02, 0x00, 0x00,
+	// 331 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0xcf, 0x4a, 0xf3, 0x40,
+	0x14, 0xc5, 0x3b, 0xcd, 0x97, 0x0f, 0x72, 0xbb, 0xb0, 0x0c, 0x15, 0x6b, 0x57, 0x61, 0x10, 0x29,
+	0x48, 0x0b, 0xc6, 0x4d, 0x71, 0x57, 0xfc, 0x53, 0x2a, 0xe8, 0x62, 0xb4, 0x1b, 0x57, 0x46, 0x7b,
+	0xd5, 0x60, 0x99, 0x89, 0xc9, 0x44, 0x48, 0x9f, 0xc3, 0xa7, 0xf0, 0x4d, 0x7c, 0x2b, 0x99, 0x99,
+	0x6a, 0x53, 0x13, 0xcc, 0xee, 0xde, 0xc3, 0xdc, 0x39, 0xf3, 0x3b, 0x77, 0x60, 0x4b, 0xc8, 0x39,
+	0x86, 0x4f, 0x28, 0xd4, 0x30, 0x4e, 0xa4, 0x92, 0xd4, 0xfb, 0x11, 0xd8, 0x00, 0x76, 0x26, 0xa8,
+	0x4e, 0xa3, 0x04, 0x1f, 0x94, 0x4c, 0xf2, 0xeb, 0x68, 0x89, 0x1c, 0x5f, 0x33, 0x4c, 0x15, 0xa5,
+	0xf0, 0x2f, 0x0e, 0xd5, 0x73, 0x97, 0xf8, 0xa4, 0xef, 0x71, 0x53, 0xb3, 0x77, 0x02, 0xdb, 0xe5,
+	0xf3, 0xf1, 0x22, 0xa7, 0x63, 0x70, 0x23, 0xf1, 0x28, 0xd3, 0x2e, 0xf1, 0x9d, 0x7e, 0x2b, 0x38,
+	0x18, 0xae, 0x4d, 0x2b, 0x07, 0x86, 0x53, 0x7d, 0xfa, 0x4c, 0xa8, 0x24, 0xe7, 0x76, 0xb2, 0x37,
+	0x02, 0x58, 0x8b, 0xb4, 0x0d, 0xce, 0x0b, 0xe6, 0x2b, 0x77, 0x5d, 0xd2, 0x0e, 0xb8, 0x6f, 0xe1,
+	0x22, 0xc3, 0x6e, 0xd3, 0x27, 0x7d, 0x87, 0xdb, 0xe6, 0xb8, 0x39, 0x22, 0xec, 0x10, 0x76, 0x27,
+	0xa8, 0x2e, 0x65, 0x26, 0x54, 0x2c, 0x23, 0xa1, 0xd2, 0x22, 0x47, 0x07, 0x5c, 0xfd, 0x76, 0xfb,
+	0x32, 0x8f, 0xdb, 0x86, 0x7d, 0x10, 0x43, 0x5e, 0x9a, 0xd1, 0x2c, 0x27, 0x9b, 0x2c, 0x83, 0x4d,
+	0x96, 0xaa, 0x91, 0x0a, 0x9a, 0x8b, 0x1a, 0x9a, 0xfd, 0x22, 0x4d, 0x2b, 0x68, 0x17, 0x4c, 0xd2,
+	0x68, 0x89, 0x69, 0x91, 0x6f, 0x0a, 0xae, 0xd1, 0x34, 0xcb, 0x8d, 0xae, 0xcc, 0x45, 0x0e, 0xb7,
+	0x8d, 0x56, 0x67, 0x46, 0x5d, 0x05, 0x33, 0xfb, 0x56, 0xcf, 0x8d, 0xea, 0x58, 0xd5, 0x34, 0xc1,
+	0x27, 0x01, 0xef, 0x4a, 0xce, 0x71, 0xac, 0x9d, 0xe8, 0x2d, 0xb4, 0x7f, 0x6f, 0x87, 0xb2, 0x3f,
+	0x57, 0x67, 0x32, 0xed, 0xf9, 0x75, 0xeb, 0x65, 0x0d, 0x7a, 0x07, 0xb4, 0x9c, 0x16, 0xdd, 0xab,
+	0x09, 0xd3, 0xde, 0xcf, 0xea, 0x23, 0x67, 0x8d, 0xfb, 0xff, 0xe6, 0x3b, 0x1f, 0x7d, 0x05, 0x00,
+	0x00, 0xff, 0xff, 0x7d, 0x16, 0xe8, 0x90, 0xe1, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -233,7 +285,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type NodeAgentClient interface {
 	GetDirectorySize(ctx context.Context, in *GetDirectorySizeRequest, opts ...grpc.CallOption) (*GetDirectorySizeReply, error)
-	GetBlockUsedSizeSize(ctx context.Context, in *GetBlockUsedSizeRequest, opts ...grpc.CallOption) (*GetBlockUsedSizeReply, error)
+	GetMountpointsSize(ctx context.Context, in *GetMountpointsSizeRequest, opts ...grpc.CallOption) (*GetMountpointsSizeReply, error)
 }
 
 type nodeAgentClient struct {
@@ -253,9 +305,9 @@ func (c *nodeAgentClient) GetDirectorySize(ctx context.Context, in *GetDirectory
 	return out, nil
 }
 
-func (c *nodeAgentClient) GetBlockUsedSizeSize(ctx context.Context, in *GetBlockUsedSizeRequest, opts ...grpc.CallOption) (*GetBlockUsedSizeReply, error) {
-	out := new(GetBlockUsedSizeReply)
-	err := c.cc.Invoke(ctx, "/nodeagent.NodeAgent/GetBlockUsedSizeSize", in, out, opts...)
+func (c *nodeAgentClient) GetMountpointsSize(ctx context.Context, in *GetMountpointsSizeRequest, opts ...grpc.CallOption) (*GetMountpointsSizeReply, error) {
+	out := new(GetMountpointsSizeReply)
+	err := c.cc.Invoke(ctx, "/nodeagent.NodeAgent/GetMountpointsSize", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +317,7 @@ func (c *nodeAgentClient) GetBlockUsedSizeSize(ctx context.Context, in *GetBlock
 // NodeAgentServer is the server API for NodeAgent service.
 type NodeAgentServer interface {
 	GetDirectorySize(context.Context, *GetDirectorySizeRequest) (*GetDirectorySizeReply, error)
-	GetBlockUsedSizeSize(context.Context, *GetBlockUsedSizeRequest) (*GetBlockUsedSizeReply, error)
+	GetMountpointsSize(context.Context, *GetMountpointsSizeRequest) (*GetMountpointsSizeReply, error)
 }
 
 // UnimplementedNodeAgentServer can be embedded to have forward compatible implementations.
@@ -275,8 +327,8 @@ type UnimplementedNodeAgentServer struct {
 func (*UnimplementedNodeAgentServer) GetDirectorySize(ctx context.Context, req *GetDirectorySizeRequest) (*GetDirectorySizeReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDirectorySize not implemented")
 }
-func (*UnimplementedNodeAgentServer) GetBlockUsedSizeSize(ctx context.Context, req *GetBlockUsedSizeRequest) (*GetBlockUsedSizeReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBlockUsedSizeSize not implemented")
+func (*UnimplementedNodeAgentServer) GetMountpointsSize(ctx context.Context, req *GetMountpointsSizeRequest) (*GetMountpointsSizeReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMountpointsSize not implemented")
 }
 
 func RegisterNodeAgentServer(s *grpc.Server, srv NodeAgentServer) {
@@ -301,20 +353,20 @@ func _NodeAgent_GetDirectorySize_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NodeAgent_GetBlockUsedSizeSize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetBlockUsedSizeRequest)
+func _NodeAgent_GetMountpointsSize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMountpointsSizeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NodeAgentServer).GetBlockUsedSizeSize(ctx, in)
+		return srv.(NodeAgentServer).GetMountpointsSize(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/nodeagent.NodeAgent/GetBlockUsedSizeSize",
+		FullMethod: "/nodeagent.NodeAgent/GetMountpointsSize",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeAgentServer).GetBlockUsedSizeSize(ctx, req.(*GetBlockUsedSizeRequest))
+		return srv.(NodeAgentServer).GetMountpointsSize(ctx, req.(*GetMountpointsSizeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -328,8 +380,8 @@ var _NodeAgent_serviceDesc = grpc.ServiceDesc{
 			Handler:    _NodeAgent_GetDirectorySize_Handler,
 		},
 		{
-			MethodName: "GetBlockUsedSizeSize",
-			Handler:    _NodeAgent_GetBlockUsedSizeSize_Handler,
+			MethodName: "GetMountpointsSize",
+			Handler:    _NodeAgent_GetMountpointsSize_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

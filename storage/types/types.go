@@ -34,8 +34,8 @@ type PV struct {
 type Node struct {
 	Name     string `json:"name"`
 	Size     string `json:"size"`
-	FreeSize string `json:"freesize"`
 	UsedSize string `json:"usedsize"`
+	FreeSize string `json:"freesize"`
 }
 
 type Pod struct {

@@ -7,19 +7,24 @@ message GetDirectorySizeRequest {
 }
 
 message GetDirectorySizeReply{
-  int64 size = 1;
+	map<string, int64> infos = 1;
 }
 
 service NodeAgent {
  rpc GetDirectorySize(GetDirectorySizeRequest) returns (GetDirectorySizeReply) {}
- rpc GetBlockUsedSizeSize(GetBlockUsedSizeRequest) returns (GetBlockUsedSizeReply) {}
+ rpc GetMountpointsSize(GetMountpointsSizeRequest) returns (GetMountpointsSizeReply) {}
 }
 
-message GetBlockUsedSizeRequest {
+message GetMountpointsSizeRequest {
         repeated string paths = 1;
-	string type = 2;
 }
 
-message GetBlockUsedSizeReply{
-	map<string, int64> infos = 1;
+message GetMountpointsSizeReply{
+	map<string, sizes> infos = 1;
+}
+
+message sizes{
+	int64 Tsize = 1;
+	int64 Usize = 2;
+	int64 Fsize = 3;
 }
