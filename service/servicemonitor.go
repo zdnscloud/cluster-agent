@@ -20,6 +20,11 @@ import (
 const (
 	AnnkeyForUDPIngress = "zcloud_ingress_udp"
 	RunningState        = "Running"
+
+	OwnerKindReplicaset  = "ReplicaSet"
+	OwnerKindDeployment  = "Deployment"
+	OwnerKindStatefulSet = "StatefulSet"
+	OwnerKindDaemonSet   = "DaemonSet"
 )
 
 type Service struct {
@@ -132,6 +137,36 @@ func (s *ServiceMonitor) OnNewService(k8ssvc *corev1.Service) {
 	}
 }
 
+func (s *ServiceMonitor) OnDeleteDeployment(k8sdeploy *appsv1.Deployment) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.deleteWorkload(&Workload{
+		Name: k8sdeploy.Name,
+		Kind: OwnerKindDeployment,
+	})
+}
+
+func (s *ServiceMonitor) OnDeleteStatefulSet(k8sstatefulset *appsv1.StatefulSet) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.deleteWorkload(&Workload{
+		Name: k8sstatefulset.Name,
+		Kind: OwnerKindStatefulSet,
+	})
+}
+
+func (s *ServiceMonitor) OnDeleteDaemonSet(k8sdaemonset *appsv1.DaemonSet) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.deleteWorkload(&Workload{
+		Name: k8sdaemonset.Name,
+		Kind: OwnerKindDaemonSet,
+	})
+}
+
 func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, error) {
 	svc := &Service{
 		name: k8ssvc.Name,
@@ -154,39 +189,32 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 		return nil, err
 	}
 
-	workerLoads := make(map[string]Workload)
+	workerLoads := make(map[string]*Workload)
 	for _, k8spod := range k8spods.Items {
-		pod := Pod{
-			Name:  k8spod.Name,
-			State: helper.GetPodState(&k8spod),
-		}
-
 		name, kind, succeed := s.getPodOwner(&k8spod)
 		if succeed == false {
 			continue
 		}
-
-		wl := s.getWorkload(kind, name)
-		if wl == nil {
+		wlKey := kind + ":" + name
+		wl, ok := workerLoads[wlKey]
+		if ok == false {
 			wl = &Workload{
 				Name: name,
 				Kind: kind,
 			}
-			s.addWorkload(wl)
+			workerLoads[wlKey] = wl
 		}
-		wl.Pods = append(wl.Pods, pod)
-
-		if _, ok := workerLoads[wl.Name]; ok == false {
-			workerLoads[wl.Name] = Workload{
-				Name: wl.Name,
-				Kind: wl.Kind,
-			}
-		}
+		s.addPodToWorkload(&k8spod, wl)
 	}
 
 	for _, wl := range workerLoads {
-		svc.workloads = append(svc.workloads, wl)
+		svc.workloads = append(svc.workloads, Workload{
+			Kind: wl.Kind,
+			Name: wl.Name,
+		})
+		s.addWorkload(wl)
 	}
+
 	svc.ingress = NewStringSet()
 	return svc, nil
 }
@@ -205,7 +233,7 @@ func (s *ServiceMonitor) getPodOwner(k8spod *corev1.Pod) (string, string, bool) 
 	err := s.cache.Get(context.TODO(), k8stypes.NamespacedName{k8spod.Namespace, owner.Name}, &k8srs)
 	if err != nil {
 		log.Warnf("get replicaset failed:%s", err.Error())
-		return "", "", false
+		return owner.Name, owner.Kind, false
 	}
 
 	if len(k8srs.OwnerReferences) != 1 {
@@ -242,11 +270,7 @@ func (s *ServiceMonitor) OnUpdatePod(oldk8spod, newk8spod *corev1.Pod) {
 		return
 	}
 
-	s.OnNewPod(newk8spod)
-}
-
-func (s *ServiceMonitor) OnNewPod(k8spod *corev1.Pod) {
-	name, kind, succeed := s.getPodOwner(k8spod)
+	name, kind, succeed := s.getPodOwner(newk8spod)
 	if succeed == false {
 		return
 	}
@@ -254,24 +278,61 @@ func (s *ServiceMonitor) OnNewPod(k8spod *corev1.Pod) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	wl := s.getWorkload(kind, name)
-	if wl == nil && s.hasServiceLinktoWorkload(kind, name) {
-		wl = &Workload{
-			Name: name,
-			Kind: kind,
-		}
-		s.addWorkload(wl)
-	}
-
 	if wl != nil {
-		s.addPodToWorkload(k8spod, wl)
+		s.addPodToWorkload(newk8spod, wl)
 	}
 }
 
-func (s *ServiceMonitor) hasServiceLinktoWorkload(kind, name string) bool {
-	for _, svc := range s.services {
-		for _, wl := range svc.workloads {
-			if wl.Kind == kind && wl.Name == name {
-				return true
+func (s *ServiceMonitor) OnUpdateEndpoints(oldk8seps, newk8seps *corev1.Endpoints) {
+	if len(oldk8seps.Subsets) == 0 && len(newk8seps.Subsets) == 0 {
+		return
+	}
+
+	s.lock.Lock()
+	hasPodChange := s.doesServicePodChanged(newk8seps)
+	s.lock.Unlock()
+
+	if hasPodChange {
+		var k8ssvc corev1.Service
+		err := s.cache.Get(context.TODO(), k8stypes.NamespacedName{newk8seps.Namespace, newk8seps.Name}, &k8ssvc)
+		if err != nil {
+			log.Warnf("get service %s failed:%s", newk8seps.Name, err.Error())
+			return
+		}
+		s.OnNewService(&k8ssvc)
+	}
+}
+
+func (s *ServiceMonitor) doesServicePodChanged(k8seps *corev1.Endpoints) bool {
+	svc, ok := s.services[k8seps.Name]
+	if ok == false {
+		log.Warnf("endpoints %s has no related service", k8seps.Name)
+		return false
+	}
+
+	pods := make(map[string]Pod)
+	for _, wl := range s.getLinkedWorkloads(svc) {
+		for _, pod := range wl.Pods {
+			pods[pod.Name] = pod
+		}
+	}
+
+	for _, subset := range k8seps.Subsets {
+		for _, addr := range subset.Addresses {
+			if addr.TargetRef != nil {
+				n := addr.TargetRef.Name
+				if _, ok := pods[n]; ok == false {
+					return true
+				}
+			}
+		}
+
+		for _, addr := range subset.NotReadyAddresses {
+			if addr.TargetRef != nil {
+				n := addr.TargetRef.Name
+				if _, ok := pods[n]; ok == false {
+					return true
+				}
 			}
 		}
 	}
@@ -322,6 +383,7 @@ func (s *ServiceMonitor) addPodToWorkload(k8spod *corev1.Pod, wl *Workload) {
 
 func (s *ServiceMonitor) OnDeletePod(k8spod *corev1.Pod) {
 	name, kind, succeed := s.getPodOwner(k8spod)
+	//only handle workload scale down
 	if succeed == false {
 		return
 	}
@@ -338,9 +400,6 @@ func (s *ServiceMonitor) removePodFromWorkload(podName string, wl *Workload) {
 	for i, pod := range wl.Pods {
 		if pod.Name == podName {
 			wl.Pods = append(wl.Pods[:i], wl.Pods[i+1:]...)
-			if len(wl.Pods) == 0 {
-				s.deleteWorkload(wl)
-			}
 			break
 		}
 	}
