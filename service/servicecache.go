@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	extv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -29,10 +28,6 @@ func NewServiceCache(c cache.Cache) (*ServiceCache, error) {
 	ctrl.Watch(&corev1.Namespace{})
 	ctrl.Watch(&corev1.Service{})
 	ctrl.Watch(&corev1.Pod{})
-	ctrl.Watch(&corev1.Endpoints{})
-	ctrl.Watch(&appsv1.Deployment{})
-	ctrl.Watch(&appsv1.StatefulSet{})
-	ctrl.Watch(&appsv1.DaemonSet{})
 	ctrl.Watch(&corev1.ConfigMap{})
 	ctrl.Watch(&extv1beta1.Ingress{})
 
@@ -103,6 +98,13 @@ func (r *ServiceCache) OnCreate(e event.CreateEvent) (handler.Result, error) {
 		} else {
 			s.OnNewService(obj)
 		}
+	case *corev1.Pod:
+		s, ok := r.services[obj.Namespace]
+		if ok == false {
+			log.Errorf("namespace %s is unknown", obj.Namespace)
+		} else {
+			s.OnNewPod(obj)
+		}
 	case *corev1.ConfigMap:
 		r.onNewTransportLayerIngress(obj)
 	case *extv1beta1.Ingress:
@@ -132,13 +134,6 @@ func (r *ServiceCache) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 			log.Errorf("namespace %s is unknown", newObj.Namespace)
 		} else {
 			s.OnUpdatePod(e.ObjectOld.(*corev1.Pod), newObj)
-		}
-	case *corev1.Endpoints:
-		s, ok := r.services[newObj.Namespace]
-		if ok == false {
-			log.Errorf("namespace %s is unknown", newObj.Namespace)
-		} else {
-			s.OnUpdateEndpoints(e.ObjectOld.(*corev1.Endpoints), newObj)
 		}
 	case *corev1.ConfigMap:
 		r.onUpdateTransportLayerIngress(e.ObjectOld.(*corev1.ConfigMap), newObj)
@@ -179,27 +174,6 @@ func (r *ServiceCache) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 			log.Errorf("namespace %s is unknown", obj.Namespace)
 		} else {
 			s.OnDeletePod(obj)
-		}
-	case *appsv1.Deployment:
-		s, ok := r.services[obj.Namespace]
-		if ok == false {
-			log.Errorf("namespace %s is unknown", obj.Namespace)
-		} else {
-			s.OnDeleteDeployment(obj)
-		}
-	case *appsv1.StatefulSet:
-		s, ok := r.services[obj.Namespace]
-		if ok == false {
-			log.Errorf("namespace %s is unknown", obj.Namespace)
-		} else {
-			s.OnDeleteStatefulSet(obj)
-		}
-	case *appsv1.DaemonSet:
-		s, ok := r.services[obj.Namespace]
-		if ok == false {
-			log.Errorf("namespace %s is unknown", obj.Namespace)
-		} else {
-			s.OnDeleteDaemonSet(obj)
 		}
 	case *extv1beta1.Ingress:
 		s, ok := r.services[obj.Namespace]

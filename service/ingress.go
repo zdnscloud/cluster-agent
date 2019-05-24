@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/zdnscloud/cement/set"
 )
 
 type IngressProtocol string
@@ -98,8 +100,8 @@ func configToIngress(ingressPort int, data string, protocol IngressProtocol) (st
 	}, nil
 }
 
-func ingressLinkedServices(ing *Ingress) StringSet {
-	ss := NewStringSet()
+func ingressLinkedServices(ing *Ingress) set.StringSet {
+	ss := set.NewStringSet()
 	for _, rule := range ing.rules {
 		for _, path := range rule.paths {
 			ss.Add(path.serviceName)

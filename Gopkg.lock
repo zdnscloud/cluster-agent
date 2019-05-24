@@ -187,18 +187,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9ed629b66289fde1dcf45162179c3832440672d11c68b3e87c63b8473a27f9a8"
+  digest = "1:338b85b97b0dc6d4a5f8b050994546bc41853546a95b6bfe753666ad71dc55e2"
   name = "github.com/zdnscloud/cement"
   packages = [
     "log",
     "log/log4go",
     "reflector",
+    "set",
     "slice",
     "unittest",
     "uuid",
   ]
   pruneopts = "UT"
-  revision = "62c37a539f2035178d4b185e53c4778da8ca8c8e"
+  revision = "1442e5c6fdc51e3b5c174f48bf2488285fdbc583"
 
 [[projects]]
   branch = "master"
@@ -246,14 +247,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c3e02059703482dfca6614a88297abd028d4c96ff6c1ed7aa360e96d76945dad"
+  digest = "1:b21570cb8b546f1e8a644d53751cc459df890ccc57378129f6144feec8f99a29"
   name = "github.com/zdnscloud/node-agent"
   packages = [
     "client",
     "proto",
   ]
   pruneopts = "UT"
-  revision = "0f0bad8368717b7ecb7ac62bdf5da8c875d8541d"
+  revision = "a1d3c2da4aaac14bb0b766fc458bbdb5e0bc63f5"
 
 [[projects]]
   branch = "master"
@@ -586,6 +587,7 @@
   input-imports = [
     "github.com/gin-gonic/gin",
     "github.com/zdnscloud/cement/log",
+    "github.com/zdnscloud/cement/set",
     "github.com/zdnscloud/cement/unittest",
     "github.com/zdnscloud/cement/uuid",
     "github.com/zdnscloud/gok8s/cache",
