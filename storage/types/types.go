@@ -16,8 +16,8 @@ type Storage struct {
 	resttypes.Resource `json:",inline"`
 	Name               string `json:"name"`
 	Size               string `json:"size"`
-	FreeSize           string `json:"freesize"`
 	UsedSize           string `json:"usedsize"`
+	FreeSize           string `json:"freesize"`
 	Nodes              []Node `json:"nodes"`
 	PVs                []PV   `json:"pvs"`
 }
