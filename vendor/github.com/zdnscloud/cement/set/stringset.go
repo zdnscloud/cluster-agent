@@ -1,5 +1,9 @@
 package set
 
+import (
+	"sort"
+)
+
 type StringSet map[string]struct{}
 
 func NewStringSet() StringSet {
@@ -12,6 +16,20 @@ func StringSetFromSlice(slice []string) StringSet {
 		ss.Add(s)
 	}
 	return ss
+}
+
+func (ss StringSet) ToSlice() []string {
+	slice := make([]string, 0, len(ss))
+	for k, _ := range ss {
+		slice = append(slice, k)
+	}
+	return slice
+}
+
+func (ss StringSet) ToSortedSlice() []string {
+	slice := ss.ToSlice()
+	sort.StringSlice(slice).Sort()
+	return slice
 }
 
 func (ss StringSet) Equal(other StringSet) bool {

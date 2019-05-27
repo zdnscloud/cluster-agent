@@ -5,11 +5,13 @@ import (
 
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/gok8s/cache"
+	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/client/config"
 	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
 
+	"github.com/zdnscloud/cluster-agent/configsyncer"
 	"github.com/zdnscloud/cluster-agent/network"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/service"
@@ -23,32 +25,40 @@ var (
 	}
 )
 
-func createCache() (cache.Cache, error) {
+func createK8SClient() (cache.Cache, client.Client, error) {
 	config, err := config.GetConfig()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	c, err := cache.New(config, cache.Options{})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return c, nil
+
+	cli, err := client.New(config, client.Options{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	stop := make(chan struct{})
+	go c.Start(stop)
+	c.WaitForCacheSync(stop)
+
+	return c, cli, nil
 }
 
 func main() {
 	log.InitLogger("debug")
 
-	cache, err := createCache()
+	cache, cli, err := createK8SClient()
 	if err != nil {
 		log.Fatalf("Create cache failed:%s", err.Error())
 	}
-	stop := make(chan struct{})
-	go cache.Start(stop)
-	cache.WaitForCacheSync(stop)
+
+	configsyncer.NewConfigSyncer(cli, cache)
 
 	nodeAgentMgr := nodeagent.New()
-
 	storageMgr, err := storage.New(cache, nodeAgentMgr)
 	if err != nil {
 		log.Fatalf("Create storage manager failed:%s", err.Error())
