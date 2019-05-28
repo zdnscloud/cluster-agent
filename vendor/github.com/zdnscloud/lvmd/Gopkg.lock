@@ -51,14 +51,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:a7a68eb7d6f9ab0b0bad2b638f165f289c3b92a09a0d7ba0ea9e6342ba99f615"
-  name = "github.com/google/lvmd"
-  packages = ["proto"]
-  pruneopts = "UT"
-  revision = "5786ea66b376bd92ed88a3c8e301212bbbc08639"
-
-[[projects]]
   digest = "1:65c4414eeb350c47b8de71110150d0ea8a281835b1f386eacaa3ad7325929c21"
   name = "github.com/googleapis/gnostic"
   packages = [
@@ -118,34 +110,34 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3bf17a6e6eaa6ad24152148a631d18662f7212e21637c2699bff3369b7f00fa2"
+  digest = "1:89da0f0574bc94cfd0ac8b59af67bf76cdd110d503df2721006b9f0492394333"
   name = "github.com/petar/GoLLRB"
   packages = ["llrb"]
   pruneopts = "UT"
-  revision = "53be0d36a84c2a886ca057d34b6aa4468df9ccb4"
+  revision = "33fb24c13b99c46c93183c291836c573ac382536"
 
 [[projects]]
-  digest = "1:0e7775ebbcf00d8dd28ac663614af924411c868dca3d5aa762af0fae3808d852"
+  digest = "1:a8c2725121694dfbf6d552fb86fe6b46e3e7135ea05db580c28695b916162aad"
   name = "github.com/peterbourgon/diskv"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5f041e8faa004a95c88a202771f4cc3e991971e6"
-  version = "v2.0.1"
+  revision = "0be1b92a6df0e4f5cb0a5d15fb7f643d0ad93ce6"
+  version = "v3.0.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:dbe190899c3589c03e9797fa553881fa3b51433b87bb5642b16c18289d85ac8f"
+  digest = "1:686ccaf60e90b0b9342cdb48fcc8bc27b917fb018399368003029a628714b9f0"
   name = "github.com/zdnscloud/cement"
   packages = [
     "log",
     "log/log4go",
   ]
   pruneopts = "UT"
-  revision = "dbe599d3f012f8c64527e2b40affb252bf95afe3"
+  revision = "4e659246475c1b00f2644fc6860e49c0c3cdf2b9"
 
 [[projects]]
   branch = "master"
-  digest = "1:500fa289ec58bf391018ad0e4136156924c757c5df28faa2b3f92748213a01ae"
+  digest = "1:0ad7c41106c1ced9602e4342bde9e11cb02c5d2b9765973ce50a470d87b57e2f"
   name = "github.com/zdnscloud/gok8s"
   packages = [
     "cache",
@@ -160,7 +152,15 @@
     "util",
   ]
   pruneopts = "UT"
-  revision = "61cf0b25644b9c6e248f43cf6e4662a7cd8a3e14"
+  revision = "9a73017bafb9d636b9aa36bae5c398747bd370f0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:724ec5024872ab336bc03c47f544e616e196190beb9482a6b74006ac3e6748c6"
+  name = "github.com/zdnscloud/lvmd-server"
+  packages = ["proto"]
+  pruneopts = "UT"
+  revision = "dbf52e75912a4a977be3a6c9ddf7e5dfaef650e8"
 
 [[projects]]
   branch = "master"
@@ -168,11 +168,11 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "c05e17bb3b2dca130fc919668a96b4bec9eb9442"
+  revision = "22d7a77e9e5f409e934ed268692e56707cd169e5"
 
 [[projects]]
   branch = "master"
-  digest = "1:f04f91f699638081f3d9659950764321bc0602076fc5fd8177c18b185ad3fdd8"
+  digest = "1:1b13e8770142a9251361b13a3b8b9b77296be6fa32856c937b346a45f93c845c"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -185,32 +185,32 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "4829fb13d2c62012c17688fa7f629f371014946d"
+  revision = "f3200d17e092c607f615320ecaad13d87ad9a2b3"
 
 [[projects]]
   branch = "master"
-  digest = "1:9927d6aceb89d188e21485f42a7a254e67e6fdcf4260aba375fe18e3c300dfb4"
+  digest = "1:8d1c112fb1679fa097e9a9255a786ee47383fa2549a3da71bcb1334a693ebcfe"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
     "internal",
   ]
   pruneopts = "UT"
-  revision = "9f3314589c9a9136388751d9adae6b0ed400978a"
+  revision = "aaccbc9213b0974828f81aaac109d194880e3014"
 
 [[projects]]
   branch = "master"
-  digest = "1:656ce95b4cdf841c00825f4cb94f6e0e1422d7d6faaf3094e94cd18884a32251"
+  digest = "1:107a534dfc1cd42e4f9fc48f335a9af498c99dd43118f925be74c153d1c9a7e2"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "9f0b1ff7b46a4014ddb5d4bdb6602a43b882cb27"
+  revision = "adf421d2caf4ffcf74142ff5fb9ee323b21a819e"
 
 [[projects]]
-  digest = "1:f4ea3f623a07a2602bb9c1624d6dc7d291261278ba2484508fac559dc7926048"
+  digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
   name = "golang.org/x/text"
   packages = [
     "collate",
@@ -231,8 +231,8 @@
     "unicode/rangetable",
   ]
   pruneopts = "UT"
-  revision = "c942b20a5d85b458c4dce1589326051d85e25d6d"
-  version = "v0.3.1"
+  revision = "342b2e1fbaa52c93f31447ad2c6abc048c63e475"
+  version = "v0.3.2"
 
 [[projects]]
   branch = "master"
@@ -255,19 +255,19 @@
     "urlfetch",
   ]
   pruneopts = "UT"
-  revision = "54a98f90d1c46b7731eb8fb305d2a321c30ef610"
-  version = "v1.5.0"
+  revision = "4c25cacc810c02874000e4f7071286a8e96b2515"
+  version = "v1.6.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:c3076e7defee87de1236f1814beb588f40a75544c60121e6eb38b3b3721783e2"
+  digest = "1:583a0c80f5e3a9343d33aea4aead1e1afcc0043db66fdf961ddd1fe8cd3a4faf"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "e7d98fc518a78c9f8b5ee77be7b0b317475d89e1"
+  revision = "c2c4e71fbf6989c3e46a18d65cb88c288f8a3a55"
 
 [[projects]]
-  digest = "1:707c3a5d10ed430ea767d73df122d9eb3dfb6312bbacc9f2e39204390686d1d0"
+  digest = "1:c69a4c19c4f241e6b75ad65c5e7a1c4eec5705ae504624df4eb6fb659c2df46c"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -304,8 +304,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "25c4f928eaa6d96443009bd842389fb4fa48664e"
-  version = "v1.20.1"
+  revision = "869adfc8d5a43efc0d05780ad109106f457f51e4"
+  version = "v1.21.0"
 
 [[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
@@ -445,12 +445,12 @@
   version = "v10.0.0"
 
 [[projects]]
-  digest = "1:c696379ad201c1e86591785579e16bf6cf886c362e9a7534e8eb0d1028b20582"
+  digest = "1:fd24a140b16df03386fb0d9da8a5879e3b0178f35fff6545d3101f70ff9a4f1a"
   name = "k8s.io/klog"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e531227889390a39d9533dde61f590fe9f4b0035"
-  version = "v0.3.0"
+  revision = "89e63fd5117f8c20208186ef85f096703a280c20"
+  version = "v0.3.1"
 
 [[projects]]
   branch = "release-1.13"
@@ -480,7 +480,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/google/lvmd/proto",
     "github.com/zdnscloud/cement/log",
     "github.com/zdnscloud/gok8s/cache",
     "github.com/zdnscloud/gok8s/client",
@@ -488,6 +487,7 @@
     "github.com/zdnscloud/gok8s/event",
     "github.com/zdnscloud/gok8s/handler",
     "github.com/zdnscloud/gok8s/predicate",
+    "github.com/zdnscloud/lvmd-server/proto",
     "google.golang.org/grpc",
     "google.golang.org/grpc/connectivity",
     "k8s.io/api/core/v1",

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	lvmd "github.com/google/lvmd/proto"
 	"github.com/zdnscloud/cement/log"
+	lvmd "github.com/zdnscloud/lvmd-server/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 )
@@ -100,18 +100,6 @@ func (c *lvmConnection) CreateLV(ctx context.Context, opt *LVMOptions) (string, 
 		return "", err
 	}
 	return rsp.GetCommandOutput(), nil
-}
-
-func (c *lvmConnection) ListLV(ctx context.Context, volGroup string) ([]*lvmd.LogicalVolume, error) {
-	client := lvmd.NewLVMClient(c.conn)
-	req := lvmd.ListLVRequest{
-		VolumeGroup: fmt.Sprintf("%s/%s", volGroup),
-	}
-	rsp, err := client.ListLV(ctx, &req)
-	if err != nil {
-		return nil, err
-	}
-	return rsp.GetVolumes(), nil
 }
 
 func (c *lvmConnection) GetLV(ctx context.Context, volGroup string, volumeId string) (string, uint64, error) {

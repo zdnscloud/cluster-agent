@@ -72,14 +72,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:a7a68eb7d6f9ab0b0bad2b638f165f289c3b92a09a0d7ba0ea9e6342ba99f615"
-  name = "github.com/google/lvmd"
-  packages = ["proto"]
-  pruneopts = "UT"
-  revision = "5786ea66b376bd92ed88a3c8e301212bbbc08639"
-
-[[projects]]
   digest = "1:65c4414eeb350c47b8de71110150d0ea8a281835b1f386eacaa3ad7325929c21"
   name = "github.com/googleapis/gnostic"
   packages = [
@@ -239,11 +231,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6a17a2b21d030df1585b044fb5234747e5c103e28cd16ad6200b7ef31ed039e4"
+  digest = "1:ed8a2cf32615e5a3da7c1f90d215daa3dbf29131c30651bb83292b39c0f7354c"
   name = "github.com/zdnscloud/lvmd"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d4275a7986ea72bb423f3c52e818a9cf7142b99b"
+  revision = "5ce2d283585e5a9444790a40154fe94f3c903baf"
+
+[[projects]]
+  branch = "master"
+  digest = "1:724ec5024872ab336bc03c47f544e616e196190beb9482a6b74006ac3e6748c6"
+  name = "github.com/zdnscloud/lvmd-server"
+  packages = ["proto"]
+  pruneopts = "UT"
+  revision = "dbf52e75912a4a977be3a6c9ddf7e5dfaef650e8"
 
 [[projects]]
   branch = "master"
