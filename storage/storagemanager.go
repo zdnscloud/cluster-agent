@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/storage/lvm"
@@ -61,7 +60,6 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
 	var infos []types.Storage
 	mountpoints, err := utils.GetAllPvUsedSize(m.NodeAgentMgr)
-	fmt.Println(mountpoints)
 	if err != nil {
 		log.Warnf("Get PV Used Size failed:%s", err.Error())
 	}
