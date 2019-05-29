@@ -1,6 +1,7 @@
 package lvm
 
 import (
+	"fmt"
 	"github.com/zdnscloud/cluster-agent/storage/pvmonitor"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
@@ -99,7 +100,7 @@ func (s *LVM) SetSize() {
 		fsize += f
 		usize += u
 	}
-	s.Size = strconv.FormatFloat(tsize, 'f', -1, 64)
-	s.FreeSize = strconv.FormatFloat(fsize, 'f', -1, 64)
-	s.UsedSize = strconv.FormatFloat(usize, 'f', -1, 64)
+	s.Size = fmt.Sprintf("%.2f", tsize)
+	s.FreeSize = fmt.Sprintf("%.2f", fsize)
+	s.UsedSize = fmt.Sprintf("%.2f", usize)
 }
