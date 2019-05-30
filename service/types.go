@@ -52,3 +52,15 @@ func SetOuterServiceSchema(schema *resttypes.Schema, handler resttypes.Handler) 
 }
 
 var OuterServiceType = resttypes.GetResourceType(OuterService{})
+
+type InnerServiceByName []InnerService
+
+func (a InnerServiceByName) Len() int           { return len(a) }
+func (a InnerServiceByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a InnerServiceByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
+
+type OuterServiceByEntryPoint []OuterService
+
+func (a OuterServiceByEntryPoint) Len() int           { return len(a) }
+func (a OuterServiceByEntryPoint) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a OuterServiceByEntryPoint) Less(i, j int) bool { return a[i].EntryPoint < a[j].EntryPoint }
