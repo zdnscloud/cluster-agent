@@ -1,6 +1,8 @@
 package network
 
 import (
+	"sort"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -19,26 +21,29 @@ func newNetworkCache() *NetworkCache {
 }
 
 func (nc *NetworkCache) GetNodeNetworks() []NodeNetwork {
-	var nodeNetworks []NodeNetwork
+	var nodeNetworks NodeNetworks
 	for _, nodeNetwork := range nc.nodeNetworks {
 		nodeNetworks = append(nodeNetworks, *nodeNetwork)
 	}
+	sort.Sort(nodeNetworks)
 	return nodeNetworks
 }
 
 func (nc *NetworkCache) GetPodNetworks() []PodNetwork {
-	var podNetworks []PodNetwork
+	var podNetworks PodNetworks
 	for _, podNetwork := range nc.podNetworks {
 		podNetworks = append(podNetworks, *podNetwork)
 	}
+	sort.Sort(podNetworks)
 	return podNetworks
 }
 
 func (nc *NetworkCache) GetServiceNetworks() []ServiceNetwork {
-	var serviceNetworks []ServiceNetwork
+	var serviceNetworks ServiceNetworks
 	for _, serviceNetwork := range nc.serviceNetworks {
 		serviceNetworks = append(serviceNetworks, *serviceNetwork)
 	}
+	sort.Sort(serviceNetworks)
 	return serviceNetworks
 }
 
