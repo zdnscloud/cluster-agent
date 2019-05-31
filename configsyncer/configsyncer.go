@@ -70,14 +70,37 @@ func (syncer *ConfigSyncer) OnCreate(e event.CreateEvent) (handler.Result, error
 func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 	var pcKey string
 	var foundPc bool
+	var oldPc PodController
+	var newPc PodController
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.ConfigMap:
 		pcKey, foundPc = syncer.configOwner.GetPodControllerUseConfig(newObj.Namespace, ObjectKey(newObj))
 	case *corev1.Secret:
 		pcKey, foundPc = syncer.configOwner.GetPodControllerUseConfig(newObj.Namespace, ObjectKey(newObj))
+	case *appsv1.Deployment:
+		oldPc = &deployment{e.ObjectOld.(*appsv1.Deployment)}
+		newPc = &deployment{newObj}
+	case *appsv1.StatefulSet:
+		oldPc = &statefulset{e.ObjectOld.(*appsv1.StatefulSet)}
+		newPc = &statefulset{newObj}
+	case *appsv1.DaemonSet:
+		oldPc = &daemonset{e.ObjectOld.(*appsv1.DaemonSet)}
+		newPc = &daemonset{newObj}
 	}
 
-	if foundPc {
+	if newPc != nil {
+		oldPcNeedReload := hasRequiredAnnotation(oldPc)
+		newPcNeedReload := hasRequiredAnnotation(newPc)
+		if oldPcNeedReload == true || newPcNeedReload == true {
+			if oldPcNeedReload == false {
+				syncer.configOwner.OnNewPodController(newPc)
+			} else if newPcNeedReload == false {
+				syncer.configOwner.OnDeletePodController(newPc)
+			} else {
+				syncer.configOwner.OnUpdatePodController(oldPc, newPc)
+			}
+		}
+	} else if foundPc {
 		pc, err := syncer.getPodController(e.MetaNew.GetNamespace(), pcKey)
 		if err != nil {
 			log.Errorf("get workerload failed:%s", err.Error())
@@ -97,6 +120,25 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 }
 
 func (syncer *ConfigSyncer) OnDelete(e event.DeleteEvent) (handler.Result, error) {
+	syncer.lock.Lock()
+	defer syncer.lock.Unlock()
+
+	var pc PodController
+	switch obj := e.Object.(type) {
+	case *appsv1.Deployment:
+		pc = &deployment{obj}
+	case *appsv1.StatefulSet:
+		pc = &statefulset{obj}
+	case *appsv1.DaemonSet:
+		pc = &daemonset{obj}
+	}
+
+	if pc != nil {
+		if hasRequiredAnnotation(pc) {
+			syncer.configOwner.OnDeletePodController(pc)
+		}
+	}
+
 	return handler.Result{}, nil
 }
 

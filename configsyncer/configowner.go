@@ -3,6 +3,7 @@ package configsyncer
 import (
 	"sync"
 
+	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cement/set"
 )
 
@@ -21,6 +22,9 @@ func newConfigOwner() *ConfigOwner {
 
 func (owner *ConfigOwner) OnNewPodController(pc PodController) {
 	configs := getReferedConfig(pc)
+	if len(configs) == 0 {
+		return
+	}
 
 	owner.lock.Lock()
 	defer owner.lock.Unlock()
@@ -31,6 +35,39 @@ func (owner *ConfigOwner) OnNewPodController(pc PodController) {
 		owner.ownerAndConfigs[pc.GetNamespace()] = ownerAndConfig
 	}
 	ownerAndConfig[ObjectKey(pc)] = configs
+}
+
+func (owner *ConfigOwner) OnUpdatePodController(oldPc, newPc PodController) {
+	oldConfigs := getReferedConfig(oldPc)
+	newConfigs := getReferedConfig(newPc)
+	if configEq(oldConfigs, newConfigs) {
+		return
+	}
+
+	owner.lock.Lock()
+	defer owner.lock.Unlock()
+	ownerAndConfig, ok := owner.ownerAndConfigs[newPc.GetNamespace()]
+	if ok == false {
+		log.Errorf("update workload %s with unknown namespace %s", ObjectKey(newPc), newPc.GetNamespace())
+	} else {
+		if len(newConfigs) == 0 {
+			delete(ownerAndConfig, ObjectKey(newPc))
+		} else {
+			ownerAndConfig[ObjectKey(newPc)] = newConfigs
+		}
+	}
+}
+
+func (owner *ConfigOwner) OnDeletePodController(pc PodController) {
+	owner.lock.Lock()
+	defer owner.lock.Unlock()
+
+	ownerAndConfig, ok := owner.ownerAndConfigs[pc.GetNamespace()]
+	if ok {
+		delete(ownerAndConfig, ObjectKey(pc))
+	} else {
+		log.Errorf("delete workload %s with unknown namespace %s", ObjectKey(pc), pc.GetNamespace())
+	}
 }
 
 func (owner *ConfigOwner) GetPodControllerUseConfig(namespace, objKey string) (string, bool) {
@@ -86,4 +123,17 @@ func getReferedConfig(obj PodController) []string {
 	}
 
 	return configs.ToSortedSlice()
+}
+
+func configEq(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i, s := range a {
+		if b[i] != s {
+			return false
+		}
+	}
+	return true
 }
