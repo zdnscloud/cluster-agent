@@ -1,4 +1,4 @@
-package lvmd
+package nodemanager
 
 import (
 	"context"
@@ -16,9 +16,12 @@ import (
 	"github.com/zdnscloud/gok8s/event"
 	"github.com/zdnscloud/gok8s/handler"
 	"github.com/zdnscloud/gok8s/predicate"
+	lvmdclient "github.com/zdnscloud/lvmd/client"
+	pb "github.com/zdnscloud/lvmd/proto"
 )
 
 var (
+	ErrVGNotExist           = errors.New("vg doesn't exist")
 	ErrUnknownNode          = errors.New("unknown node")
 	ErrNoEnoughFreeSpace    = errors.New("no node with enough size")
 	syncLVMFreeSizeInterval = 30 * time.Second
@@ -51,7 +54,7 @@ type NodeManager struct {
 	vgSizeGetter VGSizeGetter //for test
 }
 
-func NewNodeManager(c cache.Cache, vgName string) *NodeManager {
+func New(c cache.Cache, vgName string) *NodeManager {
 	ctrl := controller.New("lvmNodeManager", c, scheme.Scheme)
 	ctrl.Watch(&corev1.Node{})
 
@@ -232,12 +235,24 @@ func (m *NodeManager) DeleteNode(name string) {
 }
 
 func getSizeInVG(addr, vgName string) (uint64, uint64, error) {
-	conn, err := NewLVMConnection(addr, ConnectTimeout)
+	conn, err := lvmdclient.New(addr, ConnectTimeout)
 	if err != nil {
 		return 0, 0, err
 	}
 	defer conn.Close()
-	return conn.GetSizeOfVG(context.TODO(), vgName)
+
+	req := pb.ListVGRequest{}
+	rsp, err := conn.ListVG(context.TODO(), &req)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	for _, vg := range rsp.VolumeGroups {
+		if vg.Name == vgName {
+			return vg.Size, vg.FreeSize, nil
+		}
+	}
+	return 0, 0, ErrVGNotExist
 }
 
 func isNodeReady(node *corev1.Node) bool {

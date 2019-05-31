@@ -5,8 +5,8 @@ import (
 	"github.com/zdnscloud/cluster-agent/storage/pvmonitor"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
+	"github.com/zdnscloud/csi-lvm-plugin/pkg/nodemanager"
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/lvmd"
 	"strconv"
 	"sync"
 )
@@ -75,7 +75,7 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) types.Storage {
 }
 
 func (s *LVM) SetNodes() {
-	nm := lvmd.NewNodeManager(s.Cache, CSIDefaultVgName)
+	nm := nodemanager.New(s.Cache, CSIDefaultVgName)
 	ns := nm.GetNodes()
 	var nodes []types.Node
 	for _, v := range ns {
