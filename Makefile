@@ -6,12 +6,12 @@ GOSRC = $(shell find . -type f -name '*.go')
 
 REGISTRY_NAME = zdnscloud
 IMAGE_Name = cluster-agent
-#IMAGE_VERSION = v1.1
+IMAGE_VERSION = v1.3
 
 .PHONY: all container
 
 all: container
 
 container: 
-	#docker build -t $(REGISTRY_NAME)/$(IMAGE_Name):${IMAGE_VERSION} ./ --no-cache
-	docker build -t $(REGISTRY_NAME)/$(IMAGE_Name):$(VERSION) ./ --no-cache
+	docker build -t $(REGISTRY_NAME)/$(IMAGE_Name):${IMAGE_VERSION} ./ --no-cache
+	#docker build -t $(REGISTRY_NAME)/$(IMAGE_Name):$(VERSION) ./ --no-cache
