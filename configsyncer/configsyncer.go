@@ -112,9 +112,9 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 			if hash != newHash {
 				setConfigHash(pc, newHash)
 				if err := syncer.updatePodController(pc); err != nil {
-					log.Errorf("update pc %v failed %v", pc, err.Error())
+					log.Errorf("update pc %s failed %v", ObjectKey(pc), err.Error())
 				} else {
-					log.Infof("detect workload %v configure changed, and will be restart", pc)
+					log.Infof("detect workload %s configure changed, and will be restart", ObjectKey(pc))
 				}
 			}
 		}
