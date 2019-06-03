@@ -89,6 +89,7 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 	}
 
 	if newPc != nil {
+		//handle workload change
 		oldPcNeedReload := hasRequiredAnnotation(oldPc)
 		newPcNeedReload := hasRequiredAnnotation(newPc)
 		if oldPcNeedReload == true || newPcNeedReload == true {
@@ -101,6 +102,7 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 			}
 		}
 	} else if foundPc {
+		//handle configuration change
 		pc, err := syncer.getPodController(e.MetaNew.GetNamespace(), pcKey)
 		if err != nil {
 			log.Errorf("get workerload failed:%s", err.Error())
@@ -111,6 +113,8 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 				setConfigHash(pc, newHash)
 				if err := syncer.updatePodController(pc); err != nil {
 					log.Errorf("update pc %v failed %v", pc, err.Error())
+				} else {
+					log.Infof("detect workload %v configure changed, and will be restart", pc)
 				}
 			}
 		}
