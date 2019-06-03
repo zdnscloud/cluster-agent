@@ -68,8 +68,8 @@ func (s *NFS) GetInfo(mountpoints map[string][]int64) types.Storage {
 	return types.Storage{
 		Name:     NFSStorageClassName,
 		Size:     tSize,
-		FreeSize: uSize,
-		UsedSize: fSize,
+		UsedSize: uSize,
+		FreeSize: fSize,
 		PVs:      res,
 		Nodes:    s.Nodes,
 	}

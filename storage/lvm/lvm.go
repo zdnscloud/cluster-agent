@@ -1,11 +1,12 @@
 package lvm
 
 import (
+	"fmt"
 	"github.com/zdnscloud/cluster-agent/storage/pvmonitor"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
+	"github.com/zdnscloud/csi-lvm-plugin/pkg/nodemanager"
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/lvmd"
 	"strconv"
 	"sync"
 )
@@ -74,7 +75,7 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) types.Storage {
 }
 
 func (s *LVM) SetNodes() {
-	nm := lvmd.NewNodeManager(s.Cache, CSIDefaultVgName)
+	nm := nodemanager.New(s.Cache, CSIDefaultVgName)
 	ns := nm.GetNodes()
 	var nodes []types.Node
 	for _, v := range ns {
@@ -99,7 +100,7 @@ func (s *LVM) SetSize() {
 		fsize += f
 		usize += u
 	}
-	s.Size = strconv.FormatFloat(tsize, 'f', -1, 64)
-	s.FreeSize = strconv.FormatFloat(fsize, 'f', -1, 64)
-	s.UsedSize = strconv.FormatFloat(usize, 'f', -1, 64)
+	s.Size = fmt.Sprintf("%.2f", tsize)
+	s.FreeSize = fmt.Sprintf("%.2f", fsize)
+	s.UsedSize = fmt.Sprintf("%.2f", usize)
 }

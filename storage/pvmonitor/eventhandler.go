@@ -22,8 +22,10 @@ func (s *PVMonitor) OnNewPV(pv *corev1.PersistentVolume) {
 }
 
 func (s *PVMonitor) OnNewPVC(pvc *corev1.PersistentVolumeClaim) {
-	cls := *pvc.Spec.StorageClassName
-	if cls != s.StorageClassName {
+	if pvc.Spec.StorageClassName == nil {
+		return
+	}
+	if *pvc.Spec.StorageClassName != s.StorageClassName {
 		return
 	}
 	pvcns := pvc.Namespace + "/" + pvc.Name
@@ -70,8 +72,10 @@ func (s *PVMonitor) OnDelPV(pv *corev1.PersistentVolume) {
 }
 
 func (s *PVMonitor) OnDelPVC(pvc *corev1.PersistentVolumeClaim) {
-	cls := *pvc.Spec.StorageClassName
-	if cls != s.StorageClassName {
+	if pvc.Spec.StorageClassName == nil {
+		return
+	}
+	if *pvc.Spec.StorageClassName != s.StorageClassName {
 		return
 	}
 	delete(s.PvAndPVC, pvc.Spec.VolumeName)

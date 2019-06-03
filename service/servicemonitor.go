@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -65,6 +66,7 @@ func (s *ServiceMonitor) GetInnerServices() []InnerService {
 			})
 		}
 	}
+	sort.Sort(InnerServiceByName(svcs))
 	return svcs
 }
 
@@ -82,6 +84,7 @@ func (s *ServiceMonitor) GetOuterServices() []OuterService {
 			}
 		}
 	}
+	sort.Sort(OuterServiceByEntryPoint(outerSvcs))
 	return outerSvcs
 }
 

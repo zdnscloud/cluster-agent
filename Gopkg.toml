@@ -58,4 +58,4 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/zdnscloud/lvmd"
+  name = "github.com/zdnscloud/csi-lvm-plugin"

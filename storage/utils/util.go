@@ -12,6 +12,7 @@ import (
 	pb "github.com/zdnscloud/node-agent/proto"
 	corev1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -29,12 +30,12 @@ func SizetoGb(q resource.Quantity) string {
 
 func ByteToGb(num uint64) string {
 	f := float64(num) / (1024 * 1024 * 1024)
-	return fmt.Sprintf("%.2f", f)
+	return fmt.Sprintf("%.2f", math.Trunc(f*1e2)*1e-2)
 }
 
 func KbyteToGb(num int64) string {
 	f := float64(num) / (1024 * 1024)
-	return fmt.Sprintf("%.2f", f)
+	return fmt.Sprintf("%.2f", math.Trunc(f*1e2)*1e-2)
 }
 
 func CountFreeSize(t string, u int64) string {
@@ -44,7 +45,7 @@ func CountFreeSize(t string, u int64) string {
 	if f < 0 {
 		f = 0
 	}
-	return fmt.Sprintf("%.2f", f)
+	return fmt.Sprintf("%.2f", math.Trunc(f*1e2)*1e-2)
 }
 
 func GetNFSPVSize(pv types.PV, mountpoints map[string][]int64) (string, string) {

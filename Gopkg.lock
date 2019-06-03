@@ -72,14 +72,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:a7a68eb7d6f9ab0b0bad2b638f165f289c3b92a09a0d7ba0ea9e6342ba99f615"
-  name = "github.com/google/lvmd"
-  packages = ["proto"]
-  pruneopts = "UT"
-  revision = "5786ea66b376bd92ed88a3c8e301212bbbc08639"
-
-[[projects]]
   digest = "1:65c4414eeb350c47b8de71110150d0ea8a281835b1f386eacaa3ad7325929c21"
   name = "github.com/googleapis/gnostic"
   packages = [
@@ -203,6 +195,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:b09dc308d70271f688cce1c3d59513b29ed78dbd444117defabadb90503ba008"
+  name = "github.com/zdnscloud/csi-lvm-plugin"
+  packages = ["pkg/nodemanager"]
+  pruneopts = "UT"
+  revision = "1499dcefd7cc83bf1095e44334d0d8ad68f041b5"
+
+[[projects]]
+  branch = "master"
   digest = "1:9165aaee9914ee00b5d296a59d61ceda123318ecbbd9af0ce3186dd3b5d7d7b2"
   name = "github.com/zdnscloud/gok8s"
   packages = [
@@ -239,11 +239,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6a17a2b21d030df1585b044fb5234747e5c103e28cd16ad6200b7ef31ed039e4"
+  digest = "1:b6cacbce8f32c9e64d016c55c7104ad78b16cf02457c69f018e799307f21f8a9"
   name = "github.com/zdnscloud/lvmd"
-  packages = ["."]
+  packages = [
+    "client",
+    "proto",
+  ]
   pruneopts = "UT"
-  revision = "d4275a7986ea72bb423f3c52e818a9cf7142b99b"
+  revision = "962bf6ddad1add8b2fe5dc4220b36cebbd94808d"
 
 [[projects]]
   branch = "master"
@@ -359,7 +362,7 @@
   revision = "e7d98fc518a78c9f8b5ee77be7b0b317475d89e1"
 
 [[projects]]
-  digest = "1:707c3a5d10ed430ea767d73df122d9eb3dfb6312bbacc9f2e39204390686d1d0"
+  digest = "1:c69a4c19c4f241e6b75ad65c5e7a1c4eec5705ae504624df4eb6fb659c2df46c"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -396,8 +399,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "25c4f928eaa6d96443009bd842389fb4fa48664e"
-  version = "v1.20.1"
+  revision = "869adfc8d5a43efc0d05780ad109106f457f51e4"
+  version = "v1.21.0"
 
 [[projects]]
   digest = "1:cbc72c4c4886a918d6ab4b95e347ffe259846260f99ebdd8a198c2331cf2b2e9"
@@ -590,6 +593,7 @@
     "github.com/zdnscloud/cement/set",
     "github.com/zdnscloud/cement/unittest",
     "github.com/zdnscloud/cement/uuid",
+    "github.com/zdnscloud/csi-lvm-plugin/pkg/nodemanager",
     "github.com/zdnscloud/gok8s/cache",
     "github.com/zdnscloud/gok8s/client",
     "github.com/zdnscloud/gok8s/client/config",
@@ -601,7 +605,6 @@
     "github.com/zdnscloud/gorest/adaptor",
     "github.com/zdnscloud/gorest/api",
     "github.com/zdnscloud/gorest/types",
-    "github.com/zdnscloud/lvmd",
     "github.com/zdnscloud/node-agent/client",
     "github.com/zdnscloud/node-agent/proto",
     "k8s.io/api/apps/v1",
