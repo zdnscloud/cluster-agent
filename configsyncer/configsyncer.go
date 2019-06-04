@@ -68,15 +68,14 @@ func (syncer *ConfigSyncer) OnCreate(e event.CreateEvent) (handler.Result, error
 }
 
 func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
-	var pcKey string
-	var foundPc bool
+	var pcKeys []string
 	var oldPc PodController
 	var newPc PodController
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.ConfigMap:
-		pcKey, foundPc = syncer.configOwner.GetPodControllerUseConfig(newObj.Namespace, ObjectKey(newObj))
+		pcKeys = syncer.configOwner.GetPodControllersUseConfig(newObj.Namespace, ObjectKey(newObj))
 	case *corev1.Secret:
-		pcKey, foundPc = syncer.configOwner.GetPodControllerUseConfig(newObj.Namespace, ObjectKey(newObj))
+		pcKeys = syncer.configOwner.GetPodControllersUseConfig(newObj.Namespace, ObjectKey(newObj))
 	case *appsv1.Deployment:
 		oldPc = &deployment{e.ObjectOld.(*appsv1.Deployment)}
 		newPc = &deployment{newObj}
@@ -101,20 +100,22 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 				syncer.configOwner.OnUpdatePodController(oldPc, newPc)
 			}
 		}
-	} else if foundPc {
-		//handle configuration change
-		pc, err := syncer.getPodController(e.MetaNew.GetNamespace(), pcKey)
-		if err != nil {
-			log.Errorf("get workerload failed:%s", err.Error())
-		} else {
-			hash := getConfigHash(pc)
-			newHash, _ := syncer.calculatePodControllerConfigHash(pc)
-			if hash != newHash {
-				setConfigHash(pc, newHash)
-				if err := syncer.updatePodController(pc); err != nil {
-					log.Errorf("update pc %s failed %v", ObjectKey(pc), err.Error())
-				} else {
-					log.Infof("detect workload %s configure changed, and will be restart", ObjectKey(pc))
+	} else if len(pcKeys) > 0 {
+		for _, pcKey := range pcKeys {
+			//handle configuration change
+			pc, err := syncer.getPodController(e.MetaNew.GetNamespace(), pcKey)
+			if err != nil {
+				log.Errorf("get workerload failed:%s", err.Error())
+			} else {
+				hash := getConfigHash(pc)
+				newHash, _ := syncer.calculatePodControllerConfigHash(pc)
+				if hash != newHash {
+					setConfigHash(pc, newHash)
+					if err := syncer.updatePodController(pc); err != nil {
+						log.Errorf("update pc %s failed %v", ObjectKey(pc), err.Error())
+					} else {
+						log.Infof("detect workload %s configure changed, and will be restart", ObjectKey(pc))
+					}
 				}
 			}
 		}

@@ -70,23 +70,24 @@ func (owner *ConfigOwner) OnDeletePodController(pc PodController) {
 	}
 }
 
-func (owner *ConfigOwner) GetPodControllerUseConfig(namespace, objKey string) (string, bool) {
+func (owner *ConfigOwner) GetPodControllersUseConfig(namespace, objKey string) []string {
 	owner.lock.Lock()
 	defer owner.lock.Unlock()
 
 	ownerAndConfig, ok := owner.ownerAndConfigs[namespace]
 	if ok == false {
-		return "", false
+		return nil
 	}
 
+	var controllers []string
 	for key, configs := range ownerAndConfig {
 		for _, config := range configs {
 			if config == objKey {
-				return key, true
+				controllers = append(controllers, key)
 			}
 		}
 	}
-	return "", false
+	return controllers
 }
 
 func getReferedConfig(obj PodController) []string {
