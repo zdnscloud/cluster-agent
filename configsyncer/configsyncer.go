@@ -3,10 +3,10 @@ package configsyncer
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -17,11 +17,15 @@ import (
 	"github.com/zdnscloud/gok8s/controller"
 	"github.com/zdnscloud/gok8s/event"
 	"github.com/zdnscloud/gok8s/handler"
+	"github.com/zdnscloud/gok8s/helper"
 	"github.com/zdnscloud/gok8s/predicate"
 )
 
+const (
+	ZcloudFinalizer = "zcloud.cn/finalizer"
+)
+
 type ConfigSyncer struct {
-	lock        sync.RWMutex
 	client      client.Client
 	stopCh      chan struct{}
 	configOwner *ConfigOwner
@@ -44,10 +48,7 @@ func NewConfigSyncer(cli client.Client, c cache.Cache) *ConfigSyncer {
 	return syncer
 }
 
-func (syncer *ConfigSyncer) OnCreate(e event.CreateEvent) (handler.Result, error) {
-	syncer.lock.Lock()
-	defer syncer.lock.Unlock()
-
+func (syncer *ConfigSyncer) OnCreate(e event.CreateEvent) (result handler.Result, err error) {
 	var pc PodController
 	switch obj := e.Object.(type) {
 	case *appsv1.Deployment:
@@ -58,24 +59,49 @@ func (syncer *ConfigSyncer) OnCreate(e event.CreateEvent) (handler.Result, error
 		pc = &daemonset{obj}
 	}
 
-	if pc != nil {
-		if hasRequiredAnnotation(pc) {
-			syncer.configOwner.OnNewPodController(pc)
-		}
+	if pc != nil && hasRequiredAnnotation(pc) {
+		syncer.onNewPodController(pc)
 	}
 
 	return handler.Result{}, nil
 }
 
+func (syncer *ConfigSyncer) onNewPodController(pc PodController) {
+	configs := getReferedConfig(pc)
+	if len(configs) == 0 {
+		return
+	}
+
+	namespace := pc.GetNamespace()
+	for _, configKey := range configs {
+		config, err := syncer.getConfig(namespace, configKey)
+		if err != nil {
+			log.Errorf("get %s failed %s", configKey, err.Error())
+			return
+		}
+		metaObj := config.(metav1.Object)
+		if helper.HasFinalizer(metaObj, ZcloudFinalizer) {
+			continue
+		}
+		helper.AddFinalizer(metaObj, ZcloudFinalizer)
+		if err := syncer.client.Update(context.TODO(), config); err != nil {
+			log.Errorf("add finalizer to %s failed %s", configKey, err.Error())
+			return
+		}
+	}
+	syncer.configOwner.OnNewPodController(pc, configs)
+}
+
 func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
-	var pcKeys []string
-	var oldPc PodController
-	var newPc PodController
+	var oldConfig, newConfig Object
+	var oldPc, newPc PodController
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.ConfigMap:
-		pcKeys = syncer.configOwner.GetPodControllersUseConfig(newObj.Namespace, ObjectKey(newObj))
+		oldConfig = e.ObjectOld.(*corev1.ConfigMap)
+		newConfig = newObj
 	case *corev1.Secret:
-		pcKeys = syncer.configOwner.GetPodControllersUseConfig(newObj.Namespace, ObjectKey(newObj))
+		oldConfig = e.ObjectOld.(*corev1.Secret)
+		newConfig = newObj
 	case *appsv1.Deployment:
 		oldPc = &deployment{e.ObjectOld.(*appsv1.Deployment)}
 		newPc = &deployment{newObj}
@@ -87,23 +113,35 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 		newPc = &daemonset{newObj}
 	}
 
-	if newPc != nil {
-		//handle workload change
-		oldPcNeedReload := hasRequiredAnnotation(oldPc)
-		newPcNeedReload := hasRequiredAnnotation(newPc)
-		if oldPcNeedReload == true || newPcNeedReload == true {
-			if oldPcNeedReload == false {
-				syncer.configOwner.OnNewPodController(newPc)
-			} else if newPcNeedReload == false {
-				syncer.configOwner.OnDeletePodController(newPc)
+	if oldPc != nil && newPc != nil && hasRequiredAnnotation(newPc) {
+		syncer.configOwner.OnUpdatePodController(oldPc, newPc)
+	} else if oldConfig != nil && newConfig != nil {
+		syncer.onConfigChange(oldConfig, newConfig)
+	}
+
+	return handler.Result{}, nil
+}
+
+func (syncer *ConfigSyncer) onConfigChange(oldConfig, newConfig Object) {
+	//handle configure delete
+	if oldConfig.GetDeletionTimestamp() == nil && newConfig.GetDeletionTimestamp() != nil {
+		if helper.HasFinalizer(newConfig, ZcloudFinalizer) {
+			pcKeys := syncer.configOwner.GetPodControllersUseConfig(newConfig.GetNamespace(), ObjectKey(newConfig))
+			if len(pcKeys) == 0 {
+				helper.RemoveFinalizer(newConfig, ZcloudFinalizer)
+				if err := syncer.client.Update(context.TODO(), newConfig); err != nil {
+					log.Errorf("update %s failed:%s", ObjectKey(newConfig), err.Error())
+				}
 			} else {
-				syncer.configOwner.OnUpdatePodController(oldPc, newPc)
+				log.Warnf("delete %s is still in use", ObjectKey(newConfig))
 			}
 		}
-	} else if len(pcKeys) > 0 {
+	} else {
+		//handle configure data change
+		namespace := newConfig.GetNamespace()
+		pcKeys := syncer.configOwner.GetPodControllersUseConfig(namespace, ObjectKey(newConfig))
 		for _, pcKey := range pcKeys {
-			//handle configuration change
-			pc, err := syncer.getPodController(e.MetaNew.GetNamespace(), pcKey)
+			pc, err := syncer.getPodController(namespace, pcKey)
 			if err != nil {
 				log.Errorf("get workerload failed:%s", err.Error())
 			} else {
@@ -112,7 +150,7 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 				if hash != newHash {
 					setConfigHash(pc, newHash)
 					if err := syncer.updatePodController(pc); err != nil {
-						log.Errorf("update pc %s failed %v", ObjectKey(pc), err.Error())
+						log.Errorf("update %s failed %v", ObjectKey(pc), err.Error())
 					} else {
 						log.Infof("detect workload %s configure changed, and will be restart", ObjectKey(pc))
 					}
@@ -121,13 +159,9 @@ func (syncer *ConfigSyncer) OnUpdate(e event.UpdateEvent) (handler.Result, error
 		}
 	}
 
-	return handler.Result{}, nil
 }
 
 func (syncer *ConfigSyncer) OnDelete(e event.DeleteEvent) (handler.Result, error) {
-	syncer.lock.Lock()
-	defer syncer.lock.Unlock()
-
 	var pc PodController
 	switch obj := e.Object.(type) {
 	case *appsv1.Deployment:
@@ -138,13 +172,39 @@ func (syncer *ConfigSyncer) OnDelete(e event.DeleteEvent) (handler.Result, error
 		pc = &daemonset{obj}
 	}
 
-	if pc != nil {
-		if hasRequiredAnnotation(pc) {
-			syncer.configOwner.OnDeletePodController(pc)
-		}
+	if pc != nil && hasRequiredAnnotation(pc) {
+		syncer.onDeletePodController(pc)
 	}
 
 	return handler.Result{}, nil
+}
+
+func (syncer *ConfigSyncer) onDeletePodController(pc PodController) {
+	usedConfigs := getReferedConfig(pc)
+	syncer.configOwner.OnDeletePodController(pc)
+	namespace := pc.GetNamespace()
+	for _, configKey := range usedConfigs {
+		pcKeys := syncer.configOwner.GetPodControllersUseConfig(namespace, configKey)
+		if len(pcKeys) > 0 {
+			continue
+		}
+
+		config, err := syncer.getConfig(namespace, configKey)
+		if err != nil {
+			log.Errorf("get config %s failed %s", configKey, err.Error())
+			continue
+		}
+
+		metaObj := config.(metav1.Object)
+		if metaObj.GetDeletionTimestamp() != nil {
+			helper.RemoveFinalizer(metaObj, ZcloudFinalizer)
+			if err := syncer.client.Update(context.TODO(), config); err != nil {
+				log.Errorf("remove finalizer of %s failed:%s", configKey, err.Error())
+			} else {
+				log.Infof("remove finalizer of %s since last workload used it has been removed", configKey)
+			}
+		}
+	}
 }
 
 func (syncer *ConfigSyncer) OnGeneric(e event.GenericEvent) (handler.Result, error) {

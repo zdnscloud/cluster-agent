@@ -20,12 +20,7 @@ func newConfigOwner() *ConfigOwner {
 	}
 }
 
-func (owner *ConfigOwner) OnNewPodController(pc PodController) {
-	configs := getReferedConfig(pc)
-	if len(configs) == 0 {
-		return
-	}
-
+func (owner *ConfigOwner) OnNewPodController(pc PodController, configs []string) {
 	owner.lock.Lock()
 	defer owner.lock.Unlock()
 

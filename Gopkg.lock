@@ -203,7 +203,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9165aaee9914ee00b5d296a59d61ceda123318ecbbd9af0ce3186dd3b5d7d7b2"
+  digest = "1:0f17deeee7db199160eac6097d952b618000f1cc089a858cc0bd0be6d6b2e0cc"
   name = "github.com/zdnscloud/gok8s"
   packages = [
     "cache",
@@ -220,7 +220,7 @@
     "util",
   ]
   pruneopts = "UT"
-  revision = "7635f5a2255193aeda2fffc5e851c3321556d2d1"
+  revision = "303979a5e331e5ec2619cd1ac60ce42ce90bb629"
 
 [[projects]]
   branch = "master"
@@ -468,6 +468,17 @@
   revision = "5cb15d34447165a97c76ed5a60e4e99c8a01ecfe"
 
 [[projects]]
+  branch = "master"
+  digest = "1:009c97a2e9e26b34d39af301ed95c7030a2e5e7aa7c268e4be1a32a1e6379820"
+  name = "k8s.io/apiextensions-apiserver"
+  packages = [
+    "pkg/apis/apiextensions",
+    "pkg/apis/apiextensions/v1beta1",
+  ]
+  pruneopts = "UT"
+  revision = "451a9c13a3c87cf43a05982a04149884ef7c0d69"
+
+[[projects]]
   branch = "release-1.13"
   digest = "1:4003aa5b6ca0bd01a0dfd368a141f8db82ab71bbe0d55164b92ab5c251832ffb"
   name = "k8s.io/apimachinery"
@@ -561,6 +572,18 @@
   version = "v0.3.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:42f4e088ef95ea0afe3817e73f70b1b3fc492306096b02f00a04e32cfe6f1367"
+  name = "k8s.io/kube-aggregator"
+  packages = [
+    "pkg/apis/apiregistration",
+    "pkg/apis/apiregistration/v1",
+    "pkg/apis/apiregistration/v1beta1",
+  ]
+  pruneopts = "UT"
+  revision = "b998c87818f673b58e26800667dadc3d2e2f49c7"
+
+[[projects]]
   branch = "release-1.13"
   digest = "1:0306ff09375dc31052d211f0e9db9b9b1156e5306d36ab0080e432bc9972262a"
   name = "k8s.io/metrics"
@@ -575,6 +598,14 @@
   ]
   pruneopts = "UT"
   revision = "486c9ba21ea924d069175e771671f026eda5a34c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8b5d43a2ffe1c0df5e9d7f635227f179341964dd7d0b72fc12f857186a47c224"
+  name = "k8s.io/utils"
+  packages = ["pointer"]
+  pruneopts = "UT"
+  revision = "6999998975a717e7f5fc2a7476497044cb111854"
 
 [[projects]]
   digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
