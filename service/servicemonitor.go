@@ -246,7 +246,7 @@ func (s *ServiceMonitor) getPodOwner(k8spod *corev1.Pod) (string, string, bool) 
 	}
 
 	owner = k8srs.OwnerReferences[0]
-	if owner.Kind != "Deployment" {
+	if owner.Kind != OwnerKindDeployment {
 		log.Warnf("replicaset parent is not deployment but %v", owner.Kind)
 		return "", "", false
 	}
