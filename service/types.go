@@ -17,7 +17,8 @@ var NamespaceType = resttypes.GetResourceType(Namespace{})
 func SetInnerServiceSchema(schema *resttypes.Schema, handler resttypes.Handler) {
 	schema.Handler = handler
 	schema.CollectionMethods = []string{"GET"}
-	schema.Parent = NamespaceType
+	//schema.Parent = NamespaceType
+	schema.Parents = []string{NamespaceType}
 }
 
 type InnerService struct {
@@ -48,7 +49,8 @@ type OuterService struct {
 func SetOuterServiceSchema(schema *resttypes.Schema, handler resttypes.Handler) {
 	schema.Handler = handler
 	schema.CollectionMethods = []string{"GET"}
-	schema.Parent = NamespaceType
+	//schema.Parent = NamespaceType
+	schema.Parents = []string{NamespaceType}
 }
 
 var OuterServiceType = resttypes.GetResourceType(OuterService{})

@@ -36,7 +36,7 @@ type Schema struct {
 
 	StructVal reflect.Value `json:"-"`
 	Handler   Handler       `json:"-"`
-	Parent    string        `json:"-"`
+	Parents   []string      `json:"-"`
 }
 
 func (s *Schema) GetType() string {
@@ -64,10 +64,6 @@ type Action struct {
 	Name   string
 	Input  interface{} `json:"input,omitempty"`
 	Output string      `json:"output,omitempty"`
-}
-
-type Input struct {
-	Data []byte `json:"data,omitempty"`
 }
 
 type ActionHandler func(request *Context, action *Action) *APIError

@@ -174,6 +174,15 @@ message RemoveVGReply {
   string command_output = 1;
 }
 
+message ExtendVGRequest {
+  string name = 1;
+  string physical_volume = 2;
+}
+
+message ExtendVGReply {
+  string command_output = 1;
+}
+
 message AddTagLVRequest {
   string volume_group = 1;
   string name = 2;
@@ -194,6 +203,65 @@ message RemoveTagLVReply {
   string command_output = 1;
 }
 
+message CreatePVRequest {
+  string block = 1;
+}
+
+message CreatePVReply {
+  string command_output = 1;
+}
+
+message RemovePVRequest {
+  string block = 1;
+}
+
+message RemovePVReply {
+  string command_output = 1;
+}
+
+message ListPVRequest {}
+
+message ListPVReply {
+  repeated PVInfo pvinfos = 1;
+}
+
+message PVInfo{
+  string name = 1;
+  string uuid = 2;
+  string fmt = 3;
+  uint64 size = 4;
+  uint64 usize = 5;
+  uint64 fsize = 6;
+}
+
+message ValidateRequest {
+  string block = 1;
+}
+
+message ValidateReply {
+  bool validate = 1;
+}
+
+message DestoryRequest {
+  string block = 1;
+}
+
+message DestoryReply {
+  string command_output = 1;
+}
+
+message MatchRequest {
+  string block = 1;
+}
+
+message MatchReply {
+  string command_output = 1;
+}
+
+message GetPVNumReply {
+  string command_output = 1;
+}
+
 service LVM {
  rpc ListLV(ListLVRequest) returns (ListLVReply) {}
  rpc CreateLV(CreateLVRequest) returns (CreateLVReply) {}
@@ -206,4 +274,15 @@ service LVM {
  rpc ListVG(ListVGRequest) returns (ListVGReply) {}
  rpc CreateVG(CreateVGRequest) returns (CreateVGReply) {}
  rpc RemoveVG(CreateVGRequest) returns (RemoveVGReply) {}
+
+ rpc CreatePV(CreatePVRequest) returns (CreatePVReply) {}
+ rpc RemovePV(RemovePVRequest) returns (RemovePVReply) {}
+ rpc ExtendVG(ExtendVGRequest) returns (ExtendVGReply) {}
+ rpc ReduceVG(ExtendVGRequest) returns (ExtendVGReply) {}
+ rpc ListPV(ListPVRequest) returns (ListPVReply) {}
+
+ rpc Match(MatchRequest) returns (MatchReply) {}
+ rpc GetPVNum(CreateVGRequest) returns (GetPVNumReply) {}
+ rpc Validate(ValidateRequest) returns (ValidateReply) {}
+ rpc Destory(DestoryRequest) returns (DestoryReply) {}
 }

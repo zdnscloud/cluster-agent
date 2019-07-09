@@ -1,19 +1,16 @@
 package lvm
 
 import (
-	"fmt"
 	"github.com/zdnscloud/cluster-agent/storage/pvmonitor"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
-	"github.com/zdnscloud/csi-lvm-plugin/pkg/nodemanager"
 	"github.com/zdnscloud/gok8s/cache"
-	"strconv"
 	"sync"
 )
 
 const (
-	LVMStorageClassName = "lvm"
-	CSIDefaultVgName    = "k8s"
+	LvmStorageType      = "lvm"
+	LvmStorageClassName = "lvm"
 )
 
 type LVM struct {
@@ -27,20 +24,18 @@ type LVM struct {
 }
 
 func New(c cache.Cache) (*LVM, error) {
-	pm, err := pvmonitor.New(c, LVMStorageClassName)
+	pm, err := pvmonitor.New(c, LvmStorageClassName)
 	if err != nil {
 		return nil, err
 	}
-	lvm := &LVM{
+	return &LVM{
 		PVData: pm,
 		Cache:  c,
-	}
-
-	return lvm, nil
+	}, nil
 }
 
 func (s *LVM) GetType() string {
-	return LVMStorageClassName
+	return LvmStorageType
 }
 
 func (s *LVM) GetInfo(mountpoints map[string][]int64) types.Storage {
@@ -61,46 +56,16 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) types.Storage {
 		}
 		res = append(res, pv)
 	}
-	s.SetNodes()
-	s.SetSize()
-
+	nodes, tSize, uSize, fSize, err := utils.GetNodesCapacity(LvmStorageType)
+	if err != nil {
+		_ = err
+	}
 	return types.Storage{
-		Name:     LVMStorageClassName,
-		Size:     s.Size,
-		UsedSize: s.UsedSize,
-		FreeSize: s.FreeSize,
-		Nodes:    s.Nodes,
+		Name:     LvmStorageType,
+		Size:     tSize,
+		UsedSize: uSize,
+		FreeSize: fSize,
+		Nodes:    nodes,
 		PVs:      res,
 	}
-}
-
-func (s *LVM) SetNodes() {
-	nm := nodemanager.New(s.Cache, CSIDefaultVgName)
-	ns := nm.GetNodes()
-	var nodes []types.Node
-	for _, v := range ns {
-		node := types.Node{
-			Name:     v.Name,
-			Size:     utils.ByteToGb(v.Size),
-			UsedSize: utils.ByteToGb((v.Size - v.FreeSize)),
-			FreeSize: utils.ByteToGb(v.FreeSize),
-		}
-		nodes = append(nodes, node)
-	}
-	s.Nodes = nodes
-}
-
-func (s *LVM) SetSize() {
-	var tsize, fsize, usize float64
-	for _, n := range s.Nodes {
-		t, _ := strconv.ParseFloat(n.Size, 64)
-		f, _ := strconv.ParseFloat(n.FreeSize, 64)
-		u, _ := strconv.ParseFloat(n.UsedSize, 64)
-		tsize += t
-		fsize += f
-		usize += u
-	}
-	s.Size = fmt.Sprintf("%.2f", tsize)
-	s.FreeSize = fmt.Sprintf("%.2f", fsize)
-	s.UsedSize = fmt.Sprintf("%.2f", usize)
 }

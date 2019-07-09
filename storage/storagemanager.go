@@ -1,10 +1,11 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
+	"github.com/zdnscloud/cluster-agent/storage/ceph"
 	"github.com/zdnscloud/cluster-agent/storage/lvm"
-	"github.com/zdnscloud/cluster-agent/storage/nfs"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
 	"github.com/zdnscloud/gok8s/cache"
@@ -29,12 +30,12 @@ func New(c cache.Cache, nodeAgentMgr *nodeagent.NodeAgentManager) (*StorageManag
 	if err != nil {
 		return nil, err
 	}
-	nfs, err := nfs.New(c)
+	ceph, err := ceph.New(c)
 	if err != nil {
 		return nil, err
 	}
 	return &StorageManager{
-		storages:     []Storage{lvm, nfs},
+		storages:     []Storage{lvm, ceph},
 		NodeAgentMgr: nodeAgentMgr,
 	}, nil
 }
@@ -45,12 +46,14 @@ func (m *StorageManager) RegisterSchemas(version *resttypes.APIVersion, schemas 
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	cls := ctx.Object.GetID()
+	fmt.Println(cls)
 	mountpoints, err := utils.GetAllPvUsedSize(m.NodeAgentMgr)
 	if err != nil {
 		log.Warnf("Get PV Used Size failed:%s", err.Error())
 	}
 	for _, s := range m.storages {
 		if s.GetType() == cls {
+			fmt.Println("2222")
 			return s.GetInfo(mountpoints)
 		}
 	}
