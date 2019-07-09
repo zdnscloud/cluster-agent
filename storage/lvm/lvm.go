@@ -38,7 +38,7 @@ func (s *LVM) GetType() string {
 	return LvmStorageType
 }
 
-func (s *LVM) GetInfo(mountpoints map[string][]int64) types.Storage {
+func (s *LVM) GetInfo(mountpoints map[string][]int64) *types.Storage {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	pvs := s.PVData.PVs
@@ -60,7 +60,7 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) types.Storage {
 	if err != nil {
 		_ = err
 	}
-	return types.Storage{
+	return &types.Storage{
 		Name:     LvmStorageType,
 		Size:     tSize,
 		UsedSize: uSize,

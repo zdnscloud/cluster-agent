@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/storage/ceph"
@@ -15,7 +14,7 @@ import (
 
 type Storage interface {
 	GetType() string
-	GetInfo(map[string][]int64) types.Storage
+	GetInfo(map[string][]int64) *types.Storage
 }
 
 type StorageManager struct {
@@ -46,14 +45,12 @@ func (m *StorageManager) RegisterSchemas(version *resttypes.APIVersion, schemas 
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	cls := ctx.Object.GetID()
-	fmt.Println(cls)
 	mountpoints, err := utils.GetAllPvUsedSize(m.NodeAgentMgr)
 	if err != nil {
 		log.Warnf("Get PV Used Size failed:%s", err.Error())
 	}
 	for _, s := range m.storages {
 		if s.GetType() == cls {
-			fmt.Println("2222")
 			return s.GetInfo(mountpoints)
 		}
 	}
@@ -61,7 +58,7 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 }
 
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
-	var infos []types.Storage
+	var infos []*types.Storage
 	mountpoints, err := utils.GetAllPvUsedSize(m.NodeAgentMgr)
 	if err != nil {
 		log.Warnf("Get PV Used Size failed:%s", err.Error())

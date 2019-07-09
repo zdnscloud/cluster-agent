@@ -1,7 +1,6 @@
 package ceph
 
 import (
-	"fmt"
 	"github.com/zdnscloud/cluster-agent/storage/pvmonitor"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
@@ -39,7 +38,7 @@ func (s *ceph) GetType() string {
 	return CephStorageType
 }
 
-func (s *ceph) GetInfo(mountpoints map[string][]int64) types.Storage {
+func (s *ceph) GetInfo(mountpoints map[string][]int64) *types.Storage {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	pvs := s.PVData.PVs
@@ -61,12 +60,7 @@ func (s *ceph) GetInfo(mountpoints map[string][]int64) types.Storage {
 	if err != nil {
 		_ = err
 	}
-	fmt.Println(CephStorageType)
-	fmt.Println(tSize)
-	fmt.Println(uSize)
-	fmt.Println(fSize)
-	fmt.Println(nodes)
-	return types.Storage{
+	return &types.Storage{
 		Name:     CephStorageType,
 		Size:     tSize,
 		UsedSize: uSize,
