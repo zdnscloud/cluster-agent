@@ -13,6 +13,7 @@ message GetDirectorySizeReply{
 service NodeAgent {
  rpc GetDirectorySize(GetDirectorySizeRequest) returns (GetDirectorySizeReply) {}
  rpc GetMountpointsSize(GetMountpointsSizeRequest) returns (GetMountpointsSizeReply) {}
+ rpc GetDisksInfo(GetDisksInfoRequest) returns (GetDisksInfoReply) {}
 }
 
 message GetMountpointsSizeRequest {
@@ -27,4 +28,16 @@ message sizes{
 	int64 Tsize = 1;
 	int64 Usize = 2;
 	int64 Fsize = 3;
+}
+
+message GetDisksInfoRequest {
+	string disk = 1;
+}
+
+message GetDisksInfoReply{
+	map<string, diskinfo> infos = 1;
+}
+
+message diskinfo{
+	map<string,string> diskinfo = 1;
 }
