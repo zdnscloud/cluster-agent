@@ -13,6 +13,7 @@ import (
 	pb "github.com/zdnscloud/node-agent/proto"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"math"
 	"strconv"
 	"strings"
@@ -81,6 +82,33 @@ func GetNodes() (corev1.NodeList, error) {
 		return nodes, err
 	}
 	return nodes, nil
+}
+
+func GetNodeForLvmPv(name string) (string, error) {
+	config, err := config.GetConfig()
+	if err != nil {
+		return "", err
+	}
+	cli, err := client.New(config, client.Options{})
+	if err != nil {
+		return "", err
+	}
+	pv := corev1.PersistentVolume{}
+	err = cli.Get(context.TODO(), k8stypes.NamespacedName{"", name}, &pv)
+	if err != nil {
+		return "", err
+	}
+	if pv.Spec.StorageClassName != "lvm" {
+		return "", nil
+	}
+	for _, v := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms {
+		for _, i := range v.MatchExpressions {
+			if i.Key == "kubernetes.io/hostname" && i.Operator == "In" {
+				return i.Values[0], nil
+			}
+		}
+	}
+	return "", nil
 }
 
 func GetAllPvUsedSize(nodeAgentMgr *nodeagent.NodeAgentManager) (map[string][]int64, error) {

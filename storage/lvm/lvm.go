@@ -47,12 +47,14 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) *types.Storage {
 		uSize, fSize := utils.GetPVSize(p, mountpoints)
 		pvc := s.PVData.PvAndPVC[p.Name].Name
 		pods := s.PVData.PVCAndPod[pvc]
+		node, _ := utils.GetNodeForLvmPv(p.Name)
 		pv := types.PV{
 			Name:     p.Name,
 			Size:     p.Size,
 			UsedSize: uSize,
 			FreeSize: fSize,
 			Pods:     pods,
+			Node:     node,
 		}
 		res = append(res, pv)
 	}

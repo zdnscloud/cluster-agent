@@ -29,6 +29,7 @@ type PV struct {
 	FreeSize         string `json:"freesize"`
 	Pods             []Pod  `json:"pods"`
 	StorageClassName string `json:"-"`
+	Node             string `json:"node"`
 }
 
 type Node struct {
