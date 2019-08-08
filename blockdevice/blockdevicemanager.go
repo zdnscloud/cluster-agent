@@ -1,4 +1,4 @@
-package blockinfo
+package blockdevice
 
 import (
 	"context"
@@ -10,31 +10,31 @@ import (
 	nodeclient "github.com/zdnscloud/node-agent/client"
 	pb "github.com/zdnscloud/node-agent/proto"
 	"math"
+	"sort"
 	"strconv"
 	"time"
 )
 
-type blockinfoMgr struct {
+type blockDeviceMgr struct {
 	api.DefaultHandler
 	NodeAgentMgr *nodeagent.NodeAgentManager
 }
 
-func New(nodeAgentMgr *nodeagent.NodeAgentManager) (*blockinfoMgr, error) {
-	return &blockinfoMgr{
+func New(nodeAgentMgr *nodeagent.NodeAgentManager) (*blockDeviceMgr, error) {
+	return &blockDeviceMgr{
 		NodeAgentMgr: nodeAgentMgr,
 	}, nil
 }
 
-func (m *blockinfoMgr) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
-	schemas.MustImportAndCustomize(version, BlockInfo{}, m, SetBlockInfoSchema)
+func (m *blockDeviceMgr) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
+	schemas.MustImportAndCustomize(version, BlockDevice{}, m, SetBlockDeviceSchema)
 }
 
-func (m *blockinfoMgr) List(ctx *resttypes.Context) interface{} {
-	var res BlockInfo
+func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
+	var res BlockDevices
+	//res := make([]BlockDevice, 0)
 	nodes := m.NodeAgentMgr.GetNodeAgents()
 	for _, node := range nodes {
-		var host Host
-		host.NodeName = node.Name
 		cli, err := nodeclient.NewClient(node.Address, 10*time.Second)
 		if err != nil {
 			log.Warnf("Create node agent client: %s failed: %s", node.Name, err.Error())
@@ -46,6 +46,7 @@ func (m *blockinfoMgr) List(ctx *resttypes.Context) interface{} {
 			log.Warnf("Get node %s Disk info failed: %s", node.Name, err.Error())
 			continue
 		}
+		devs := make([]Dev, 0)
 		for k, v := range reply.Infos {
 			dev := Dev{
 				Name:       k,
@@ -54,11 +55,16 @@ func (m *blockinfoMgr) List(ctx *resttypes.Context) interface{} {
 				Filesystem: sTob(v.Diskinfo["Filesystem"]),
 				Mount:      sTob(v.Diskinfo["Mountpoint"]),
 			}
-			host.BlockDevices = append(host.BlockDevices, dev)
+			devs = append(devs, dev)
 		}
-		res.Hosts = append(res.Hosts, host)
+		host := BlockDevice{
+			NodeName:     node.Name,
+			BlockDevices: devs,
+		}
+		res = append(res, host)
 	}
-	return []*BlockInfo{&res}
+	sort.Sort(res)
+	return res
 }
 
 func byteToG(size string) string {

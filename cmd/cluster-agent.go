@@ -11,7 +11,7 @@ import (
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
 
-	"github.com/zdnscloud/cluster-agent/blockinfo"
+	"github.com/zdnscloud/cluster-agent/blockdevice"
 	"github.com/zdnscloud/cluster-agent/configsyncer"
 	"github.com/zdnscloud/cluster-agent/network"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
@@ -72,7 +72,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
-	blockinfoMgr, err := blockinfo.New(nodeAgentMgr)
+	blockDeviceMgr, err := blockdevice.New(nodeAgentMgr)
 	if err != nil {
 		log.Fatalf("Create nodeblocks manager failed:%s", err.Error())
 	}
@@ -82,7 +82,7 @@ func main() {
 	networkMgr.RegisterSchemas(&Version, schemas)
 	serviceMgr.RegisterSchemas(&Version, schemas)
 	nodeAgentMgr.RegisterSchemas(&Version, schemas)
-	blockinfoMgr.RegisterSchemas(&Version, schemas)
+	blockDeviceMgr.RegisterSchemas(&Version, schemas)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
