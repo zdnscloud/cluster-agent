@@ -56,6 +56,10 @@
   go-tests = true
   unused-packages = true
 
-[[constraint]]
-  branch = "master"
-  name = "github.com/zdnscloud/csi-lvm-plugin"
+[[override]]
+  branch = "release-1.13"
+  name = "k8s.io/apiextensions-apiserver"
+
+[[override]]
+  branch = "release-1.13"
+  name = "k8s.io/kube-aggregator"
