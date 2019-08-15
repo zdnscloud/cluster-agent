@@ -160,16 +160,22 @@ func GetNodesCapacity(storagetype string) ([]types.Node, string, string, string,
 		return nodes, tSize, uSize, fSize, err
 	}
 	storageclusters := storagev1.ClusterList{}
-	err = cli.List(context.TODO(), &client.ListOptions{Namespace: StorageNamespace}, &storageclusters)
+	err = cli.List(context.TODO(), nil, &storageclusters)
 	if err != nil {
 		return nodes, tSize, uSize, fSize, err
 	}
 	ns := make(map[string]map[string]int64)
+	nodestat := make(map[string]bool)
 	for _, c := range storageclusters.Items {
 		if c.Spec.StorageType != storagetype {
 			continue
 		}
+		stat := true
 		for _, i := range c.Status.Capacity.Instances {
+			if !i.Stat {
+				stat = false
+			}
+			nodestat[i.Host] = stat
 			v, ok := ns[i.Host]
 			if ok {
 				v["Total"] += sToi(i.Info.Total)
@@ -193,6 +199,7 @@ func GetNodesCapacity(storagetype string) ([]types.Node, string, string, string,
 			Size:     byteToGb(v["Total"]),
 			UsedSize: byteToGb(v["Used"]),
 			FreeSize: byteToGb(v["Free"]),
+			Stat:     nodestat[k],
 		}
 		nodes = append(nodes, node)
 	}

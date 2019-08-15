@@ -37,6 +37,7 @@ type Node struct {
 	Size     string `json:"size"`
 	UsedSize string `json:"usedsize"`
 	FreeSize string `json:"freesize"`
+	Stat     bool   `json:"stat"`
 }
 
 type Pod struct {
