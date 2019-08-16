@@ -46,7 +46,7 @@ func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
 			log.Warnf("Get node %s Disk info failed: %s", node.Name, err.Error())
 			continue
 		}
-		devs := make([]Dev, 0)
+		var devs Devs
 		for k, v := range reply.Infos {
 			dev := Dev{
 				Name:       k,
@@ -57,6 +57,7 @@ func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
 			}
 			devs = append(devs, dev)
 		}
+		sort.Sort(devs)
 		host := BlockDevice{
 			NodeName:     node.Name,
 			BlockDevices: devs,

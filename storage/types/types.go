@@ -38,8 +38,29 @@ type Node struct {
 	UsedSize string `json:"usedsize"`
 	FreeSize string `json:"freesize"`
 	Stat     bool   `json:"stat"`
+	//Devs     []Dev  `json:"devs"`
 }
 
 type Pod struct {
 	Name string `json:"name"`
 }
+
+/*
+type Dev struct {
+	Name string `json:"name"`
+	Size string `json:"size"`
+}*/
+
+type Nodes []Node
+
+func (s Nodes) Len() int           { return len(s) }
+func (s Nodes) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s Nodes) Less(i, j int) bool { return s[i].Name < s[j].Name }
+
+/*
+type Devs []Dev
+
+func (s Devs) Len() int           { return len(s) }
+func (s Devs) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s Devs) Less(i, j int) bool { return s[i].Name < s[j].Name }
+*/

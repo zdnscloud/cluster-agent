@@ -30,3 +30,9 @@ type BlockDevices []BlockDevice
 func (s BlockDevices) Len() int           { return len(s) }
 func (s BlockDevices) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s BlockDevices) Less(i, j int) bool { return s[i].NodeName < s[j].NodeName }
+
+type Devs []Dev
+
+func (s Devs) Len() int           { return len(s) }
+func (s Devs) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s Devs) Less(i, j int) bool { return s[i].Name < s[j].Name }
