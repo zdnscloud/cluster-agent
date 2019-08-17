@@ -172,6 +172,7 @@ func GetNodesCapacity(storagetype string) ([]types.Node, string, string, string,
 		if c.Spec.StorageType != storagetype {
 			continue
 		}
+		fmt.Println(c.Status.Capacity.Instances)
 		stat := true
 		//infos = c.Status.Config
 		for _, i := range c.Status.Capacity.Instances {
@@ -196,6 +197,7 @@ func GetNodesCapacity(storagetype string) ([]types.Node, string, string, string,
 		uSize = byteToGb(sToi(c.Status.Capacity.Total.Used))
 		fSize = byteToGb(sToi(c.Status.Capacity.Total.Free))
 	}
+	fmt.Println(ns)
 	for k, v := range ns {
 		node := types.Node{
 			Name:     k,

@@ -5,8 +5,8 @@
     "resourceFields": {
 	"name": {"type": "enum", "validValues": ["lvm", "nfs"]},
         "size": {"type": "string"},
-        "usedsize": {"type": "string"},
-        "freesize": {"type": "string"},
+        "usedSize": {"type": "string"},
+        "freeSize": {"type": "string"},
         "nodes": {"type": "array", "elemType": "node"},
         "pvs": {"type": "array", "elemType": "pv"}
     },
@@ -14,15 +14,17 @@
 	"pv": {
 	    "name": {"type": "string"},
 	    "size": {"type": "string"},
-	    "usedsize": {"type": "string"},
-	    "freesize": {"type": "string"},
-	    "pods": {"type": "array", "elemType": "pod"}
+	    "usedSize": {"type": "string"},
+	    "freeSize": {"type": "string"},
+	    "pods": {"type": "array", "elemType": "pod"},
+	    "node": {"type": "string"}
 	},
 	"node": {
 	    "name": {"type": "string"},
 	    "size": {"type": "string"},
-	    "usedsize": {"type": "string"},
-	    "freesize": {"type": "string"}
+	    "usedSize": {"type": "string"},
+	    "freeSize": {"type": "string"},
+	    "stat": {"type": "bool"}
 	},
 	"pod": {
 	    "name": {"type": "string"}
