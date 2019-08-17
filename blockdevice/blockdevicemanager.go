@@ -32,7 +32,6 @@ func (m *blockDeviceMgr) RegisterSchemas(version *resttypes.APIVersion, schemas 
 
 func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
 	var res BlockDevices
-	//res := make([]BlockDevice, 0)
 	nodes := m.NodeAgentMgr.GetNodeAgents()
 	for _, node := range nodes {
 		cli, err := nodeclient.NewClient(node.Address, 10*time.Second)
@@ -48,12 +47,12 @@ func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
 		}
 		var devs Devs
 		for k, v := range reply.Infos {
+			if sTob(v.Diskinfo["Parted"]) || sTob(v.Diskinfo["Filesystem"]) || sTob(v.Diskinfo["Mountpoint"]) {
+				continue
+			}
 			dev := Dev{
-				Name:       k,
-				Size:       byteToG(v.Diskinfo["Size"]),
-				Parted:     sTob(v.Diskinfo["Parted"]),
-				Filesystem: sTob(v.Diskinfo["Filesystem"]),
-				Mount:      sTob(v.Diskinfo["Mountpoint"]),
+				Name: k,
+				Size: byteToG(v.Diskinfo["Size"]),
 			}
 			devs = append(devs, dev)
 		}
