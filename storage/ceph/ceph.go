@@ -9,22 +9,18 @@ import (
 )
 
 const (
-	CephStorageType      = "ceph"
-	CephStorageClassName = "cephfs"
+	CephStorageType       = "ceph"
+	CephStorageDriverName = "cephfs.csi.ceph.com"
 )
 
 type ceph struct {
-	Nodes    []types.Node
-	Size     string
-	FreeSize string
-	UsedSize string
-	PVData   *pvmonitor.PVMonitor
-	Cache    cache.Cache
-	lock     sync.RWMutex
+	PVData *pvmonitor.PVMonitor
+	Cache  cache.Cache
+	lock   sync.RWMutex
 }
 
 func New(c cache.Cache) (*ceph, error) {
-	pm, err := pvmonitor.New(c, CephStorageClassName)
+	pm, err := pvmonitor.New(c, CephStorageDriverName)
 	if err != nil {
 		return nil, err
 	}
@@ -56,16 +52,8 @@ func (s *ceph) GetInfo(mountpoints map[string][]int64) *types.Storage {
 		}
 		res = append(res, pv)
 	}
-	nodes, tSize, uSize, fSize, err := utils.GetNodesCapacity(CephStorageType)
-	if err != nil {
-		_ = err
-	}
 	return &types.Storage{
-		Name:     CephStorageType,
-		Size:     tSize,
-		UsedSize: uSize,
-		FreeSize: fSize,
-		Nodes:    nodes,
-		PVs:      res,
+		Name: CephStorageType,
+		PVs:  res,
 	}
 }

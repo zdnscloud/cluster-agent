@@ -2,7 +2,6 @@ package pvmonitor
 
 import (
 	"context"
-	//"fmt"
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/controller"
@@ -15,11 +14,11 @@ import (
 )
 
 type PVMonitor struct {
-	StorageClassName string
-	PVs              []types.PV
-	PvAndPVC         map[string]PVC
-	PVCAndPod        map[string][]types.Pod
-	lock             sync.RWMutex
+	DriverName string
+	PVs        []types.PV
+	PvAndPVC   map[string]PVC
+	PVCAndPod  map[string][]types.Pod
+	lock       sync.RWMutex
 }
 
 type PVC struct {
@@ -35,10 +34,10 @@ func New(c cache.Cache, n string) (*PVMonitor, error) {
 	stopCh := make(chan struct{})
 
 	pm := &PVMonitor{
-		StorageClassName: n,
-		PVs:              make([]types.PV, 0),
-		PvAndPVC:         make(map[string]PVC),
-		PVCAndPod:        make(map[string][]types.Pod),
+		DriverName: n,
+		PVs:        make([]types.PV, 0),
+		PvAndPVC:   make(map[string]PVC),
+		PVCAndPod:  make(map[string][]types.Pod),
 	}
 	if err := pm.initPVC(c); err != nil {
 		return nil, err

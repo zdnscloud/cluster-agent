@@ -6,8 +6,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const (
+	CSIAnnotations = "volume.beta.kubernetes.io/storage-provisioner"
+)
+
 func (s *PVMonitor) OnNewPV(pv *corev1.PersistentVolume) {
-	if pv.Spec.StorageClassName != s.StorageClassName {
+	if pv.Spec.PersistentVolumeSource.CSI.Driver != s.DriverName {
 		return
 	}
 	quantity := pv.Spec.Capacity["storage"]
@@ -25,7 +29,7 @@ func (s *PVMonitor) OnNewPVC(pvc *corev1.PersistentVolumeClaim) {
 	if pvc.Spec.StorageClassName == nil {
 		return
 	}
-	if *pvc.Spec.StorageClassName != s.StorageClassName {
+	if pvc.Annotations[CSIAnnotations] != s.DriverName {
 		return
 	}
 	pvcns := pvc.Namespace + "/" + pvc.Name
@@ -60,7 +64,7 @@ func (s *PVMonitor) OnNewPod(pod *corev1.Pod) {
 }
 
 func (s *PVMonitor) OnDelPV(pv *corev1.PersistentVolume) {
-	if pv.Spec.StorageClassName != s.StorageClassName {
+	if pv.Spec.PersistentVolumeSource.CSI.Driver != s.DriverName {
 		return
 	}
 	pvs := s.PVs
@@ -75,7 +79,7 @@ func (s *PVMonitor) OnDelPVC(pvc *corev1.PersistentVolumeClaim) {
 	if pvc.Spec.StorageClassName == nil {
 		return
 	}
-	if *pvc.Spec.StorageClassName != s.StorageClassName {
+	if pvc.Annotations[CSIAnnotations] != s.DriverName {
 		return
 	}
 	delete(s.PvAndPVC, pvc.Spec.VolumeName)

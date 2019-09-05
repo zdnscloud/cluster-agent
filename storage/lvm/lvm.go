@@ -9,22 +9,18 @@ import (
 )
 
 const (
-	LvmStorageType      = "lvm"
-	LvmStorageClassName = "lvm"
+	LvmStorageType       = "lvm"
+	LvmStorageDriverName = "csi-lvmplugin"
 )
 
 type LVM struct {
-	Nodes    []types.Node
-	Size     string
-	FreeSize string
-	UsedSize string
-	PVData   *pvmonitor.PVMonitor
-	Cache    cache.Cache
-	lock     sync.RWMutex
+	PVData *pvmonitor.PVMonitor
+	Cache  cache.Cache
+	lock   sync.RWMutex
 }
 
 func New(c cache.Cache) (*LVM, error) {
-	pm, err := pvmonitor.New(c, LvmStorageClassName)
+	pm, err := pvmonitor.New(c, LvmStorageDriverName)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +43,7 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) *types.Storage {
 		uSize, fSize := utils.GetPVSize(p, mountpoints)
 		pvc := s.PVData.PvAndPVC[p.Name].Name
 		pods := s.PVData.PVCAndPod[pvc]
-		node, _ := utils.GetNodeForLvmPv(p.Name)
+		node, _ := utils.GetNodeForLvmPv(p.Name, LvmStorageDriverName)
 		pv := types.PV{
 			Name:     p.Name,
 			Size:     p.Size,
@@ -58,16 +54,8 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) *types.Storage {
 		}
 		res = append(res, pv)
 	}
-	nodes, tSize, uSize, fSize, err := utils.GetNodesCapacity(LvmStorageType)
-	if err != nil {
-		_ = err
-	}
 	return &types.Storage{
-		Name:     LvmStorageType,
-		Size:     tSize,
-		UsedSize: uSize,
-		FreeSize: fSize,
-		Nodes:    nodes,
-		PVs:      res,
+		Name: LvmStorageType,
+		PVs:  res,
 	}
 }

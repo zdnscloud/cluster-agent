@@ -18,8 +18,11 @@ type BlockDevice struct {
 	BlockDevices       []Dev  `json:"blockDevices"`
 }
 type Dev struct {
-	Name string `json:"name"`
-	Size string `json:"size"`
+	Name       string `json:"name"`
+	Size       string `json:"size"`
+	Parted     bool   `json:"parted"`
+	Filesystem bool   `json:"filesystem"`
+	Mount      bool   `json:"mount"`
 }
 
 type BlockDevices []BlockDevice

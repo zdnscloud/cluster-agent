@@ -47,12 +47,12 @@ func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
 		}
 		var devs Devs
 		for k, v := range reply.Infos {
-			if sTob(v.Diskinfo["Parted"]) || sTob(v.Diskinfo["Filesystem"]) || sTob(v.Diskinfo["Mountpoint"]) {
-				continue
-			}
 			dev := Dev{
-				Name: k,
-				Size: byteToG(v.Diskinfo["Size"]),
+				Name:       k,
+				Size:       byteToG(v.Diskinfo["Size"]),
+				Parted:     sTob(v.Diskinfo["Parted"]),
+				Filesystem: sTob(v.Diskinfo["Filesystem"]),
+				Mount:      sTob(v.Diskinfo["Mountpoint"]),
 			}
 			devs = append(devs, dev)
 		}
