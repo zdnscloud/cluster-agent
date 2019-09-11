@@ -29,6 +29,9 @@ const (
 	OwnerKindDaemonSet   = "DaemonSet"
 )
 
+//use service spec.Selector to get pods
+//use pods owner to find the workload
+//link workload to service logic is in k8ssvcToSCService
 type Service struct {
 	name      string
 	ingress   set.StringSet
