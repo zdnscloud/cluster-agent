@@ -25,6 +25,20 @@ func (s *PVMonitor) OnNewPV(pv *corev1.PersistentVolume) {
 	s.PVs = append(pvs, p)
 }
 
+func (s *PVMonitor) OnUpdatePV(pv *corev1.PersistentVolume) {
+	for i, p := range s.PVs {
+		if p.Name != pv.Name {
+			continue
+		}
+		quantity := pv.Spec.Capacity["storage"]
+		pvsize := utils.SizetoGb(quantity)
+		if p.Size == pvsize {
+			continue
+		}
+		s.PVs[i].Size = pvsize
+	}
+}
+
 func (s *PVMonitor) OnNewPVC(pvc *corev1.PersistentVolumeClaim) {
 	if pvc.Spec.StorageClassName == nil {
 		return

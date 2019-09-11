@@ -1,6 +1,7 @@
 package storage
 
 import (
+	cementcache "github.com/zdnscloud/cement/cache"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/storage/ceph"
@@ -10,6 +11,7 @@ import (
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
+	"time"
 )
 
 type Storage interface {
@@ -22,6 +24,7 @@ type StorageManager struct {
 
 	storages     []Storage
 	NodeAgentMgr *nodeagent.NodeAgentManager
+	cache        *cementcache.Cache
 }
 
 func New(c cache.Cache, nodeAgentMgr *nodeagent.NodeAgentManager) (*StorageManager, error) {
@@ -36,6 +39,7 @@ func New(c cache.Cache, nodeAgentMgr *nodeagent.NodeAgentManager) (*StorageManag
 	return &StorageManager{
 		storages:     []Storage{lvm, ceph},
 		NodeAgentMgr: nodeAgentMgr,
+		cache:        cementcache.New(1, hashMountPoints, false),
 	}, nil
 }
 
@@ -45,9 +49,11 @@ func (m *StorageManager) RegisterSchemas(version *resttypes.APIVersion, schemas 
 
 func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	cls := ctx.Object.GetID()
-	mountpoints, err := utils.GetAllPvUsedSize(m.NodeAgentMgr)
-	if err != nil {
-		log.Warnf("Get PV Used Size failed:%s", err.Error())
+	mountpoints := m.GetBuf()
+	if len(mountpoints) == 0 {
+		log.Infof("Get pv used info from nodeagent")
+		log.Infof("Add cache 60 second")
+		mountpoints = m.SetBuf()
 	}
 	for _, s := range m.storages {
 		if s.GetType() == cls {
@@ -59,12 +65,45 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 
 func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
 	var infos []*types.Storage
-	mountpoints, err := utils.GetAllPvUsedSize(m.NodeAgentMgr)
-	if err != nil {
-		log.Warnf("Get PV Used Size failed:%s", err.Error())
+	mountpoints := m.GetBuf()
+	if len(mountpoints) == 0 {
+		log.Infof("Get pv used info from nodeagent")
+		log.Infof("Add cache 60 second")
+		mountpoints = m.SetBuf()
 	}
 	for _, s := range m.storages {
 		infos = append(infos, s.GetInfo(mountpoints))
 	}
 	return infos
+}
+
+var key = cementcache.HashString("1")
+
+func hashMountPoints(s cementcache.Value) cementcache.Key {
+	return key
+}
+
+func (m *StorageManager) SetBuf() map[string][]int64 {
+	mountpoints, err := utils.GetAllPvUsedSize(m.NodeAgentMgr)
+	if err != nil {
+		log.Warnf("Get PV Used Size failed:%s", err.Error())
+	}
+	if len(mountpoints) == 0 {
+		log.Warnf("Has no info to cache")
+		return mountpoints
+	}
+	m.cache.Add(&mountpoints, 60*time.Second)
+	return mountpoints
+}
+
+func (m *StorageManager) GetBuf() map[string][]int64 {
+	log.Infof("Get pv used info from cache")
+	mountpoints := make(map[string][]int64)
+	res, has := m.cache.Get(key)
+	if !has {
+		log.Warnf("Cache not found info")
+		return mountpoints
+	}
+	mountpoints = *res.(*map[string][]int64)
+	return mountpoints
 }

@@ -3,6 +3,7 @@ package blockdevice
 import (
 	"context"
 	"fmt"
+	cementcache "github.com/zdnscloud/cement/cache"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/gorest/api"
@@ -18,11 +19,13 @@ import (
 type blockDeviceMgr struct {
 	api.DefaultHandler
 	NodeAgentMgr *nodeagent.NodeAgentManager
+	cache        *cementcache.Cache
 }
 
 func New(nodeAgentMgr *nodeagent.NodeAgentManager) (*blockDeviceMgr, error) {
 	return &blockDeviceMgr{
 		NodeAgentMgr: nodeAgentMgr,
+		cache:        cementcache.New(1, hashBlockdevices, false),
 	}, nil
 }
 
@@ -31,6 +34,58 @@ func (m *blockDeviceMgr) RegisterSchemas(version *resttypes.APIVersion, schemas 
 }
 
 func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
+	bs := m.GetBuf()
+	if len(bs) == 0 {
+		log.Infof("Get blockdevices from nodeagent")
+		log.Infof("Add cache 60 second")
+		bs = m.SetBuf()
+	}
+	return bs
+}
+
+func byteToG(size string) string {
+	num, _ := strconv.ParseInt(size, 10, 64)
+	f := float64(num) / (1024 * 1024 * 1024)
+	return fmt.Sprintf("%.2f", math.Trunc(f*1e2)*1e-2)
+}
+
+func sTob(str string) bool {
+	var res bool
+	if str == "true" {
+		res = true
+	}
+	return res
+}
+
+var key = cementcache.HashString("1")
+
+func hashBlockdevices(s cementcache.Value) cementcache.Key {
+	return key
+}
+
+func (m *blockDeviceMgr) SetBuf() BlockDevices {
+	bs := m.getBlockdevicesFronNodeAgent()
+	if len(bs) == 0 {
+		log.Warnf("Has no blockdevices to cache")
+		return bs
+	}
+	m.cache.Add(&bs, 60*time.Second)
+	return bs
+}
+
+func (m *blockDeviceMgr) GetBuf() BlockDevices {
+	log.Infof("Get blockdevices from cache")
+	var bs BlockDevices
+	res, has := m.cache.Get(key)
+	if !has {
+		log.Warnf("Cache not found blockdevice")
+		return bs
+	}
+	bs = *res.(*BlockDevices)
+	return bs
+}
+
+func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() BlockDevices {
 	var res BlockDevices
 	nodes := m.NodeAgentMgr.GetNodeAgents()
 	for _, node := range nodes {
@@ -64,19 +119,5 @@ func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
 		res = append(res, host)
 	}
 	sort.Sort(res)
-	return res
-}
-
-func byteToG(size string) string {
-	num, _ := strconv.ParseInt(size, 10, 64)
-	f := float64(num) / (1024 * 1024 * 1024)
-	return fmt.Sprintf("%.2f", math.Trunc(f*1e2)*1e-2)
-}
-
-func sTob(str string) bool {
-	var res bool
-	if str == "true" {
-		res = true
-	}
 	return res
 }

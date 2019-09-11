@@ -77,6 +77,8 @@ func (s *PVMonitor) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 	switch newObj := e.ObjectNew.(type) {
 	case *corev1.PersistentVolumeClaim:
 		s.OnNewPVC(newObj)
+	case *corev1.PersistentVolume:
+		s.OnUpdatePV(newObj)
 	}
 	return handler.Result{}, nil
 }
