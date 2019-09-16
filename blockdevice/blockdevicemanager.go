@@ -20,12 +20,14 @@ type blockDeviceMgr struct {
 	api.DefaultHandler
 	NodeAgentMgr *nodeagent.NodeAgentManager
 	cache        *cementcache.Cache
+	timeout      int
 }
 
-func New(nodeAgentMgr *nodeagent.NodeAgentManager) (*blockDeviceMgr, error) {
+func New(to int, nodeAgentMgr *nodeagent.NodeAgentManager) (*blockDeviceMgr, error) {
 	return &blockDeviceMgr{
 		NodeAgentMgr: nodeAgentMgr,
 		cache:        cementcache.New(1, hashBlockdevices, false),
+		timeout:      to,
 	}, nil
 }
 
@@ -37,7 +39,7 @@ func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
 	bs := m.GetBuf()
 	if len(bs) == 0 {
 		log.Infof("Get blockdevices from nodeagent")
-		log.Infof("Add cache 60 second")
+		log.Infof("Add cache %d second", m.timeout)
 		bs = m.SetBuf()
 	}
 	return bs
@@ -69,7 +71,7 @@ func (m *blockDeviceMgr) SetBuf() BlockDevices {
 		log.Warnf("Has no blockdevices to cache")
 		return bs
 	}
-	m.cache.Add(&bs, 60*time.Second)
+	m.cache.Add(&bs, time.Duration(m.timeout)*time.Second)
 	return bs
 }
 
@@ -94,6 +96,7 @@ func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() BlockDevices {
 			log.Warnf("Create node agent client: %s failed: %s", node.Name, err.Error())
 			continue
 		}
+		log.Infof("Get node %s Disk info", node.Name)
 		req := pb.GetDisksInfoRequest{}
 		reply, err := cli.GetDisksInfo(context.TODO(), &req)
 		if err != nil {

@@ -10,6 +10,8 @@ import (
 	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/api"
 	resttypes "github.com/zdnscloud/gorest/types"
+	"os"
+	"strconv"
 
 	"github.com/zdnscloud/cluster-agent/blockdevice"
 	"github.com/zdnscloud/cluster-agent/configsyncer"
@@ -59,8 +61,17 @@ func main() {
 
 	configsyncer.NewConfigSyncer(cli, cache)
 
+	to := os.Getenv("CACHE_TIME")
+	if to == "" {
+		to = "60"
+	}
+	timeout, err := strconv.Atoi(to)
+	if err != nil {
+		timeout = int(60)
+	}
+
 	nodeAgentMgr := nodeagent.New()
-	storageMgr, err := storage.New(cache, nodeAgentMgr)
+	storageMgr, err := storage.New(cache, timeout, nodeAgentMgr)
 	if err != nil {
 		log.Fatalf("Create storage manager failed:%s", err.Error())
 	}
@@ -72,7 +83,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
-	blockDeviceMgr, err := blockdevice.New(nodeAgentMgr)
+	blockDeviceMgr, err := blockdevice.New(timeout, nodeAgentMgr)
 	if err != nil {
 		log.Fatalf("Create nodeblocks manager failed:%s", err.Error())
 	}

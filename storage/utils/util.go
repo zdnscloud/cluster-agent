@@ -112,25 +112,18 @@ func GetNodeForLvmPv(name, DriverName string) (string, error) {
 
 func GetAllPvUsedSize(nodeAgentMgr *nodeagent.NodeAgentManager) (map[string][]int64, error) {
 	infos := make(map[string][]int64)
-	nodes, err := GetNodes()
-	if err != nil {
-		return infos, err
-	}
-	for _, n := range nodes.Items {
-		agent, ok := nodeAgentMgr.GetNodeAgent(n.Name)
-		if !ok {
-			log.Warnf("Get node agent %s failed", n.Name)
-			continue
-		}
-		cli, err := nodeclient.NewClient(agent.Address, 10*time.Second)
+	nodes := nodeAgentMgr.GetNodeAgents()
+	for _, node := range nodes {
+		cli, err := nodeclient.NewClient(node.Address, 10*time.Second)
 		if err != nil {
-			log.Warnf("Create node agent client: %s failed: %s", agent.Address, err.Error())
+			log.Warnf("Create node agent client: %s failed: %s", node.Name, err.Error())
 			continue
 		}
+		log.Infof("Get node %s MountpointsSize info", node.Name)
 		mreq := pb.GetMountpointsSizeRequest{}
 		mreply, err := cli.GetMountpointsSize(context.TODO(), &mreq)
 		if err != nil {
-			log.Warnf("Get MountpointsSize on %s failed: %s", agent.Address, err.Error())
+			log.Warnf("Get MountpointsSize on %s failed: %s", node.Name, err.Error())
 			continue
 		}
 		for k, v := range mreply.Infos {
@@ -140,5 +133,5 @@ func GetAllPvUsedSize(nodeAgentMgr *nodeagent.NodeAgentManager) (map[string][]in
 			infos[k] = []int64{v.Tsize, v.Usize, v.Fsize}
 		}
 	}
-	return infos, err
+	return infos, nil
 }

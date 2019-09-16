@@ -25,9 +25,10 @@ type StorageManager struct {
 	storages     []Storage
 	NodeAgentMgr *nodeagent.NodeAgentManager
 	cache        *cementcache.Cache
+	timeout      int
 }
 
-func New(c cache.Cache, nodeAgentMgr *nodeagent.NodeAgentManager) (*StorageManager, error) {
+func New(c cache.Cache, to int, nodeAgentMgr *nodeagent.NodeAgentManager) (*StorageManager, error) {
 	lvm, err := lvm.New(c)
 	if err != nil {
 		return nil, err
@@ -40,6 +41,7 @@ func New(c cache.Cache, nodeAgentMgr *nodeagent.NodeAgentManager) (*StorageManag
 		storages:     []Storage{lvm, ceph},
 		NodeAgentMgr: nodeAgentMgr,
 		cache:        cementcache.New(1, hashMountPoints, false),
+		timeout:      to,
 	}, nil
 }
 
@@ -52,7 +54,7 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	mountpoints := m.GetBuf()
 	if len(mountpoints) == 0 {
 		log.Infof("Get pv used info from nodeagent")
-		log.Infof("Add cache 60 second")
+		log.Infof("Add cache %s second", m.timeout)
 		mountpoints = m.SetBuf()
 	}
 	for _, s := range m.storages {
@@ -68,7 +70,7 @@ func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
 	mountpoints := m.GetBuf()
 	if len(mountpoints) == 0 {
 		log.Infof("Get pv used info from nodeagent")
-		log.Infof("Add cache 60 second")
+		log.Infof("Add cache %d second", m.timeout)
 		mountpoints = m.SetBuf()
 	}
 	for _, s := range m.storages {
@@ -92,7 +94,7 @@ func (m *StorageManager) SetBuf() map[string][]int64 {
 		log.Warnf("Has no info to cache")
 		return mountpoints
 	}
-	m.cache.Add(&mountpoints, 60*time.Second)
+	m.cache.Add(&mountpoints, time.Duration(m.timeout)*time.Second)
 	return mountpoints
 }
 
