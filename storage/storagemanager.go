@@ -54,7 +54,7 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	mountpoints := m.GetBuf()
 	if len(mountpoints) == 0 {
 		log.Infof("Get pv used info from nodeagent")
-		log.Infof("Add cache %s second", m.timeout)
+		log.Infof("Add cache %d second", m.timeout)
 		mountpoints = m.SetBuf()
 	}
 	for _, s := range m.storages {

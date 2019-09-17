@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	CephStorageType       = "ceph"
+	CephStorageType       = "cephfs"
 	CephStorageDriverName = "cephfs.csi.ceph.com"
 )
 
