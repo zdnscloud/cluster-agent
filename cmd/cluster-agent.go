@@ -12,14 +12,14 @@ import (
 	"github.com/zdnscloud/gorest/resource"
 	"github.com/zdnscloud/gorest/resource/schema"
 	"os"
-	//"strconv"
+	"strconv"
 
-	//"github.com/zdnscloud/cluster-agent/blockdevice"
+	"github.com/zdnscloud/cluster-agent/blockdevice"
 	"github.com/zdnscloud/cluster-agent/configsyncer"
 	//"github.com/zdnscloud/cluster-agent/network"
-	//"github.com/zdnscloud/cluster-agent/nodeagent"
+	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/service"
-	//"github.com/zdnscloud/cluster-agent/storage"
+	"github.com/zdnscloud/cluster-agent/storage"
 )
 
 var (
@@ -67,26 +67,26 @@ func main() {
 		to = "60"
 	}
 
-	/*
-		timeout, err := strconv.Atoi(to)
-		if err != nil {
-			timeout = int(60)
-		}
+	timeout, err := strconv.Atoi(to)
+	if err != nil {
+		timeout = int(60)
+	}
 
-			nodeAgentMgr := nodeagent.New()
-			storageMgr, err := storage.New(cache, timeout, nodeAgentMgr)
-			if err != nil {
-				log.Fatalf("Create storage manager failed:%s", err.Error())
-			}
-			networkMgr, err := network.New(cache)
-			if err != nil {
-				log.Fatalf("Create network manager failed:%s", err.Error())
-			}
-			blockDeviceMgr, err := blockdevice.New(timeout, nodeAgentMgr)
-			if err != nil {
-				log.Fatalf("Create nodeblocks manager failed:%s", err.Error())
-			}
+	nodeAgentMgr := nodeagent.New()
+	storageMgr, err := storage.New(cache, timeout, nodeAgentMgr)
+	if err != nil {
+		log.Fatalf("Create storage manager failed:%s", err.Error())
+	}
+	/*
+		networkMgr, err := network.New(cache)
+		if err != nil {
+			log.Fatalf("Create network manager failed:%s", err.Error())
+		}
 	*/
+	blockDeviceMgr, err := blockdevice.New(timeout, nodeAgentMgr)
+	if err != nil {
+		log.Fatalf("Create nodeblocks manager failed:%s", err.Error())
+	}
 
 	serviceMgr, err := service.New(cache)
 	if err != nil {
@@ -94,11 +94,11 @@ func main() {
 	}
 
 	schemas := schema.NewSchemaManager()
-	//storageMgr.RegisterSchemas(&Version, schemas)
-	//networkMgr.RegisterSchemas(&Version, schemas)
 	serviceMgr.RegisterSchemas(&Version, schemas)
-	//nodeAgentMgr.RegisterSchemas(&Version, schemas)
-	//blockDeviceMgr.RegisterSchemas(&Version, schemas)
+	storageMgr.RegisterSchemas(&Version, schemas)
+	//networkMgr.RegisterSchemas(&Version, schemas)
+	nodeAgentMgr.RegisterSchemas(&Version, schemas)
+	blockDeviceMgr.RegisterSchemas(&Version, schemas)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	adaptor.RegisterHandler(router, gorest.NewAPIServer(schemas), schemas.GenerateResourceRoute())

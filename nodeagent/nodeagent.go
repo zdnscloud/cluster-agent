@@ -3,13 +3,11 @@ package nodeagent
 import (
 	"sync"
 
-	"github.com/zdnscloud/gorest"
-	resttypes "github.com/zdnscloud/gorest/resource"
+	gorestError "github.com/zdnscloud/gorest/error"
+	"github.com/zdnscloud/gorest/resource"
 )
 
 type NodeAgentManager struct {
-	api.DefaultHandler
-
 	lock       sync.Mutex
 	nodeAgents map[string]*NodeAgent
 }
@@ -20,7 +18,7 @@ func New() *NodeAgentManager {
 	}
 }
 
-func (m *NodeAgentManager) List(ctx *resttypes.Context) interface{} {
+func (m *NodeAgentManager) List(ctx *resource.Context) interface{} {
 	return m.GetNodeAgents()
 
 }
@@ -44,10 +42,10 @@ func (m *NodeAgentManager) GetNodeAgent(name string) (*NodeAgent, bool) {
 	return agent, ok
 }
 
-func (m *NodeAgentManager) Create(ctx *resttypes.Context, yamlConf []byte) (interface{}, *resttypes.APIError) {
-	node := ctx.Object.(*NodeAgent)
+func (m *NodeAgentManager) Create(ctx *resource.Context) (resource.Resource, *gorestError.APIError) {
+	node := ctx.Resource.(*NodeAgent)
 	node.SetID(node.Name)
-	node.SetType(NodeAgentType)
+	//node.SetType(NodeAgentType)
 
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -55,6 +53,6 @@ func (m *NodeAgentManager) Create(ctx *resttypes.Context, yamlConf []byte) (inte
 	return node, nil
 }
 
-func (m *NodeAgentManager) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
-	schemas.MustImportAndCustomize(version, NodeAgent{}, m, SetNodeAgentSchema)
+func (m *NodeAgentManager) RegisterSchemas(version *resource.APIVersion, schemas resource.SchemaManager) {
+	schemas.MustImport(version, NodeAgent{}, m)
 }

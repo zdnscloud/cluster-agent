@@ -9,8 +9,7 @@ import (
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/gorest"
-	resttypes "github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource"
 	"time"
 )
 
@@ -20,8 +19,6 @@ type Storage interface {
 }
 
 type StorageManager struct {
-	api.DefaultHandler
-
 	storages     []Storage
 	NodeAgentMgr *nodeagent.NodeAgentManager
 	cache        *cementcache.Cache
@@ -45,12 +42,13 @@ func New(c cache.Cache, to int, nodeAgentMgr *nodeagent.NodeAgentManager) (*Stor
 	}, nil
 }
 
-func (m *StorageManager) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
-	schemas.MustImportAndCustomize(version, types.Storage{}, m, types.SetStorageSchema)
+func (m *StorageManager) RegisterSchemas(version *resource.APIVersion, schemas resource.SchemaManager) {
+	schemas.MustImport(version, types.Storage{}, m)
 }
 
-func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
-	cls := ctx.Object.GetID()
+func (m *StorageManager) Get(ctx *resource.Context) resource.Resource {
+	res := ctx.Resource.(*types.Storage)
+	cls := ctx.Resource.GetID()
 	mountpoints := m.GetBuf()
 	if len(mountpoints) == 0 {
 		log.Infof("Get pv used info from nodeagent")
@@ -59,13 +57,14 @@ func (m *StorageManager) Get(ctx *resttypes.Context) interface{} {
 	}
 	for _, s := range m.storages {
 		if s.GetType() == cls {
-			return s.GetInfo(mountpoints)
+			res = s.GetInfo(mountpoints)
 		}
 	}
-	return nil
+	res.SetID(cls)
+	return res
 }
 
-func (m *StorageManager) List(ctx *resttypes.Context) interface{} {
+func (m *StorageManager) List(ctx *resource.Context) interface{} {
 	var infos []*types.Storage
 	mountpoints := m.GetBuf()
 	if len(mountpoints) == 0 {

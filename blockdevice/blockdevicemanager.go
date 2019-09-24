@@ -6,8 +6,7 @@ import (
 	cementcache "github.com/zdnscloud/cement/cache"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
-	"github.com/zdnscloud/gorest"
-	resttypes "github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource"
 	nodeclient "github.com/zdnscloud/node-agent/client"
 	pb "github.com/zdnscloud/node-agent/proto"
 	"math"
@@ -17,7 +16,6 @@ import (
 )
 
 type blockDeviceMgr struct {
-	api.DefaultHandler
 	NodeAgentMgr *nodeagent.NodeAgentManager
 	cache        *cementcache.Cache
 	timeout      int
@@ -31,11 +29,11 @@ func New(to int, nodeAgentMgr *nodeagent.NodeAgentManager) (*blockDeviceMgr, err
 	}, nil
 }
 
-func (m *blockDeviceMgr) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
-	schemas.MustImportAndCustomize(version, BlockDevice{}, m, SetBlockDeviceSchema)
+func (m *blockDeviceMgr) RegisterSchemas(version *resource.APIVersion, schemas resource.SchemaManager) {
+	schemas.MustImport(version, BlockDevice{}, m)
 }
 
-func (m *blockDeviceMgr) List(ctx *resttypes.Context) interface{} {
+func (m *blockDeviceMgr) List(ctx *resource.Context) interface{} {
 	bs := m.GetBuf()
 	if len(bs) == 0 {
 		log.Infof("Get blockdevices from nodeagent")
@@ -65,7 +63,7 @@ func hashBlockdevices(s cementcache.Value) cementcache.Key {
 	return key
 }
 
-func (m *blockDeviceMgr) SetBuf() BlockDevices {
+func (m *blockDeviceMgr) SetBuf() []*BlockDevice {
 	bs := m.getBlockdevicesFronNodeAgent()
 	if len(bs) == 0 {
 		log.Warnf("Has no blockdevices to cache")
@@ -75,21 +73,20 @@ func (m *blockDeviceMgr) SetBuf() BlockDevices {
 	return bs
 }
 
-func (m *blockDeviceMgr) GetBuf() BlockDevices {
+func (m *blockDeviceMgr) GetBuf() []*BlockDevice {
 	log.Infof("Get blockdevices from cache")
-	var bs BlockDevices
 	res, has := m.cache.Get(key)
 	if !has {
 		log.Warnf("Cache not found blockdevice")
-		return bs
+		return []*BlockDevice{}
 	}
-	bs = *res.(*BlockDevices)
-	return bs
+	return *res.(*[]*BlockDevice)
 }
 
-func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() BlockDevices {
+func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() []*BlockDevice {
 	var res BlockDevices
 	nodes := m.NodeAgentMgr.GetNodeAgents()
+	fmt.Println(nodes)
 	for _, node := range nodes {
 		cli, err := nodeclient.NewClient(node.Address, 10*time.Second)
 		if err != nil {
@@ -122,5 +119,9 @@ func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() BlockDevices {
 		res = append(res, host)
 	}
 	sort.Sort(res)
-	return res
+	bs := make([]*BlockDevice, len(res))
+	for i := 0; i < len(res); i++ {
+		bs[i] = &res[i]
+	}
+	return bs
 }

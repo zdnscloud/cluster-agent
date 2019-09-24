@@ -1,21 +1,18 @@
 package types
 
 import (
-	resttypes "github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource"
 )
 
-func SetStorageSchema(schema *resttypes.Schema, handler resttypes.Handler) {
-	schema.Handler = handler
-	schema.CollectionMethods = []string{"GET"}
-	schema.ResourceMethods = []string{"GET"}
+type Cluster struct {
+	resource.ResourceBase `json:",inline"`
+	Name                  string `json:"name,omitempty"`
 }
 
-var StorageType = resttypes.GetResourceType(Storage{})
-
 type Storage struct {
-	resttypes.Resource `json:",inline"`
-	Name               string `json:"name"`
-	PVs                []PV   `json:"pvs"`
+	resource.ResourceBase `json:",inline"`
+	Name                  string `json:"name"`
+	PVs                   []PV   `json:"pvs"`
 }
 
 type PV struct {

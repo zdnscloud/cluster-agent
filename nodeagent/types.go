@@ -1,18 +1,11 @@
 package nodeagent
 
 import (
-	resttypes "github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource"
 )
 
-func SetNodeAgentSchema(schema *resttypes.Schema, handler resttypes.Handler) {
-	schema.Handler = handler
-	schema.CollectionMethods = []string{"POST", "GET"}
-}
-
 type NodeAgent struct {
-	resttypes.Resource `json:",inline"`
-	Name               string `json:"name"`
-	Address            string `json:"address"`
+	resource.ResourceBase `json:",inline"`
+	Name                  string `json:"name"`
+	Address               string `json:"address"`
 }
-
-var NodeAgentType = resttypes.GetResourceType(NodeAgent{})
