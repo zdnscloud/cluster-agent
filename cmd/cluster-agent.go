@@ -98,7 +98,6 @@ func main() {
 	networkMgr.RegisterSchemas(&Version, schemas)
 	serviceMgr.RegisterSchemas(&Version, schemas)
 	storageMgr.RegisterSchemas(&Version, schemas)
-	networkMgr.RegisterSchemas(&Version, schemas)
 	nodeAgentMgr.RegisterSchemas(&Version, schemas)
 	blockDeviceMgr.RegisterSchemas(&Version, schemas)
 	gin.SetMode(gin.ReleaseMode)
