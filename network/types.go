@@ -10,7 +10,7 @@ type NodeNetwork struct {
 	IP                    string `json:"ip"`
 }
 
-type NodeNetworks []NodeNetwork
+type NodeNetworks []*NodeNetwork
 
 func (n NodeNetworks) Len() int {
 	return len(n)
@@ -35,7 +35,7 @@ type PodIP struct {
 	IP        string `json:"ip"`
 }
 
-type PodNetworks []PodNetwork
+type PodNetworks []*PodNetwork
 
 func (p PodNetworks) Len() int {
 	return len(p)
@@ -54,7 +54,7 @@ type ServiceNetwork struct {
 	IP                    string `json:"ip"`
 }
 
-type ServiceNetworks []ServiceNetwork
+type ServiceNetworks []*ServiceNetwork
 
 func (s ServiceNetworks) Len() int {
 	return len(s)

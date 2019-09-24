@@ -20,28 +20,28 @@ func newNetworkCache() *NetworkCache {
 	}
 }
 
-func (nc *NetworkCache) GetNodeNetworks() []NodeNetwork {
+func (nc *NetworkCache) GetNodeNetworks() NodeNetworks {
 	var nodeNetworks NodeNetworks
 	for _, nodeNetwork := range nc.nodeNetworks {
-		nodeNetworks = append(nodeNetworks, *nodeNetwork)
+		nodeNetworks = append(nodeNetworks, nodeNetwork)
 	}
 	sort.Sort(nodeNetworks)
 	return nodeNetworks
 }
 
-func (nc *NetworkCache) GetPodNetworks() []PodNetwork {
+func (nc *NetworkCache) GetPodNetworks() PodNetworks {
 	var podNetworks PodNetworks
 	for _, podNetwork := range nc.podNetworks {
-		podNetworks = append(podNetworks, *podNetwork)
+		podNetworks = append(podNetworks, podNetwork)
 	}
 	sort.Sort(podNetworks)
 	return podNetworks
 }
 
-func (nc *NetworkCache) GetServiceNetworks() []ServiceNetwork {
+func (nc *NetworkCache) GetServiceNetworks() ServiceNetworks {
 	var serviceNetworks ServiceNetworks
 	for _, serviceNetwork := range nc.serviceNetworks {
-		serviceNetworks = append(serviceNetworks, *serviceNetwork)
+		serviceNetworks = append(serviceNetworks, serviceNetwork)
 	}
 	sort.Sort(serviceNetworks)
 	return serviceNetworks
