@@ -1,21 +1,14 @@
 package network
 
 import (
-	resttypes "github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource"
 )
 
-func SetNodeNetworkSchema(schema *resttypes.Schema, handler resttypes.Handler) {
-	schema.Handler = handler
-	schema.CollectionMethods = []string{"GET"}
-}
-
 type NodeNetwork struct {
-	resttypes.Resource `json:",inline"`
-	Name               string `json:"name"`
-	IP                 string `json:"ip"`
+	resource.ResourceBase `json:",inline"`
+	Name                  string `json:"name"`
+	IP                    string `json:"ip"`
 }
-
-var NodeNetworkType = resttypes.GetResourceType(NodeNetwork{})
 
 type NodeNetworks []NodeNetwork
 
@@ -29,16 +22,11 @@ func (n NodeNetworks) Less(i, j int) bool {
 	return n[i].Name < n[j].Name
 }
 
-func SetPodNetworkSchema(schema *resttypes.Schema, handler resttypes.Handler) {
-	schema.Handler = handler
-	schema.CollectionMethods = []string{"GET"}
-}
-
 type PodNetwork struct {
-	resttypes.Resource `json:",inline"`
-	NodeName           string  `json:"nodeName"`
-	PodCIDR            string  `json:"podCIDR"`
-	PodIPs             []PodIP `json:"podIPs"`
+	resource.ResourceBase `json:",inline"`
+	NodeName              string  `json:"nodeName"`
+	PodCIDR               string  `json:"podCIDR"`
+	PodIPs                []PodIP `json:"podIPs"`
 }
 
 type PodIP struct {
@@ -46,8 +34,6 @@ type PodIP struct {
 	Name      string `json:"name"`
 	IP        string `json:"ip"`
 }
-
-var PodNetworkType = resttypes.GetResourceType(PodNetwork{})
 
 type PodNetworks []PodNetwork
 
@@ -61,19 +47,12 @@ func (p PodNetworks) Less(i, j int) bool {
 	return p[i].NodeName < p[j].NodeName
 }
 
-func SetServiceNetworkSchema(schema *resttypes.Schema, handler resttypes.Handler) {
-	schema.Handler = handler
-	schema.CollectionMethods = []string{"GET"}
-}
-
 type ServiceNetwork struct {
-	resttypes.Resource `json:",inline"`
-	Namespace          string `json:"-"`
-	Name               string `json:"name"`
-	IP                 string `json:"ip"`
+	resource.ResourceBase `json:",inline"`
+	Namespace             string `json:"-"`
+	Name                  string `json:"name"`
+	IP                    string `json:"ip"`
 }
-
-var ServiceNetworkType = resttypes.GetResourceType(ServiceNetwork{})
 
 type ServiceNetworks []ServiceNetwork
 

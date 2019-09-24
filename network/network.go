@@ -5,19 +5,18 @@ import (
 	"sync"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes/scheme"
+	k8sscheme "k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/controller"
 	"github.com/zdnscloud/gok8s/event"
 	"github.com/zdnscloud/gok8s/handler"
 	"github.com/zdnscloud/gok8s/predicate"
-	"github.com/zdnscloud/gorest"
-	resttypes "github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource/schema"
 )
 
 type NetworkManager struct {
-	api.DefaultHandler
 	networks *NetworkCache
 	cache    cache.Cache
 	lock     sync.RWMutex
@@ -25,7 +24,7 @@ type NetworkManager struct {
 }
 
 func New(c cache.Cache) (*NetworkManager, error) {
-	ctrl := controller.New("networkCache", c, scheme.Scheme)
+	ctrl := controller.New("networkCache", c, k8sscheme.Scheme)
 	ctrl.Watch(&corev1.Node{})
 	ctrl.Watch(&corev1.Pod{})
 	ctrl.Watch(&corev1.Service{})
@@ -43,10 +42,10 @@ func New(c cache.Cache) (*NetworkManager, error) {
 	return m, nil
 }
 
-func (m *NetworkManager) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
-	schemas.MustImportAndCustomize(version, NodeNetwork{}, m, SetNodeNetworkSchema)
-	schemas.MustImportAndCustomize(version, PodNetwork{}, m, SetPodNetworkSchema)
-	schemas.MustImportAndCustomize(version, ServiceNetwork{}, m, SetServiceNetworkSchema)
+func (m *NetworkManager) RegisterSchemas(version *resource.APIVersion, schemas *schema.SchemaManager) {
+	schemas.MustImport(version, NodeNetwork{}, m)
+	schemas.MustImport(version, PodNetwork{}, m)
+	schemas.MustImport(version, ServiceNetwork{}, m)
 }
 
 func (m *NetworkManager) initNetworkManagers() error {
@@ -65,15 +64,15 @@ func (m *NetworkManager) initNetworkManagers() error {
 	return nil
 }
 
-func (m *NetworkManager) List(ctx *resttypes.Context) interface{} {
+func (m *NetworkManager) List(ctx *resource.Context) interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	switch ctx.Object.GetType() {
-	case NodeNetworkType:
+	switch ctx.Resource.GetType() {
+	case resource.DefaultKindName(NodeNetwork{}):
 		return m.networks.GetNodeNetworks()
-	case PodNetworkType:
+	case resource.DefaultKindName(PodNetwork{}):
 		return m.networks.GetPodNetworks()
-	case ServiceNetworkType:
+	case resource.DefaultKindName(ServiceNetwork{}):
 		return m.networks.GetServiceNetworks()
 	default:
 		return nil
