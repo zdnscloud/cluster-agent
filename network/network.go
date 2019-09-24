@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	corev1 "k8s.io/api/core/v1"
-	k8sscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/controller"
@@ -13,7 +13,6 @@ import (
 	"github.com/zdnscloud/gok8s/handler"
 	"github.com/zdnscloud/gok8s/predicate"
 	"github.com/zdnscloud/gorest/resource"
-	"github.com/zdnscloud/gorest/resource/schema"
 )
 
 type NetworkManager struct {
@@ -24,7 +23,7 @@ type NetworkManager struct {
 }
 
 func New(c cache.Cache) (*NetworkManager, error) {
-	ctrl := controller.New("networkCache", c, k8sscheme.Scheme)
+	ctrl := controller.New("networkCache", c, scheme.Scheme)
 	ctrl.Watch(&corev1.Node{})
 	ctrl.Watch(&corev1.Pod{})
 	ctrl.Watch(&corev1.Service{})
@@ -42,7 +41,7 @@ func New(c cache.Cache) (*NetworkManager, error) {
 	return m, nil
 }
 
-func (m *NetworkManager) RegisterSchemas(version *resource.APIVersion, schemas *schema.SchemaManager) {
+func (m *NetworkManager) RegisterSchemas(version *resource.APIVersion, schemas resource.SchemaManager) {
 	schemas.MustImport(version, NodeNetwork{}, m)
 	schemas.MustImport(version, PodNetwork{}, m)
 	schemas.MustImport(version, ServiceNetwork{}, m)

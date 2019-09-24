@@ -16,7 +16,7 @@ import (
 
 	//"github.com/zdnscloud/cluster-agent/blockdevice"
 	"github.com/zdnscloud/cluster-agent/configsyncer"
-	//"github.com/zdnscloud/cluster-agent/network"
+	"github.com/zdnscloud/cluster-agent/network"
 	//"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/service"
 	//"github.com/zdnscloud/cluster-agent/storage"
@@ -78,14 +78,16 @@ func main() {
 			if err != nil {
 				log.Fatalf("Create storage manager failed:%s", err.Error())
 			}
-			networkMgr, err := network.New(cache)
-			if err != nil {
-				log.Fatalf("Create network manager failed:%s", err.Error())
-			}
-			blockDeviceMgr, err := blockdevice.New(timeout, nodeAgentMgr)
-			if err != nil {
-				log.Fatalf("Create nodeblocks manager failed:%s", err.Error())
-			}
+	*/
+	networkMgr, err := network.New(cache)
+	if err != nil {
+		log.Fatalf("Create network manager failed:%s", err.Error())
+	}
+	/*
+		blockDeviceMgr, err := blockdevice.New(timeout, nodeAgentMgr)
+		if err != nil {
+			log.Fatalf("Create nodeblocks manager failed:%s", err.Error())
+		}
 	*/
 
 	serviceMgr, err := service.New(cache)
@@ -95,7 +97,7 @@ func main() {
 
 	schemas := schema.NewSchemaManager()
 	//storageMgr.RegisterSchemas(&Version, schemas)
-	//networkMgr.RegisterSchemas(&Version, schemas)
+	networkMgr.RegisterSchemas(&Version, schemas)
 	serviceMgr.RegisterSchemas(&Version, schemas)
 	//nodeAgentMgr.RegisterSchemas(&Version, schemas)
 	//blockDeviceMgr.RegisterSchemas(&Version, schemas)
