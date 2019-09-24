@@ -9,8 +9,8 @@ import (
 	"github.com/zdnscloud/cluster-agent/storage/types"
 	"github.com/zdnscloud/cluster-agent/storage/utils"
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/gorest/api"
-	resttypes "github.com/zdnscloud/gorest/types"
+	"github.com/zdnscloud/gorest"
+	resttypes "github.com/zdnscloud/gorest/resource"
 	"time"
 )
 

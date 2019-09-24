@@ -12,8 +12,8 @@ import (
 	"github.com/zdnscloud/gok8s/event"
 	"github.com/zdnscloud/gok8s/handler"
 	"github.com/zdnscloud/gok8s/predicate"
-	"github.com/zdnscloud/gorest/api"
-	resttypes "github.com/zdnscloud/gorest/types"
+	"github.com/zdnscloud/gorest"
+	resttypes "github.com/zdnscloud/gorest/resource"
 )
 
 type NetworkManager struct {

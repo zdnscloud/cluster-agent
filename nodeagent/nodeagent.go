@@ -3,8 +3,8 @@ package nodeagent
 import (
 	"sync"
 
-	"github.com/zdnscloud/gorest/api"
-	resttypes "github.com/zdnscloud/gorest/types"
+	"github.com/zdnscloud/gorest"
+	resttypes "github.com/zdnscloud/gorest/resource"
 )
 
 type NodeAgentManager struct {

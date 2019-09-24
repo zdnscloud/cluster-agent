@@ -1,7 +1,7 @@
 package service
 
 import (
-	resttypes "github.com/zdnscloud/gorest/types"
+	resttypes "github.com/zdnscloud/gorest/resource"
 )
 
 func SetNamespaceSchema(schema *resttypes.Schema, handler resttypes.Handler) {

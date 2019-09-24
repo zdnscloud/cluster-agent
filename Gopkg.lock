@@ -179,12 +179,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:de867f440c0984e02192ee47c5bf3edd7236d50226cd5cef758073dc155299c8"
+  digest = "1:4017b0f4c4ed2b4ba0fadd8aa373c444e089a80add49f113b469fa9b26aae73c"
   name = "github.com/zdnscloud/cement"
   packages = [
+    "cache",
     "log",
     "log/log4go",
-    "reflector",
     "set",
     "slice",
     "unittest",
@@ -195,7 +195,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:08f6d2c2fa478549b3baedf70fd660a58d57ea55ae4af2318f565b043d7894a7"
+  digest = "1:6db0cf7efec841fbe270262e2a418e95fc7f163778ec2866e1d6e3186ead78d2"
   name = "github.com/zdnscloud/gok8s"
   packages = [
     "cache",
@@ -209,7 +209,6 @@
     "handler",
     "helper",
     "predicate",
-    "scheme",
     "util",
   ]
   pruneopts = "UT"
@@ -217,26 +216,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dff9b80335d30b4f163ee3da352c96391e69dcaa1f43ae67bdec1a22d0aaead2"
+  digest = "1:da8fabe30bcfb9cd8a0a612c1cea37b45512ce7c034821becd28bc4863f4a944"
   name = "github.com/zdnscloud/gorest"
   packages = [
+    ".",
     "adaptor",
-    "api",
-    "api/handler",
-    "parse",
-    "types",
+    "error",
+    "resource",
     "util",
   ]
   pruneopts = "UT"
-  revision = "b515ac7fed0e4002895a90be54b0a9c68f5ee78b"
-
-[[projects]]
-  digest = "1:4252f5ae3abd7d768466e08b563120b4d45fbb38f45556fe06f1b83e2a8dc4a3"
-  name = "github.com/zdnscloud/immense"
-  packages = ["pkg/apis/zcloud/v1"]
-  pruneopts = "UT"
-  revision = "aaaaf55f12bf8fb2ec7778306dc1e86b573d170c"
-  version = "v1.0"
+  revision = "53fb708b94507f01762fd6396765699c61a38ffd"
 
 [[projects]]
   branch = "master"
@@ -605,6 +595,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/gin-gonic/gin",
+    "github.com/zdnscloud/cement/cache",
     "github.com/zdnscloud/cement/log",
     "github.com/zdnscloud/cement/set",
     "github.com/zdnscloud/cement/unittest",
@@ -617,10 +608,9 @@
     "github.com/zdnscloud/gok8s/handler",
     "github.com/zdnscloud/gok8s/helper",
     "github.com/zdnscloud/gok8s/predicate",
+    "github.com/zdnscloud/gorest",
     "github.com/zdnscloud/gorest/adaptor",
-    "github.com/zdnscloud/gorest/api",
-    "github.com/zdnscloud/gorest/types",
-    "github.com/zdnscloud/immense/pkg/apis/zcloud/v1",
+    "github.com/zdnscloud/gorest/resource",
     "github.com/zdnscloud/node-agent/client",
     "github.com/zdnscloud/node-agent/proto",
     "k8s.io/api/apps/v1",

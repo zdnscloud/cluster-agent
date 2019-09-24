@@ -1,7 +1,7 @@
 package nodeagent
 
 import (
-	resttypes "github.com/zdnscloud/gorest/types"
+	resttypes "github.com/zdnscloud/gorest/resource"
 )
 
 func SetNodeAgentSchema(schema *resttypes.Schema, handler resttypes.Handler) {

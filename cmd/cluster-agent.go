@@ -8,8 +8,6 @@ import (
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/client/config"
 	"github.com/zdnscloud/gorest/adaptor"
-	"github.com/zdnscloud/gorest/api"
-	resttypes "github.com/zdnscloud/gorest/types"
 	"os"
 	"strconv"
 
