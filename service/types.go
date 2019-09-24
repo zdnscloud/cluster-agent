@@ -1,30 +1,22 @@
 package service
 
 import (
-	resttypes "github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource"
 )
 
-func SetNamespaceSchema(schema *resttypes.Schema, handler resttypes.Handler) {
-}
-
 type Namespace struct {
-	resttypes.Resource `json:",inline"`
-	Name               string `json:"name,omitempty"`
-}
-
-var NamespaceType = resttypes.GetResourceType(Namespace{})
-
-func SetInnerServiceSchema(schema *resttypes.Schema, handler resttypes.Handler) {
-	schema.Handler = handler
-	schema.CollectionMethods = []string{"GET"}
-	//schema.Parent = NamespaceType
-	schema.Parents = []string{NamespaceType}
+	resource.ResourceBase `json:",inline"`
+	Name                  string `json:"name,omitempty"`
 }
 
 type InnerService struct {
-	resttypes.Resource `json:",inline"`
-	Name               string      `json:"name"`
-	Workloads          []*Workload `json:"workloads"`
+	resource.ResourceBase `json:",inline"`
+	Name                  string      `json:"name"`
+	Workloads             []*Workload `json:"workloads"`
+}
+
+func (s InnerService) GetParents() []resource.ResourceKind {
+	return []resource.ResourceKind{Namespace{}}
 }
 
 type Workload struct {
@@ -38,30 +30,23 @@ type Pod struct {
 	State string `json:"state"`
 }
 
-var InnerServiceType = resttypes.GetResourceType(InnerService{})
-
 type OuterService struct {
-	resttypes.Resource `json:",inline"`
-	EntryPoint         string                  `json:"entryPoint"`
-	Services           map[string]InnerService `json:"services"`
+	resource.ResourceBase `json:",inline"`
+	EntryPoint            string                  `json:"entryPoint"`
+	Services              map[string]InnerService `json:"services"`
 }
 
-func SetOuterServiceSchema(schema *resttypes.Schema, handler resttypes.Handler) {
-	schema.Handler = handler
-	schema.CollectionMethods = []string{"GET"}
-	//schema.Parent = NamespaceType
-	schema.Parents = []string{NamespaceType}
+func (s OuterService) GetParents() []resource.ResourceKind {
+	return []resource.ResourceKind{Namespace{}}
 }
 
-var OuterServiceType = resttypes.GetResourceType(OuterService{})
-
-type InnerServiceByName []InnerService
+type InnerServiceByName []*InnerService
 
 func (a InnerServiceByName) Len() int           { return len(a) }
 func (a InnerServiceByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a InnerServiceByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
-type OuterServiceByEntryPoint []OuterService
+type OuterServiceByEntryPoint []*OuterService
 
 func (a OuterServiceByEntryPoint) Len() int           { return len(a) }
 func (a OuterServiceByEntryPoint) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

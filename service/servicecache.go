@@ -65,7 +65,7 @@ func (r *ServiceCache) initServices() error {
 	return nil
 }
 
-func (r *ServiceCache) GetInnerServices(namespace string) []InnerService {
+func (r *ServiceCache) GetInnerServices(namespace string) []*InnerService {
 	r.lock.RLock()
 	monitor, ok := r.services[namespace]
 	r.lock.RUnlock()
@@ -76,7 +76,7 @@ func (r *ServiceCache) GetInnerServices(namespace string) []InnerService {
 	return monitor.GetInnerServices()
 }
 
-func (r *ServiceCache) GetOuterServices(namespace string) []OuterService {
+func (r *ServiceCache) GetOuterServices(namespace string) []*OuterService {
 	r.lock.RLock()
 	monitor, ok := r.services[namespace]
 	r.lock.RUnlock()

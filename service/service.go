@@ -2,13 +2,10 @@ package service
 
 import (
 	"github.com/zdnscloud/gok8s/cache"
-	"github.com/zdnscloud/gorest"
-	resttypes "github.com/zdnscloud/gorest/resource"
+	"github.com/zdnscloud/gorest/resource"
 )
 
 type ServiceManager struct {
-	api.DefaultHandler
-
 	cache *ServiceCache
 }
 
@@ -23,19 +20,25 @@ func New(c cache.Cache) (*ServiceManager, error) {
 	}, nil
 }
 
-func (m *ServiceManager) List(ctx *resttypes.Context) interface{} {
-	namespace := ctx.Object.GetParent().GetID()
-	switch ctx.Object.GetType() {
-	case InnerServiceType:
+func (m *ServiceManager) List(ctx *resource.Context) interface{} {
+	namespace := ctx.Resource.GetParent().GetID()
+	switch ctx.Resource.GetType() {
+	case resource.DefaultKindName(InnerService{}):
 		return m.cache.GetInnerServices(namespace)
-	case OuterServiceType:
+	case resource.DefaultKindName(OuterService{}):
 		return m.cache.GetOuterServices(namespace)
 	}
 	return nil
 }
 
-func (m *ServiceManager) RegisterSchemas(version *resttypes.APIVersion, schemas *resttypes.Schemas) {
-	schemas.MustImport(version, Namespace{})
-	schemas.MustImportAndCustomize(version, InnerService{}, m, SetInnerServiceSchema)
-	schemas.MustImportAndCustomize(version, OuterService{}, m, SetOuterServiceSchema)
+type dumbHandler struct{}
+
+func (h *dumbHandler) List(ctx *resource.Context) interface{} {
+	return nil
+}
+
+func (m *ServiceManager) RegisterSchemas(version *resource.APIVersion, schemas resource.SchemaManager) {
+	schemas.MustImport(version, Namespace{}, &dumbHandler{})
+	schemas.MustImport(version, InnerService{}, m)
+	schemas.MustImport(version, OuterService{}, m)
 }

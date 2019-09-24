@@ -216,13 +216,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:da8fabe30bcfb9cd8a0a612c1cea37b45512ce7c034821becd28bc4863f4a944"
+  digest = "1:f317b45371e0876d8b51a94429a9afae41c4d59464a1d59c85c3acef76b1a22c"
   name = "github.com/zdnscloud/gorest"
   packages = [
     ".",
     "adaptor",
     "error",
     "resource",
+    "resource/schema",
+    "resource/schema/resourcefield",
     "util",
   ]
   pruneopts = "UT"
@@ -611,6 +613,7 @@
     "github.com/zdnscloud/gorest",
     "github.com/zdnscloud/gorest/adaptor",
     "github.com/zdnscloud/gorest/resource",
+    "github.com/zdnscloud/gorest/resource/schema",
     "github.com/zdnscloud/node-agent/client",
     "github.com/zdnscloud/node-agent/proto",
     "k8s.io/api/apps/v1",

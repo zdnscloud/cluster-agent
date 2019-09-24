@@ -14,6 +14,7 @@ import (
 
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cement/set"
+	"github.com/zdnscloud/cement/uuid"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/helper"
@@ -56,27 +57,29 @@ func newServiceMonitor(cache cache.Cache) *ServiceMonitor {
 	}
 }
 
-func (s *ServiceMonitor) GetInnerServices() []InnerService {
+func (s *ServiceMonitor) GetInnerServices() []*InnerService {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	svcs := make([]InnerService, 0, len(s.services))
+	svcs := make([]*InnerService, 0, len(s.services))
 	for _, svc := range s.services {
 		if len(svc.ingress) == 0 {
-			svcs = append(svcs, InnerService{
+			is := &InnerService{
 				Name:      svc.name,
 				Workloads: s.getLinkedWorkloads(svc),
-			})
+			}
+			is.SetID(svc.name)
+			svcs = append(svcs, is)
 		}
 	}
 	sort.Sort(InnerServiceByName(svcs))
 	return svcs
 }
 
-func (s *ServiceMonitor) GetOuterServices() []OuterService {
+func (s *ServiceMonitor) GetOuterServices() []*OuterService {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
-	outerSvcs := make([]OuterService, 0, len(s.services))
+	outerSvcs := make([]*OuterService, 0, len(s.services))
 	//handle several services shared same ingress
 	returnedIngress := set.NewStringSet()
 	for _, svc := range s.services {
@@ -91,10 +94,10 @@ func (s *ServiceMonitor) GetOuterServices() []OuterService {
 	return outerSvcs
 }
 
-func (s *ServiceMonitor) toOuterService(ing *Ingress) []OuterService {
-	outerSvcs := make([]OuterService, 0, len(ing.rules))
-	var outerSvc OuterService
+func (s *ServiceMonitor) toOuterService(ing *Ingress) []*OuterService {
+	outerSvcs := make([]*OuterService, 0, len(ing.rules))
 	for _, rule := range ing.rules {
+		outerSvc := &OuterService{}
 		if rule.protocol == IngressProtocolHTTP {
 			outerSvc.EntryPoint = fmt.Sprintf("%s://%s", rule.protocol, rule.host)
 		} else {
@@ -111,6 +114,7 @@ func (s *ServiceMonitor) toOuterService(ing *Ingress) []OuterService {
 			}
 		}
 		outerSvc.Services = innerSvcs
+		outerSvc.SetID(uuid.MustGen())
 		outerSvcs = append(outerSvcs, outerSvc)
 	}
 	return outerSvcs
