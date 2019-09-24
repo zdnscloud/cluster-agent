@@ -86,7 +86,6 @@ func (m *blockDeviceMgr) GetBuf() []*BlockDevice {
 func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() []*BlockDevice {
 	var res BlockDevices
 	nodes := m.NodeAgentMgr.GetNodeAgents()
-	fmt.Println(nodes)
 	for _, node := range nodes {
 		cli, err := nodeclient.NewClient(node.Address, 10*time.Second)
 		if err != nil {
