@@ -68,6 +68,12 @@ func (nc *NetworkCache) OnNewNode(k8snode *corev1.Node) {
 	nn.SetID(GenUUID())
 	nc.nodeNetworks[k8snode.Name] = nn
 
+	if k8snode.Spec.PodCIDR != "" {
+		nc.newPodNetworks(k8snode)
+	}
+}
+
+func (nc *NetworkCache) newPodNetworks(k8snode *corev1.Node) {
 	pn := &PodNetwork{
 		NodeName: k8snode.Name,
 		PodCIDR:  k8snode.Spec.PodCIDR,
@@ -128,6 +134,19 @@ func (nc *NetworkCache) OnDeletePod(k8spod *corev1.Pod) {
 
 func (nc *NetworkCache) OnDeleteService(k8ssvc *corev1.Service) {
 	delete(nc.serviceNetworks, genServiceKey(k8ssvc))
+}
+
+func (nc *NetworkCache) OnUpdateNode(k8snode *corev1.Node) {
+	if _, ok := nc.nodeNetworks[k8snode.Name]; ok == false {
+		return
+	}
+
+	if pn, ok := nc.podNetworks[k8snode.Name]; ok {
+		pn.PodCIDR = k8snode.Spec.PodCIDR
+		return
+	}
+
+	nc.newPodNetworks(k8snode)
 }
 
 func (nc *NetworkCache) OnUpdateService(k8ssvc *corev1.Service) {

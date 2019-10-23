@@ -105,6 +105,10 @@ func (m *NetworkManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 		}
 	case *corev1.Pod:
 		m.networks.OnUpdatePod(e.ObjectOld.(*corev1.Pod), newObj)
+	case *corev1.Node:
+		if e.ObjectOld.(*corev1.Node).Spec.PodCIDR != newObj.Spec.PodCIDR {
+			m.networks.OnUpdateNode(newObj)
+		}
 	}
 
 	return handler.Result{}, nil
