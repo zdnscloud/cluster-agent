@@ -94,7 +94,7 @@ func (syncer *ConfigSyncer) onNewPodController(pc PodController) {
 	for _, configKey := range configs {
 		config, err := syncer.getConfig(namespace, configKey)
 		if err != nil {
-			log.Errorf("get %s failed %s", configKey, err.Error())
+			log.Warnf("get %s failed %s which may caused by workload is created before config resource", configKey, err.Error())
 			continue
 		}
 		metaObj := config.(metav1.Object)
