@@ -57,6 +57,10 @@ func (syncer *ConfigSyncer) OnCreate(e event.CreateEvent) (result handler.Result
 		pc = &statefulset{obj}
 	case *appsv1.DaemonSet:
 		pc = &daemonset{obj}
+	case *corev1.ConfigMap:
+		syncer.onNewConfig(obj)
+	case *corev1.Secret:
+		syncer.onNewConfig(obj)
 	}
 
 	if pc != nil && hasRequiredAnnotation(pc) {
@@ -64,6 +68,20 @@ func (syncer *ConfigSyncer) OnCreate(e event.CreateEvent) (result handler.Result
 	}
 
 	return handler.Result{}, nil
+}
+
+func (syncer *ConfigSyncer) onNewConfig(config Object) {
+	if helper.HasFinalizer(config, ZcloudFinalizer) {
+		return
+	}
+
+	pcKeys := syncer.configOwner.GetPodControllersUseConfig(config.GetNamespace(), ObjectKey(config))
+	if len(pcKeys) != 0 {
+		helper.AddFinalizer(config, ZcloudFinalizer)
+		if err := syncer.client.Update(context.TODO(), config); err != nil {
+			log.Errorf("add finalizer to %s failed %s", config.GetName(), err.Error())
+		}
+	}
 }
 
 func (syncer *ConfigSyncer) onNewPodController(pc PodController) {
@@ -77,7 +95,7 @@ func (syncer *ConfigSyncer) onNewPodController(pc PodController) {
 		config, err := syncer.getConfig(namespace, configKey)
 		if err != nil {
 			log.Errorf("get %s failed %s", configKey, err.Error())
-			return
+			continue
 		}
 		metaObj := config.(metav1.Object)
 		if helper.HasFinalizer(metaObj, ZcloudFinalizer) {
