@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/zdnscloud/cement/log"
@@ -11,14 +14,13 @@ import (
 	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/resource"
 	"github.com/zdnscloud/gorest/resource/schema"
-	"os"
-	"strconv"
 
 	"github.com/zdnscloud/cluster-agent/blockdevice"
 	"github.com/zdnscloud/cluster-agent/configsyncer"
 	"github.com/zdnscloud/cluster-agent/network"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/service"
+	"github.com/zdnscloud/cluster-agent/servicemesh"
 	"github.com/zdnscloud/cluster-agent/storage"
 )
 
@@ -94,12 +96,18 @@ func main() {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
 
+	serviceMeshMgr, err := servicemesh.New(cli)
+	if err != nil {
+		log.Fatalf("Create servicemesh manager failed:%s", err.Error())
+	}
+
 	schemas := schema.NewSchemaManager()
 	networkMgr.RegisterSchemas(&Version, schemas)
 	serviceMgr.RegisterSchemas(&Version, schemas)
 	storageMgr.RegisterSchemas(&Version, schemas)
 	nodeAgentMgr.RegisterSchemas(&Version, schemas)
 	blockDeviceMgr.RegisterSchemas(&Version, schemas)
+	serviceMeshMgr.RegisterSchemas(&Version, schemas)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	adaptor.RegisterHandler(router, gorest.NewAPIServer(schemas), schemas.GenerateResourceRoute())
