@@ -26,5 +26,5 @@ func (w WorkloadGroups) Swap(i, j int) {
 }
 
 func (w WorkloadGroups) Less(i, j int) bool {
-	return len(w[i].Workloads) < len(w[j].Workloads)
+	return len(w[j].Workloads) < len(w[i].Workloads)
 }
