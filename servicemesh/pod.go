@@ -1,9 +1,9 @@
 package servicemesh
 
 import (
-	"fmt"
 	"net/url"
 
+	"github.com/zdnscloud/cement/errgroup"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/gorest/resource"
 
@@ -16,46 +16,55 @@ const (
 
 type PodManager struct {
 	apiServerURL *url.URL
+	groupManager *WorkloadGroupManager
 }
 
-func newPodManager(apiServerURL *url.URL) *PodManager {
-	return &PodManager{apiServerURL}
+func newPodManager(apiServerURL *url.URL, groupManager *WorkloadGroupManager) *PodManager {
+	return &PodManager{
+		apiServerURL: apiServerURL,
+		groupManager: groupManager,
+	}
 }
 
 func (m *PodManager) Get(ctx *resource.Context) resource.Resource {
 	namespace := ctx.Resource.GetParent().GetParent().GetParent().GetID()
+	workloadId := ctx.Resource.GetParent().GetID()
 	podId := ctx.Resource.(*types.Pod).GetID()
-	pod, err := m.getPod(namespace, podId)
+	pod, err := m.getPod(namespace, workloadId, podId)
 	if err != nil {
-		log.Warnf("get pod %s stat with namespace %s failed: %s", podId, namespace, err.Error())
+		log.Warnf("get pod %s failed: %s", podId, err.Error())
 		return nil
 	}
 
 	return pod
 }
 
-func (m *PodManager) getPod(namespace, name string) (*types.Pod, error) {
-	stat, err := getStat(m.apiServerURL, namespace, Pod, name)
+func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.Pod, error) {
+	if err := m.groupManager.IsPodBelongToWorkload(namespace, workloadId, podName); err != nil {
+		return nil, err
+	}
+
+	resultCh, err := errgroup.Batch(genBasicStatOptions(m.apiServerURL, namespace, Pod, podName),
+		func(options interface{}) (interface{}, error) {
+			return getWorkloadWithOptions(options.(*StatOptions))
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	inbound, err := getStatsTo(m.apiServerURL, namespace, Pod, name)
-	if err != nil {
-		return nil, fmt.Errorf("get pod %s inbound stats with namespace %s failed: %s", name, namespace, err.Error())
+	pod := &types.Pod{}
+	for result := range resultCh {
+		p := result.(*types.Workload)
+		if len(p.Inbound) != 0 {
+			pod.Inbound = p.Inbound
+		} else if len(p.Outbound) != 0 {
+			pod.Outbound = p.Outbound
+		} else {
+			pod.Stat = p.Stat
+		}
 	}
 
-	outbound, err := getStatsFrom(m.apiServerURL, namespace, Pod, name)
-	if err != nil {
-		return nil, fmt.Errorf("get pod %s outbound stats with namespace %s failed: %s", name, namespace, err.Error())
-	}
-
-	pod := &types.Pod{
-		Stat:     stat,
-		Inbound:  inbound,
-		Outbound: outbound,
-	}
-
-	pod.SetID(name)
+	pod.SetID(podName)
 	return pod, nil
 }

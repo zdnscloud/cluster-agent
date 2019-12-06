@@ -96,7 +96,7 @@ func main() {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
 
-	serviceMeshMgr, err := servicemesh.New(cli)
+	serviceMeshMgr, err := servicemesh.New(cache)
 	if err != nil {
 		log.Fatalf("Create servicemesh manager failed:%s", err.Error())
 	}

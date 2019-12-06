@@ -17,22 +17,22 @@ const (
 	AllResourceType         = "all"
 )
 
-func getStatsFrom(apiServerURL *url.URL, namespace, resourceType, resourceName string) (types.Stats, error) {
-	return getStatsByReq(apiServerURL, buildStatRequest(namespace, resourceType, resourceName, true, false),
-		resourceType == Pod)
+var WorkloadKinds = []string{Deployment, DaemonSet, StatefulSet}
+
+type StatOptions struct {
+	ApiServerURL *url.URL
+	Namespace    string
+	ResourceID   string
+	ResourceType string
+	ResourceName string
+	From         bool
+	To           bool
 }
 
-func getStatsTo(apiServerURL *url.URL, namespace, resourceType, resourceName string) (types.Stats, error) {
-	return getStatsByReq(apiServerURL, buildStatRequest(namespace, resourceType, resourceName, false, true),
-		resourceType == Pod)
-}
-
-func getStat(apiServerURL *url.URL, namespace, resourceType, resourceName string) (types.Stat, error) {
-	stats, err := getStatsByReq(apiServerURL, buildStatRequest(namespace, resourceType, resourceName, false, false),
-		resourceType == Pod)
+func getStat(options *StatOptions) (types.Stat, error) {
+	stats, err := getStatsByReq(options.ApiServerURL, buildStatRequest(options), options.ResourceType == Pod)
 	if err != nil {
-		return types.Stat{}, fmt.Errorf("get %s/%s stat with namespace %s failed: %s",
-			resourceType, resourceName, namespace, err.Error())
+		return types.Stat{}, err
 	}
 
 	if len(stats) == 0 {
@@ -42,11 +42,15 @@ func getStat(apiServerURL *url.URL, namespace, resourceType, resourceName string
 	return stats[0], nil
 }
 
-func buildStatRequest(namespace, resourceType, resourceName string, from, to bool) *pb.StatSummaryRequest {
+func getStats(options *StatOptions) (types.Stats, error) {
+	return getStatsByReq(options.ApiServerURL, buildStatRequest(options), options.ResourceType == Pod)
+}
+
+func buildStatRequest(options *StatOptions) *pb.StatSummaryRequest {
 	pbResource := &pb.Resource{
-		Namespace: namespace,
-		Type:      resourceType,
-		Name:      resourceName,
+		Namespace: options.Namespace,
+		Type:      options.ResourceType,
+		Name:      options.ResourceName,
 	}
 
 	req := &pb.StatSummaryRequest{
@@ -60,15 +64,15 @@ func buildStatRequest(namespace, resourceType, resourceName string, from, to boo
 		},
 	}
 
-	if from {
+	if options.From {
 		req.Selector.Resource = &pb.Resource{
-			Namespace: namespace,
+			Namespace: options.Namespace,
 			Type:      AllResourceType,
 		}
 		req.Outbound = &pb.StatSummaryRequest_FromResource{FromResource: pbResource}
-	} else if to {
+	} else if options.To {
 		req.Selector.Resource = &pb.Resource{
-			Namespace: namespace,
+			Namespace: options.Namespace,
 			Type:      AllResourceType,
 		}
 		req.Outbound = &pb.StatSummaryRequest_ToResource{ToResource: pbResource}
@@ -77,7 +81,7 @@ func buildStatRequest(namespace, resourceType, resourceName string, from, to boo
 	return req
 }
 
-func getStatsByReq(apiServerURL *url.URL, req *pb.StatSummaryRequest, isPodType bool) (types.Stats, error) {
+func getStatsByReq(apiServerURL *url.URL, req *pb.StatSummaryRequest, isReqPodType bool) (types.Stats, error) {
 	var resp pb.StatSummaryResponse
 	if err := apiRequest(apiServerURL, StatEndPoint, req, &resp); err != nil {
 		return nil, fmt.Errorf("request stats failed: %s", err.Error())
@@ -87,14 +91,14 @@ func getStatsByReq(apiServerURL *url.URL, req *pb.StatSummaryRequest, isPodType 
 		return nil, fmt.Errorf("stats resp has error: %s", e.Error)
 	}
 
-	return pbStatsRespToStats(&resp, isPodType), nil
+	return pbStatsRespToStats(&resp, isReqPodType), nil
 }
 
-func pbStatsRespToStats(resp *pb.StatSummaryResponse, isPodType bool) types.Stats {
+func pbStatsRespToStats(resp *pb.StatSummaryResponse, isReqPodType bool) types.Stats {
 	stats := make(types.Stats, 0)
 	for _, pbStatTable := range resp.GetOk().GetStatTables() {
 		for _, pbstat := range pbStatTable.GetPodGroup().GetRows() {
-			if isPodType {
+			if isReqPodType {
 				if pbstat.Resource.GetType() != Pod {
 					continue
 				}

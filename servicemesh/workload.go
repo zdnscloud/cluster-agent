@@ -1,20 +1,12 @@
 package servicemesh
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 	"sort"
 
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	k8stypes "k8s.io/apimachinery/pkg/types"
-
+	"github.com/zdnscloud/cement/errgroup"
 	"github.com/zdnscloud/cement/log"
-	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gorest/resource"
 
 	"github.com/zdnscloud/cluster-agent/servicemesh/types"
@@ -22,13 +14,13 @@ import (
 
 type WorkloadManager struct {
 	apiServerURL *url.URL
-	client       client.Client
+	groupManager *WorkloadGroupManager
 }
 
-func newWorkloadManager(apiServerURL *url.URL, cli client.Client) *WorkloadManager {
+func newWorkloadManager(apiServerURL *url.URL, groupManager *WorkloadGroupManager) *WorkloadManager {
 	return &WorkloadManager{
 		apiServerURL: apiServerURL,
-		client:       cli,
+		groupManager: groupManager,
 	}
 }
 
@@ -37,7 +29,7 @@ func (m *WorkloadManager) Get(ctx *resource.Context) resource.Resource {
 	id := ctx.Resource.(*types.Workload).GetID()
 	workload, err := m.getWorkload(namespace, id)
 	if err != nil {
-		log.Warnf("get workload %s failed: %s", id, err.Error())
+		log.Warnf("get workload with id %s failed: %s", id, err.Error())
 		return nil
 	}
 
@@ -45,52 +37,70 @@ func (m *WorkloadManager) Get(ctx *resource.Context) resource.Resource {
 }
 
 func (m *WorkloadManager) getWorkload(namespace, id string) (*types.Workload, error) {
+	statOptions, err := m.getStatOptions(namespace, id)
+	if err != nil {
+		return nil, err
+	}
+
+	resultCh, err := errgroup.Batch(statOptions, func(options interface{}) (interface{}, error) {
+		return getWorkloadWithOptions(options.(*StatOptions))
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	workload := &types.Workload{}
+	for result := range resultCh {
+		w := result.(*types.Workload)
+		if len(w.Inbound) != 0 {
+			workload.Inbound = w.Inbound
+		} else if len(w.Outbound) != 0 {
+			workload.Outbound = w.Outbound
+		} else if w.Stat.Resource.Type == Pod {
+			pod := &types.Pod{Stat: w.Stat}
+			pod.SetID(pod.Stat.Resource.Name)
+			workload.Pods = append(workload.Pods, pod)
+		} else {
+			workload.Stat = w.Stat
+		}
+	}
+
+	sort.Sort(workload.Pods)
+	workload.SetID(id)
+	return workload, nil
+}
+
+func (m *WorkloadManager) getStatOptions(namespace, id string) ([]*StatOptions, error) {
 	resourceType, resourceName, err := getResourceTypeAndName(id)
 	if err != nil {
 		return nil, err
 	}
 
-	stat, err := getStat(m.apiServerURL, namespace, resourceType, resourceName)
-	if err != nil {
-		return nil, fmt.Errorf("get workload %s/%s stats with namespace %s failed: %s",
-			resourceType, resourceName, namespace, err.Error())
-	}
-
-	inbound, err := getStatsTo(m.apiServerURL, namespace, resourceType, resourceName)
-	if err != nil {
-		return nil, fmt.Errorf("get workload %s/%s inbound stats with namespace %s failed: %s",
-			resourceType, resourceName, namespace, err.Error())
-	}
-
-	outbound, err := getStatsFrom(m.apiServerURL, namespace, resourceType, resourceName)
-	if err != nil {
-		return nil, fmt.Errorf("get workload %s/%s outbound stats with namespace %s failed: %s",
-			resourceType, resourceName, namespace, err.Error())
-	}
-
-	pods, err := getPods(m.client, m.apiServerURL, namespace, resourceType, resourceName)
+	options := genBasicStatOptions(m.apiServerURL, namespace, resourceType, resourceName)
+	pods, err := m.groupManager.GetWorkloadPods(namespace, id)
 	if err != nil {
 		return nil, err
 	}
 
-	workload := &types.Workload{
-		Stat:     stat,
-		Inbound:  inbound,
-		Outbound: outbound,
-		Pods:     pods,
+	for _, podName := range pods {
+		options = append(options, &StatOptions{
+			ApiServerURL: m.apiServerURL,
+			Namespace:    namespace,
+			ResourceType: Pod,
+			ResourceName: podName,
+		})
 	}
 
-	workload.SetID(id)
-	return workload, nil
+	return options, nil
 }
 
 func getResourceTypeAndName(id string) (string, string, error) {
-	if len(id) <= 3 {
-		return "", "", fmt.Errorf("invalid workload id %s, its len must be longer than 3", id)
+	if len(id) <= 4 {
+		return "", "", fmt.Errorf("invalid workload id, len must be longer than 4")
 	}
 
-	prefix := id[:3]
-	name := id[3:]
+	prefix := id[:4]
+	name := id[4:]
 	var typ string
 	switch prefix {
 	case DeploymentPrefix:
@@ -98,7 +108,7 @@ func getResourceTypeAndName(id string) (string, string, error) {
 	case DaemonSetPrefix:
 		typ = DaemonSet
 	case StatefulSetPrefix:
-		typ = StatefulSetPrefix
+		typ = StatefulSet
 	default:
 		return "", "", fmt.Errorf("unspported workload prefix %s", prefix)
 	}
@@ -106,64 +116,53 @@ func getResourceTypeAndName(id string) (string, string, error) {
 	return typ, name, nil
 }
 
-func getPods(cli client.Client, apiServerURL *url.URL, namespace, resourceType, resourceName string) (types.Pods, error) {
-	selector, err := getPodParentSelector(cli, namespace, resourceType, resourceName)
-	if err != nil {
-		return nil, err
+func genBasicStatOptions(apiServerURL *url.URL, namespace, resourceType, resourceName string) []*StatOptions {
+	return []*StatOptions{
+		&StatOptions{
+			ApiServerURL: apiServerURL,
+			Namespace:    namespace,
+			ResourceType: resourceType,
+			ResourceName: resourceName,
+		},
+		&StatOptions{
+			ApiServerURL: apiServerURL,
+			Namespace:    namespace,
+			ResourceType: resourceType,
+			ResourceName: resourceName,
+			From:         true,
+		},
+		&StatOptions{
+			ApiServerURL: apiServerURL,
+			Namespace:    namespace,
+			ResourceType: resourceType,
+			ResourceName: resourceName,
+			To:           true,
+		},
 	}
-
-	podList := corev1.PodList{}
-	if err := cli.List(context.TODO(), &client.ListOptions{Namespace: namespace, LabelSelector: selector}, &podList); err != nil {
-		if apierrors.IsNotFound(err) == false {
-			return nil, fmt.Errorf("list %s/%s pods with namespace %s failed: %s", resourceType, resourceName, namespace, err.Error())
-		}
-	}
-
-	var pods types.Pods
-	for _, p := range podList.Items {
-		stat, err := getStat(apiServerURL, namespace, Pod, p.Name)
-		if err != nil {
-			return nil, err
-		}
-
-		pod := &types.Pod{Stat: stat}
-		pod.SetID(p.Name)
-		pods = append(pods, pod)
-	}
-
-	sort.Sort(pods)
-	return pods, nil
 }
 
-func getPodParentSelector(cli client.Client, namespace, resourceType, resourceName string) (labels.Selector, error) {
-	var selector *metav1.LabelSelector
-	switch resourceType {
-	case Deployment:
-		deploy := appsv1.Deployment{}
-		if err := cli.Get(context.TODO(), k8stypes.NamespacedName{namespace, resourceName}, &deploy); err != nil {
-			return nil, fmt.Errorf("get deployment %s with namespace %s failed: %s", resourceName, namespace, err.Error())
+func getWorkloadWithOptions(opts *StatOptions) (*types.Workload, error) {
+	if opts.From {
+		stats, err := getStats(opts)
+		if err != nil {
+			return nil, fmt.Errorf("get %s/%s outbound stats with namespace %s failed: %s",
+				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
 
-		selector = deploy.Spec.Selector
-	case DaemonSet:
-		ds := appsv1.DaemonSet{}
-		if err := cli.Get(context.TODO(), k8stypes.NamespacedName{namespace, resourceName}, &ds); err != nil {
-			return nil, fmt.Errorf("get daemonset %s with namespace %s failed: %s", resourceName, namespace, err.Error())
+		return &types.Workload{Outbound: stats}, nil
+	} else if opts.To {
+		stats, err := getStats(opts)
+		if err != nil {
+			return nil, fmt.Errorf("get %s/%s inbound stats with namespace %s failed: %s",
+				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
-
-		selector = ds.Spec.Selector
-	case StatefulSet:
-		sts := appsv1.StatefulSet{}
-		if err := cli.Get(context.TODO(), k8stypes.NamespacedName{namespace, resourceName}, &sts); err != nil {
-			return nil, fmt.Errorf("get statefulset %s with namespace %s failed: %s", resourceName, namespace, err.Error())
+		return &types.Workload{Inbound: stats}, nil
+	} else {
+		stat, err := getStat(opts)
+		if err != nil {
+			return nil, fmt.Errorf("get %s/%s stats with namespace %s failed: %s",
+				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
-
-		selector = sts.Spec.Selector
+		return &types.Workload{Stat: stat}, nil
 	}
-
-	if selector == nil {
-		return nil, fmt.Errorf("workload %s/%s with namespace %s no selector", resourceType, resourceName, namespace)
-	}
-
-	return metav1.LabelSelectorAsSelector(selector)
 }

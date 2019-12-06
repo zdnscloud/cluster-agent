@@ -7,11 +7,16 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	"github.com/golang/protobuf/proto"
+
+	pb "github.com/zdnscloud/cluster-agent/servicemesh/public"
 )
+
+const ErrorHeader = "linkerd-error"
 
 func apiRequest(serverUrl *url.URL, endpoint string, req proto.Message, resp proto.Message) error {
 	httpRsp, err := post(context.TODO(), endpointNameToPublicAPIURL(serverUrl, endpoint), req)
@@ -19,6 +24,10 @@ func apiRequest(serverUrl *url.URL, endpoint string, req proto.Message, resp pro
 		return fmt.Errorf("post request failed: %s", err.Error())
 	}
 	defer httpRsp.Body.Close()
+
+	if err := checkIfResponseHasError(httpRsp); err != nil {
+		return err
+	}
 
 	reader := bufio.NewReader(httpRsp.Body)
 	return fromByteStreamToProtocolBuffers(reader, resp)
@@ -40,6 +49,34 @@ func post(ctx context.Context, url *url.URL, req proto.Message) (*http.Response,
 	}
 
 	return http.DefaultClient.Do(httpReq.WithContext(ctx))
+}
+
+func checkIfResponseHasError(rsp *http.Response) error {
+	errorMsg := rsp.Header.Get(ErrorHeader)
+	if errorMsg != "" {
+		reader := bufio.NewReader(rsp.Body)
+		var apiError pb.ApiError
+		err := fromByteStreamToProtocolBuffers(reader, &apiError)
+		if err != nil {
+			return fmt.Errorf("response has %s header [%s], but response body didn't contain protobuf error: %v",
+				ErrorHeader, errorMsg, err)
+		}
+
+		return fmt.Errorf("response get error: %s", apiError.Error)
+	}
+
+	if rsp.StatusCode != http.StatusOK {
+		if rsp.Body != nil {
+			bytes, err := ioutil.ReadAll(rsp.Body)
+			if err == nil && len(bytes) > 0 {
+				return fmt.Errorf("http error, status code [%d] (unexpected api response: %s)", rsp.StatusCode, string(bytes))
+			}
+		}
+
+		return fmt.Errorf("http error, status code [%d] (unexpected api response)", rsp.StatusCode)
+	}
+
+	return nil
 }
 
 func fromByteStreamToProtocolBuffers(byteStreamContainingMessage *bufio.Reader, out proto.Message) error {
