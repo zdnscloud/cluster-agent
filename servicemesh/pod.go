@@ -29,7 +29,7 @@ func newPodManager(apiServerURL *url.URL, groupManager *WorkloadGroupManager) *P
 func (m *PodManager) Get(ctx *resource.Context) resource.Resource {
 	namespace := ctx.Resource.GetParent().GetParent().GetParent().GetID()
 	workloadId := ctx.Resource.GetParent().GetID()
-	podId := ctx.Resource.(*types.WorkloadPod).GetID()
+	podId := ctx.Resource.(*types.SvcMeshPod).GetID()
 	pod, err := m.getPod(namespace, workloadId, podId)
 	if err != nil {
 		log.Warnf("get pod %s failed: %s", podId, err.Error())
@@ -39,7 +39,7 @@ func (m *PodManager) Get(ctx *resource.Context) resource.Resource {
 	return pod
 }
 
-func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.WorkloadPod, error) {
+func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.SvcMeshPod, error) {
 	if err := m.groupManager.IsPodBelongToWorkload(namespace, workloadId, podName); err != nil {
 		return nil, err
 	}
@@ -53,9 +53,9 @@ func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.Workl
 		return nil, err
 	}
 
-	pod := &types.WorkloadPod{}
+	pod := &types.SvcMeshPod{}
 	for result := range resultCh {
-		p := result.(*types.Workload)
+		p := result.(*types.SvcMeshWorkload)
 		if len(p.Inbound) != 0 {
 			pod.Inbound = p.Inbound
 		} else if len(p.Outbound) != 0 {

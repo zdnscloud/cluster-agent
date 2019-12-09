@@ -171,9 +171,9 @@ func genWorkloadID(typ, name string) (string, bool) {
 }
 
 func (m *WorkloadGroupManager) RegisterSchemas(version *resource.APIVersion, schemas resource.SchemaManager) {
-	schemas.MustImport(version, types.WorkloadGroup{}, m)
-	schemas.MustImport(version, types.Workload{}, newWorkloadManager(m.apiServerURL, m))
-	schemas.MustImport(version, types.WorkloadPod{}, newPodManager(m.apiServerURL, m))
+	schemas.MustImport(version, types.SvcMeshWorkloadGroup{}, m)
+	schemas.MustImport(version, types.SvcMeshWorkload{}, newWorkloadManager(m.apiServerURL, m))
+	schemas.MustImport(version, types.SvcMeshPod{}, newPodManager(m.apiServerURL, m))
 }
 
 func (m *WorkloadGroupManager) List(ctx *resource.Context) interface{} {
@@ -187,7 +187,7 @@ func (m *WorkloadGroupManager) List(ctx *resource.Context) interface{} {
 	return groups
 }
 
-func (m *WorkloadGroupManager) getWorkloadGroups(namespace string) (types.WorkloadGroups, error) {
+func (m *WorkloadGroupManager) getWorkloadGroups(namespace string) (types.SvcMeshWorkloadGroups, error) {
 	optionsGroups, err := m.getStatOptionsGroups(namespace)
 	if err != nil {
 		return nil, err
@@ -200,15 +200,15 @@ func (m *WorkloadGroupManager) getWorkloadGroups(namespace string) (types.Worklo
 		return nil, err
 	}
 
-	var workloadgroups types.WorkloadGroups
+	var workloadgroups types.SvcMeshWorkloadGroups
 	for result := range resultCh {
-		workloadgroups = append(workloadgroups, result.(*types.WorkloadGroup))
+		workloadgroups = append(workloadgroups, result.(*types.SvcMeshWorkloadGroup))
 	}
 	sort.Sort(workloadgroups)
 	return workloadgroups, nil
 }
 
-func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*types.WorkloadGroup, error) {
+func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*types.SvcMeshWorkloadGroup, error) {
 	resultCh, err := errgroup.Batch(statOptions, func(options interface{}) (interface{}, error) {
 		opts := options.(*StatOptions)
 		stat, err := getStat(opts)
@@ -216,7 +216,7 @@ func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*ty
 			return nil, err
 		}
 
-		workload := &types.Workload{Destinations: opts.Dsts, Stat: stat}
+		workload := &types.SvcMeshWorkload{Destinations: opts.Dsts, Stat: stat}
 		workload.SetID(opts.ResourceID)
 		return workload, nil
 	})
@@ -224,9 +224,9 @@ func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*ty
 		return nil, err
 	}
 
-	workloadgroup := &types.WorkloadGroup{}
+	workloadgroup := &types.SvcMeshWorkloadGroup{}
 	for result := range resultCh {
-		workloadgroup.Workloads = append(workloadgroup.Workloads, result.(*types.Workload))
+		workloadgroup.Workloads = append(workloadgroup.Workloads, result.(*types.SvcMeshWorkload))
 	}
 
 	id, err := uuid.Gen()

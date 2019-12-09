@@ -1,21 +1,14 @@
 {
-  "resourceType": "workloadpod",
-  "collectionName": "workloadpods",
+  "resourceType": "svcmeshworkloadgroup",
+  "collectionName": "svcmeshworkloadgroups",
   "parentResources": [
-    "workload"
+    "namespace"
   ],
-  "goStructName": "WorkloadPod",
+  "goStructName": "SvcMeshWorkloadGroup",
   "resourceFields": {
-    "inbound": {
+    "workloads": {
       "type": "array",
-      "elemType": "stat"
-    },
-    "outbound": {
-      "type": "array",
-      "elemType": "stat"
-    },
-    "stat": {
-      "type": "stat"
+      "elemType": "svcMeshWorkload"
     }
   },
   "subResources": {
@@ -109,6 +102,40 @@
         "type": "trafficSplitStat"
       }
     },
+    "svcMeshPod": {
+      "inbound": {
+        "type": "array",
+        "elemType": "stat"
+      },
+      "outbound": {
+        "type": "array",
+        "elemType": "stat"
+      },
+      "stat": {
+        "type": "stat"
+      }
+    },
+    "svcMeshWorkload": {
+      "destinations": {
+        "type": "array",
+        "elemType": "string"
+      },
+      "inbound": {
+        "type": "array",
+        "elemType": "stat"
+      },
+      "outbound": {
+        "type": "array",
+        "elemType": "stat"
+      },
+      "pods": {
+        "type": "array",
+        "elemType": "svcMeshPod"
+      },
+      "stat": {
+        "type": "stat"
+      }
+    },
     "tcpStat": {
       "openConnections": {
         "type": "int"
@@ -132,7 +159,7 @@
       }
     }
   },
-  "resourceMethods": [
+  "collectionMethods": [
     "GET"
   ]
 }

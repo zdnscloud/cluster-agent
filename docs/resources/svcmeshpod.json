@@ -1,15 +1,11 @@
 {
-  "resourceType": "workload",
-  "collectionName": "workloads",
+  "resourceType": "svcmeshpod",
+  "collectionName": "svcmeshpods",
   "parentResources": [
-    "workloadgroup"
+    "svcmeshworkload"
   ],
-  "goStructName": "Workload",
+  "goStructName": "SvcMeshPod",
   "resourceFields": {
-    "destinations": {
-      "type": "array",
-      "elemType": "string"
-    },
     "inbound": {
       "type": "array",
       "elemType": "stat"
@@ -17,10 +13,6 @@
     "outbound": {
       "type": "array",
       "elemType": "stat"
-    },
-    "pods": {
-      "type": "array",
-      "elemType": "workloadPod"
     },
     "stat": {
       "type": "stat"
@@ -137,19 +129,6 @@
       },
       "weight": {
         "type": "string"
-      }
-    },
-    "workloadPod": {
-      "inbound": {
-        "type": "array",
-        "elemType": "stat"
-      },
-      "outbound": {
-        "type": "array",
-        "elemType": "stat"
-      },
-      "stat": {
-        "type": "stat"
       }
     }
   },

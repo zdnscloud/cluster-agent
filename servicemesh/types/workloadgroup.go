@@ -5,25 +5,25 @@ import (
 	"github.com/zdnscloud/gorest/resource"
 )
 
-type WorkloadGroup struct {
+type SvcMeshWorkloadGroup struct {
 	resource.ResourceBase `json:",inline"`
 	Workloads             Workloads `json:"workloads,omitempty"`
 }
 
-func (w WorkloadGroup) GetParents() []resource.ResourceKind {
+func (w SvcMeshWorkloadGroup) GetParents() []resource.ResourceKind {
 	return []resource.ResourceKind{service.Namespace{}}
 }
 
-type WorkloadGroups []*WorkloadGroup
+type SvcMeshWorkloadGroups []*SvcMeshWorkloadGroup
 
-func (w WorkloadGroups) Len() int {
+func (w SvcMeshWorkloadGroups) Len() int {
 	return len(w)
 }
 
-func (w WorkloadGroups) Swap(i, j int) {
+func (w SvcMeshWorkloadGroups) Swap(i, j int) {
 	w[i], w[j] = w[j], w[i]
 }
 
-func (w WorkloadGroups) Less(i, j int) bool {
+func (w SvcMeshWorkloadGroups) Less(i, j int) bool {
 	return len(w[j].Workloads) < len(w[i].Workloads)
 }

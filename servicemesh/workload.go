@@ -26,7 +26,7 @@ func newWorkloadManager(apiServerURL *url.URL, groupManager *WorkloadGroupManage
 
 func (m *WorkloadManager) Get(ctx *resource.Context) resource.Resource {
 	namespace := ctx.Resource.GetParent().GetParent().GetID()
-	id := ctx.Resource.(*types.Workload).GetID()
+	id := ctx.Resource.(*types.SvcMeshWorkload).GetID()
 	workload, err := m.getWorkload(namespace, id)
 	if err != nil {
 		log.Warnf("get workload with id %s failed: %s", id, err.Error())
@@ -36,7 +36,7 @@ func (m *WorkloadManager) Get(ctx *resource.Context) resource.Resource {
 	return workload
 }
 
-func (m *WorkloadManager) getWorkload(namespace, id string) (*types.Workload, error) {
+func (m *WorkloadManager) getWorkload(namespace, id string) (*types.SvcMeshWorkload, error) {
 	statOptions, err := m.getStatOptions(namespace, id)
 	if err != nil {
 		return nil, err
@@ -49,15 +49,15 @@ func (m *WorkloadManager) getWorkload(namespace, id string) (*types.Workload, er
 		return nil, err
 	}
 
-	workload := &types.Workload{}
+	workload := &types.SvcMeshWorkload{}
 	for result := range resultCh {
-		w := result.(*types.Workload)
+		w := result.(*types.SvcMeshWorkload)
 		if len(w.Inbound) != 0 {
 			workload.Inbound = w.Inbound
 		} else if len(w.Outbound) != 0 {
 			workload.Outbound = w.Outbound
 		} else if w.Stat.Resource.Type == ResourceTypePod {
-			pod := &types.WorkloadPod{Stat: w.Stat}
+			pod := &types.SvcMeshPod{Stat: w.Stat}
 			pod.SetID(pod.Stat.Resource.Name)
 			workload.Pods = append(workload.Pods, pod)
 		} else {
@@ -141,7 +141,7 @@ func genBasicStatOptions(apiServerURL *url.URL, namespace, resourceType, resourc
 	}
 }
 
-func getWorkloadWithOptions(opts *StatOptions) (*types.Workload, error) {
+func getWorkloadWithOptions(opts *StatOptions) (*types.SvcMeshWorkload, error) {
 	if opts.From {
 		stats, err := getStats(opts)
 		if err != nil {
@@ -149,20 +149,20 @@ func getWorkloadWithOptions(opts *StatOptions) (*types.Workload, error) {
 				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
 
-		return &types.Workload{Outbound: stats}, nil
+		return &types.SvcMeshWorkload{Outbound: stats}, nil
 	} else if opts.To {
 		stats, err := getStats(opts)
 		if err != nil {
 			return nil, fmt.Errorf("get %s/%s inbound stats with namespace %s failed: %s",
 				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
-		return &types.Workload{Inbound: stats}, nil
+		return &types.SvcMeshWorkload{Inbound: stats}, nil
 	} else {
 		stat, err := getStat(opts)
 		if err != nil {
 			return nil, fmt.Errorf("get %s/%s stats with namespace %s failed: %s",
 				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
-		return &types.Workload{Stat: stat}, nil
+		return &types.SvcMeshWorkload{Stat: stat}, nil
 	}
 }

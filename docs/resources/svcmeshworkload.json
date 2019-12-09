@@ -1,14 +1,29 @@
 {
-  "resourceType": "workloadgroup",
-  "collectionName": "workloadgroups",
+  "resourceType": "svcmeshworkload",
+  "collectionName": "svcmeshworkloads",
   "parentResources": [
-    "namespace"
+    "svcmeshworkloadgroup"
   ],
-  "goStructName": "WorkloadGroup",
+  "goStructName": "SvcMeshWorkload",
   "resourceFields": {
-    "workloads": {
+    "destinations": {
       "type": "array",
-      "elemType": "workload"
+      "elemType": "string"
+    },
+    "inbound": {
+      "type": "array",
+      "elemType": "stat"
+    },
+    "outbound": {
+      "type": "array",
+      "elemType": "stat"
+    },
+    "pods": {
+      "type": "array",
+      "elemType": "svcMeshPod"
+    },
+    "stat": {
+      "type": "stat"
     }
   },
   "subResources": {
@@ -102,6 +117,19 @@
         "type": "trafficSplitStat"
       }
     },
+    "svcMeshPod": {
+      "inbound": {
+        "type": "array",
+        "elemType": "stat"
+      },
+      "outbound": {
+        "type": "array",
+        "elemType": "stat"
+      },
+      "stat": {
+        "type": "stat"
+      }
+    },
     "tcpStat": {
       "openConnections": {
         "type": "int"
@@ -123,43 +151,9 @@
       "weight": {
         "type": "string"
       }
-    },
-    "workload": {
-      "destinations": {
-        "type": "array",
-        "elemType": "string"
-      },
-      "inbound": {
-        "type": "array",
-        "elemType": "stat"
-      },
-      "outbound": {
-        "type": "array",
-        "elemType": "stat"
-      },
-      "pods": {
-        "type": "array",
-        "elemType": "workloadPod"
-      },
-      "stat": {
-        "type": "stat"
-      }
-    },
-    "workloadPod": {
-      "inbound": {
-        "type": "array",
-        "elemType": "stat"
-      },
-      "outbound": {
-        "type": "array",
-        "elemType": "stat"
-      },
-      "stat": {
-        "type": "stat"
-      }
     }
   },
-  "collectionMethods": [
+  "resourceMethods": [
     "GET"
   ]
 }

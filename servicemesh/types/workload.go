@@ -4,7 +4,7 @@ import (
 	"github.com/zdnscloud/gorest/resource"
 )
 
-type Workload struct {
+type SvcMeshWorkload struct {
 	resource.ResourceBase `json:",inline"`
 	Destinations          []string `json:"destinations,omitempty"`
 	Stat                  Stat     `json:"stat,omitempty"`
@@ -13,11 +13,11 @@ type Workload struct {
 	Pods                  Pods     `json:"pods,omitempty"`
 }
 
-func (w Workload) GetParents() []resource.ResourceKind {
-	return []resource.ResourceKind{WorkloadGroup{}}
+func (w SvcMeshWorkload) GetParents() []resource.ResourceKind {
+	return []resource.ResourceKind{SvcMeshWorkloadGroup{}}
 }
 
-type Workloads []*Workload
+type Workloads []*SvcMeshWorkload
 
 func (w Workloads) Len() int {
 	return len(w)
