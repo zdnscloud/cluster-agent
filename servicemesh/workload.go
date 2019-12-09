@@ -56,8 +56,8 @@ func (m *WorkloadManager) getWorkload(namespace, id string) (*types.Workload, er
 			workload.Inbound = w.Inbound
 		} else if len(w.Outbound) != 0 {
 			workload.Outbound = w.Outbound
-		} else if w.Stat.Resource.Type == Pod {
-			pod := &types.Pod{Stat: w.Stat}
+		} else if w.Stat.Resource.Type == ResourceTypePod {
+			pod := &types.WorkloadPod{Stat: w.Stat}
 			pod.SetID(pod.Stat.Resource.Name)
 			workload.Pods = append(workload.Pods, pod)
 		} else {
@@ -86,7 +86,7 @@ func (m *WorkloadManager) getStatOptions(namespace, id string) ([]*StatOptions, 
 		options = append(options, &StatOptions{
 			ApiServerURL: m.apiServerURL,
 			Namespace:    namespace,
-			ResourceType: Pod,
+			ResourceType: ResourceTypePod,
 			ResourceName: podName,
 		})
 	}
@@ -104,11 +104,11 @@ func getResourceTypeAndName(id string) (string, string, error) {
 	var typ string
 	switch prefix {
 	case DeploymentPrefix:
-		typ = Deployment
+		typ = ResourceTypeDeployment
 	case DaemonSetPrefix:
-		typ = DaemonSet
+		typ = ResourceTypeDaemonSet
 	case StatefulSetPrefix:
-		typ = StatefulSet
+		typ = ResourceTypeStatefulSet
 	default:
 		return "", "", fmt.Errorf("unspported workload prefix %s", prefix)
 	}

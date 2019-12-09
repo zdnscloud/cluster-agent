@@ -202,8 +202,9 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 
 	workerLoads := make(map[string]*Workload)
 	for _, k8spod := range k8spods.Items {
-		name, kind, succeed := s.getPodOwner(&k8spod)
-		if succeed == false {
+		kind, name, err := helper.GetPodOwner(s.cache, &k8spod)
+		if err != nil {
+			log.Warnf("get pod %s owner failed:%s", k8spod.Name, err.Error())
 			continue
 		}
 		wlKey := kind + ":" + name
@@ -230,36 +231,6 @@ func (s *ServiceMonitor) k8ssvcToSCService(k8ssvc *corev1.Service) (*Service, er
 	return svc, nil
 }
 
-func (s *ServiceMonitor) getPodOwner(k8spod *corev1.Pod) (string, string, bool) {
-	if len(k8spod.OwnerReferences) != 1 {
-		return "", "", false
-	}
-
-	owner := k8spod.OwnerReferences[0]
-	if owner.Kind != "ReplicaSet" {
-		return owner.Name, owner.Kind, true
-	}
-
-	var k8srs appsv1.ReplicaSet
-	err := s.cache.Get(context.TODO(), k8stypes.NamespacedName{k8spod.Namespace, owner.Name}, &k8srs)
-	if err != nil {
-		log.Warnf("get replicaset failed:%s", err.Error())
-		return owner.Name, owner.Kind, false
-	}
-
-	if len(k8srs.OwnerReferences) != 1 {
-		log.Warnf("replicaset OwnerReferences is strange:%v", k8srs.OwnerReferences)
-		return "", "", false
-	}
-
-	owner = k8srs.OwnerReferences[0]
-	if owner.Kind != OwnerKindDeployment {
-		log.Warnf("replicaset parent is not deployment but %v", owner.Kind)
-		return "", "", false
-	}
-	return owner.Name, owner.Kind, true
-}
-
 func (s *ServiceMonitor) OnDeleteService(k8ssvc *corev1.Service) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -281,8 +252,9 @@ func (s *ServiceMonitor) OnUpdatePod(oldk8spod, newk8spod *corev1.Pod) {
 		return
 	}
 
-	name, kind, succeed := s.getPodOwner(newk8spod)
-	if succeed == false {
+	kind, name, err := helper.GetPodOwner(s.cache, newk8spod)
+	if err != nil {
+		log.Warnf("get pod %s owner failed:%s", newk8spod.Name, err.Error())
 		return
 	}
 
@@ -393,9 +365,10 @@ func (s *ServiceMonitor) addPodToWorkload(k8spod *corev1.Pod, wl *Workload) {
 }
 
 func (s *ServiceMonitor) OnDeletePod(k8spod *corev1.Pod) {
-	name, kind, succeed := s.getPodOwner(k8spod)
+	kind, name, err := helper.GetPodOwner(s.cache, k8spod)
 	//only handle workload scale down
-	if succeed == false {
+	if err != nil {
+		log.Warnf("get pod %s owner failed: %s", k8spod.Name, err.Error())
 		return
 	}
 

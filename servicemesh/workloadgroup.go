@@ -30,23 +30,17 @@ import (
 )
 
 const (
-	LinkerdControllerSVCAPIAddr = "http://linkerd-controller-api.linkerd.svc:8085/api/v1/"
-	LinkerdControllerAPIAddr    = "http://10.42.1.160:8085/api/v1/"
-	Deployment                  = "deployment"
-	DaemonSet                   = "daemonset"
-	StatefulSet                 = "statefulset"
-	DeploymentPrefix            = "dpm-"
-	DaemonSetPrefix             = "dms-"
-	StatefulSetPrefix           = "sts-"
-	ProxyContainerName          = "linkerd-proxy"
-	ProxyContainerPortName      = "linkerd-admin"
-	LinkerdInjectAnnotation     = "linkerd.io/inject"
+	LinkerdControllerAPIAddr = "http://linkerd-controller-api.linkerd.svc:8085/api/v1/"
+	ResourceTypeDeployment   = "deployment"
+	ResourceTypeDaemonSet    = "daemonset"
+	ResourceTypeStatefulSet  = "statefulset"
+	DeploymentPrefix         = "dpm-"
+	DaemonSetPrefix          = "dms-"
+	StatefulSetPrefix        = "sts-"
+	ProxyContainerName       = "linkerd-proxy"
+	ProxyContainerPortName   = "linkerd-admin"
+	LinkerdInjectAnnotation  = "linkerd.io/inject"
 )
-
-type WorkloadGroupOptions struct {
-	Group     []string
-	Namespace string
-}
 
 type InjectedResouces struct {
 	podOwners map[string]string
@@ -163,11 +157,11 @@ func isLinkerdInjectedPod(pod *corev1.Pod) bool {
 func genWorkloadID(typ, name string) (string, bool) {
 	var workloadPrefix string
 	switch strings.ToLower(typ) {
-	case Deployment:
+	case ResourceTypeDeployment:
 		workloadPrefix = DeploymentPrefix
-	case DaemonSet:
+	case ResourceTypeDaemonSet:
 		workloadPrefix = DaemonSetPrefix
-	case StatefulSet:
+	case ResourceTypeStatefulSet:
 		workloadPrefix = StatefulSetPrefix
 	default:
 		return "", false
@@ -179,7 +173,7 @@ func genWorkloadID(typ, name string) (string, bool) {
 func (m *WorkloadGroupManager) RegisterSchemas(version *resource.APIVersion, schemas resource.SchemaManager) {
 	schemas.MustImport(version, types.WorkloadGroup{}, m)
 	schemas.MustImport(version, types.Workload{}, newWorkloadManager(m.apiServerURL, m))
-	schemas.MustImport(version, types.Pod{}, newPodManager(m.apiServerURL, m))
+	schemas.MustImport(version, types.WorkloadPod{}, newPodManager(m.apiServerURL, m))
 }
 
 func (m *WorkloadGroupManager) List(ctx *resource.Context) interface{} {
@@ -222,7 +216,7 @@ func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*ty
 			return nil, err
 		}
 
-		workload := &types.Workload{Stat: stat}
+		workload := &types.Workload{Destinations: opts.Dsts, Stat: stat}
 		workload.SetID(opts.ResourceID)
 		return workload, nil
 	})
@@ -250,10 +244,10 @@ func (m *WorkloadGroupManager) getStatOptionsGroups(namespace string) ([][]*Stat
 	resources, ok := m.nsResources[namespace]
 	m.lock.RUnlock()
 	if ok == false {
-		return nil, nil
+		return nil, fmt.Errorf("no found namespace %s", namespace)
 	}
 
-	es, err := getEdges(m.apiServerURL, namespace, Pod)
+	es, err := getEdges(m.apiServerURL, namespace, ResourceTypePod)
 	if err != nil {
 		return nil, err
 	}
@@ -293,8 +287,10 @@ func (m *WorkloadGroupManager) getStatOptionsGroups(namespace string) ([][]*Stat
 	}
 
 	g := graph.New(id)
+	srcDsts := make(map[string][]string)
 	for _, e := range edges {
 		g.Add(workloadIDs[e.Src.Name], workloadIDs[e.Dst.Name])
+		srcDsts[e.Src.Name] = append(srcDsts[e.Src.Name], e.Dst.Name)
 	}
 
 	var optionsGroups [][]*StatOptions
@@ -303,7 +299,7 @@ func (m *WorkloadGroupManager) getStatOptionsGroups(namespace string) ([][]*Stat
 		for _, id := range ids {
 			for wId, _id := range workloadIDs {
 				if _id == id {
-					options = append(options, m.workloadIDToStatOptions(namespace, wId))
+					options = append(options, m.workloadIDToStatOptions(namespace, wId, srcDsts[wId]))
 					break
 				}
 			}
@@ -314,19 +310,20 @@ func (m *WorkloadGroupManager) getStatOptionsGroups(namespace string) ([][]*Stat
 
 	for wId := range resources.workloads {
 		if _, ok := workloadIDs[wId]; ok == false {
-			optionsGroups = append(optionsGroups, []*StatOptions{m.workloadIDToStatOptions(namespace, wId)})
+			optionsGroups = append(optionsGroups, []*StatOptions{m.workloadIDToStatOptions(namespace, wId, nil)})
 		}
 	}
 
 	return optionsGroups, nil
 }
 
-func (m *WorkloadGroupManager) workloadIDToStatOptions(namespace, id string) *StatOptions {
+func (m *WorkloadGroupManager) workloadIDToStatOptions(namespace, id string, dsts []string) *StatOptions {
 	resourceType, resourceName, _ := getResourceTypeAndName(id)
 	return &StatOptions{
 		ApiServerURL: m.apiServerURL,
 		Namespace:    namespace,
 		ResourceID:   id,
+		Dsts:         dsts,
 		ResourceType: resourceType,
 		ResourceName: resourceName,
 	}

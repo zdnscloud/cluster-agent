@@ -17,12 +17,13 @@ const (
 	AllResourceType         = "all"
 )
 
-var WorkloadKinds = []string{Deployment, DaemonSet, StatefulSet}
+var WorkloadKinds = []string{ResourceTypeDeployment, ResourceTypeDaemonSet, ResourceTypeStatefulSet}
 
 type StatOptions struct {
 	ApiServerURL *url.URL
 	Namespace    string
 	ResourceID   string
+	Dsts         []string
 	ResourceType string
 	ResourceName string
 	From         bool
@@ -30,7 +31,7 @@ type StatOptions struct {
 }
 
 func getStat(options *StatOptions) (types.Stat, error) {
-	stats, err := getStatsByReq(options.ApiServerURL, buildStatRequest(options), options.ResourceType == Pod)
+	stats, err := getStatsByReq(options.ApiServerURL, buildStatRequest(options), options.ResourceType == ResourceTypePod)
 	if err != nil {
 		return types.Stat{}, err
 	}
@@ -43,7 +44,7 @@ func getStat(options *StatOptions) (types.Stat, error) {
 }
 
 func getStats(options *StatOptions) (types.Stats, error) {
-	return getStatsByReq(options.ApiServerURL, buildStatRequest(options), options.ResourceType == Pod)
+	return getStatsByReq(options.ApiServerURL, buildStatRequest(options), options.ResourceType == ResourceTypePod)
 }
 
 func buildStatRequest(options *StatOptions) *pb.StatSummaryRequest {
@@ -99,7 +100,7 @@ func pbStatsRespToStats(resp *pb.StatSummaryResponse, isReqPodType bool) types.S
 	for _, pbStatTable := range resp.GetOk().GetStatTables() {
 		for _, pbstat := range pbStatTable.GetPodGroup().GetRows() {
 			if isReqPodType {
-				if pbstat.Resource.GetType() != Pod {
+				if pbstat.Resource.GetType() != ResourceTypePod {
 					continue
 				}
 			} else if slice.SliceIndex(WorkloadKinds, pbstat.Resource.Type) == -1 {

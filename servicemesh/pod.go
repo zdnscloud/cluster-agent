@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Pod = "pod"
+	ResourceTypePod = "pod"
 )
 
 type PodManager struct {
@@ -29,7 +29,7 @@ func newPodManager(apiServerURL *url.URL, groupManager *WorkloadGroupManager) *P
 func (m *PodManager) Get(ctx *resource.Context) resource.Resource {
 	namespace := ctx.Resource.GetParent().GetParent().GetParent().GetID()
 	workloadId := ctx.Resource.GetParent().GetID()
-	podId := ctx.Resource.(*types.Pod).GetID()
+	podId := ctx.Resource.(*types.WorkloadPod).GetID()
 	pod, err := m.getPod(namespace, workloadId, podId)
 	if err != nil {
 		log.Warnf("get pod %s failed: %s", podId, err.Error())
@@ -39,12 +39,12 @@ func (m *PodManager) Get(ctx *resource.Context) resource.Resource {
 	return pod
 }
 
-func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.Pod, error) {
+func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.WorkloadPod, error) {
 	if err := m.groupManager.IsPodBelongToWorkload(namespace, workloadId, podName); err != nil {
 		return nil, err
 	}
 
-	resultCh, err := errgroup.Batch(genBasicStatOptions(m.apiServerURL, namespace, Pod, podName),
+	resultCh, err := errgroup.Batch(genBasicStatOptions(m.apiServerURL, namespace, ResourceTypePod, podName),
 		func(options interface{}) (interface{}, error) {
 			return getWorkloadWithOptions(options.(*StatOptions))
 		},
@@ -53,7 +53,7 @@ func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.Pod, 
 		return nil, err
 	}
 
-	pod := &types.Pod{}
+	pod := &types.WorkloadPod{}
 	for result := range resultCh {
 		p := result.(*types.Workload)
 		if len(p.Inbound) != 0 {

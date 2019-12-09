@@ -1,9 +1,8 @@
 package types
 
 import (
-	"github.com/zdnscloud/gorest/resource"
-
 	"github.com/zdnscloud/cluster-agent/service"
+	"github.com/zdnscloud/gorest/resource"
 )
 
 type WorkloadGroup struct {

@@ -4,18 +4,18 @@ import (
 	"github.com/zdnscloud/gorest/resource"
 )
 
-type Pod struct {
+type WorkloadPod struct {
 	resource.ResourceBase `json:",inline"`
 	Stat                  Stat  `json:"stat,omitempty"`
 	Inbound               Stats `json:"inbound,omitempty"`
 	Outbound              Stats `json:"outbound,omitempty"`
 }
 
-func (p Pod) GetParents() []resource.ResourceKind {
+func (p WorkloadPod) GetParents() []resource.ResourceKind {
 	return []resource.ResourceKind{Workload{}}
 }
 
-type Pods []*Pod
+type Pods []*WorkloadPod
 
 func (p Pods) Len() int {
 	return len(p)

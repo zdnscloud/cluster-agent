@@ -6,10 +6,11 @@ import (
 
 type Workload struct {
 	resource.ResourceBase `json:",inline"`
-	Stat                  Stat  `json:"stat,omitempty"`
-	Inbound               Stats `json:"inbound,omitempty"`
-	Outbound              Stats `json:"outbound,omitempty"`
-	Pods                  Pods  `json:"pods,omitempty"`
+	Destinations          []string `json:"destinations,omitempty"`
+	Stat                  Stat     `json:"stat,omitempty"`
+	Inbound               Stats    `json:"inbound,omitempty"`
+	Outbound              Stats    `json:"outbound,omitempty"`
+	Pods                  Pods     `json:"pods,omitempty"`
 }
 
 func (w Workload) GetParents() []resource.ResourceKind {

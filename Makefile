@@ -14,4 +14,4 @@ all: container
 
 container: 
 	docker build -t $(REGISTRY_NAME)/$(IMAGE_Name):${IMAGE_VERSION} ./ --no-cache
-	#docker build -t $(REGISTRY_NAME)/$(IMAGE_Name):$(VERSION) ./ --no-cache
+	docker image prune -f
