@@ -76,8 +76,7 @@ func GetNodes() (corev1.NodeList, error) {
 	if err != nil {
 		return nodes, err
 	}
-	err = cli.List(context.TODO(), nil, &nodes)
-	if err != nil {
+	if err = cli.List(context.TODO(), nil, &nodes); err != nil {
 		return nodes, err
 	}
 	return nodes, nil
@@ -93,11 +92,10 @@ func GetNodeForLvmPv(name, DriverName string) (string, error) {
 		return "", err
 	}
 	pv := corev1.PersistentVolume{}
-	err = cli.Get(context.TODO(), k8stypes.NamespacedName{"", name}, &pv)
-	if err != nil {
+	if err = cli.Get(context.TODO(), k8stypes.NamespacedName{"", name}, &pv); err != nil {
 		return "", err
 	}
-	if pv.Spec.PersistentVolumeSource.CSI.Driver != DriverName {
+	if pv.Spec.PersistentVolumeSource.CSI == nil || pv.Spec.PersistentVolumeSource.CSI.Driver != DriverName {
 		return "", nil
 	}
 	for _, v := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms {

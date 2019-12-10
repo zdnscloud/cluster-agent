@@ -4,11 +4,6 @@ import (
 	"github.com/zdnscloud/gorest/resource"
 )
 
-type Cluster struct {
-	resource.ResourceBase `json:",inline"`
-	Name                  string `json:"name,omitempty"`
-}
-
 type BlockDevice struct {
 	resource.ResourceBase `json:",inline"`
 	NodeName              string `json:"nodeName"`
