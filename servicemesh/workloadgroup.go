@@ -113,6 +113,17 @@ func (m *WorkloadGroupManager) onCreatePod(pod *corev1.Pod) error {
 		return nil
 	}
 
+	resources, ok := m.nsResources[pod.Namespace]
+	if ok == false {
+		resources = InjectedResouces{
+			podOwners: make(map[string]string),
+			workloads: make(map[string][]string),
+		}
+		m.nsResources[pod.Namespace] = resources
+	} else if _, ok := resources.podOwners[pod.Name]; ok {
+		return nil
+	}
+
 	ownerType, ownerName, err := helper.GetPodOwner(m.cache, pod)
 	if err != nil {
 		return fmt.Errorf("get pod %s owner with namespace %s failed: %s", pod.Name, pod.Namespace, err.Error())
@@ -123,14 +134,6 @@ func (m *WorkloadGroupManager) onCreatePod(pod *corev1.Pod) error {
 		return nil
 	}
 
-	resources, ok := m.nsResources[pod.Namespace]
-	if ok == false {
-		resources = InjectedResouces{
-			podOwners: make(map[string]string),
-			workloads: make(map[string][]string),
-		}
-		m.nsResources[pod.Namespace] = resources
-	}
 	resources.podOwners[pod.Name] = workloadId
 	resources.workloads[workloadId] = append(resources.workloads[workloadId], pod.Name)
 	return nil
