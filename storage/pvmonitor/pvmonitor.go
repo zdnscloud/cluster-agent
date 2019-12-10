@@ -48,8 +48,7 @@ func New(c cache.Cache, n string) (*PVMonitor, error) {
 
 func (s *PVMonitor) initPVC(c cache.Cache) error {
 	pvcs := corev1.PersistentVolumeClaimList{}
-	err := c.List(context.TODO(), nil, &pvcs)
-	if err != nil {
+	if err := c.List(context.TODO(), nil, &pvcs); err != nil {
 		return err
 	}
 	for _, pvc := range pvcs.Items {
