@@ -5,7 +5,9 @@ import (
 	"net/url"
 	"sort"
 
-	pb "github.com/zdnscloud/cluster-agent/servicemesh/public"
+	sm "github.com/zdnscloud/servicemesh"
+	pb "github.com/zdnscloud/servicemesh/public"
+
 	"github.com/zdnscloud/cluster-agent/servicemesh/types"
 )
 
@@ -13,7 +15,7 @@ const edgeEndPoint = "Edges"
 
 func getEdges(apiServerURL *url.URL, namespace, kind string) (types.Edges, error) {
 	var resp pb.EdgesResponse
-	if err := apiRequest(apiServerURL, edgeEndPoint, buildEdgesRequest(namespace, kind), &resp); err != nil {
+	if err := sm.HandleApiRequest(apiServerURL, edgeEndPoint, buildEdgesRequest(namespace, kind), &resp); err != nil {
 		return nil, fmt.Errorf("request %s edges with namespace %s failed: %s", kind, namespace, err.Error())
 	}
 

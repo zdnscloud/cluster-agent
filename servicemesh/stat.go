@@ -6,8 +6,9 @@ import (
 	"sort"
 
 	"github.com/zdnscloud/cement/slice"
+	sm "github.com/zdnscloud/servicemesh"
+	pb "github.com/zdnscloud/servicemesh/public"
 
-	pb "github.com/zdnscloud/cluster-agent/servicemesh/public"
 	"github.com/zdnscloud/cluster-agent/servicemesh/types"
 )
 
@@ -84,7 +85,7 @@ func buildStatRequest(options *StatOptions) *pb.StatSummaryRequest {
 
 func getStatsByReq(apiServerURL *url.URL, req *pb.StatSummaryRequest, isReqPodType bool) (types.Stats, error) {
 	var resp pb.StatSummaryResponse
-	if err := apiRequest(apiServerURL, StatEndPoint, req, &resp); err != nil {
+	if err := sm.HandleApiRequest(apiServerURL, StatEndPoint, req, &resp); err != nil {
 		return nil, fmt.Errorf("request stats failed: %s", err.Error())
 	}
 
