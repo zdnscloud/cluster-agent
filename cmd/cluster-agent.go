@@ -1,9 +1,19 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
+	"os"
+	"strconv"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/zdnscloud/cement/log"
+	"github.com/zdnscloud/cluster-agent/blockdevice"
+	"github.com/zdnscloud/cluster-agent/configsyncer"
+	"github.com/zdnscloud/cluster-agent/network"
+	"github.com/zdnscloud/cluster-agent/nodeagent"
+	"github.com/zdnscloud/cluster-agent/service"
+	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/client/config"
@@ -11,15 +21,6 @@ import (
 	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/resource"
 	"github.com/zdnscloud/gorest/resource/schema"
-	"os"
-	"strconv"
-
-	"github.com/zdnscloud/cluster-agent/blockdevice"
-	"github.com/zdnscloud/cluster-agent/configsyncer"
-	"github.com/zdnscloud/cluster-agent/network"
-	"github.com/zdnscloud/cluster-agent/nodeagent"
-	"github.com/zdnscloud/cluster-agent/service"
-	"github.com/zdnscloud/cluster-agent/storage"
 )
 
 var (
@@ -102,6 +103,18 @@ func main() {
 	blockDeviceMgr.RegisterSchemas(&Version, schemas)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
+	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		return fmt.Sprintf("[%s] client:%s \"%s %s\" %s %d %s %s\n",
+			param.TimeStamp.Format(time.RFC3339),
+			param.ClientIP,
+			param.Method,
+			param.Path,
+			param.Request.Proto,
+			param.StatusCode,
+			param.Latency,
+			param.Request.UserAgent(),
+		)
+	}))
 	adaptor.RegisterHandler(router, gorest.NewAPIServer(schemas), schemas.GenerateResourceRoute())
 	addr := "0.0.0.0:8090"
 	router.Run(addr)

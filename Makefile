@@ -6,7 +6,7 @@ GOSRC = $(shell find . -type f -name '*.go')
 
 REGISTRY_NAME = zdnscloud
 IMAGE_Name = cluster-agent
-IMAGE_VERSION = v3.1.2
+IMAGE_VERSION = v3.1.4
 
 .PHONY: all container
 
