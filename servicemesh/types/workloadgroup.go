@@ -25,5 +25,9 @@ func (w SvcMeshWorkloadGroups) Swap(i, j int) {
 }
 
 func (w SvcMeshWorkloadGroups) Less(i, j int) bool {
+	if len(w[j].Workloads) == len(w[i].Workloads) {
+		return w[i].GetID() < w[j].GetID()
+	}
+
 	return len(w[j].Workloads) < len(w[i].Workloads)
 }

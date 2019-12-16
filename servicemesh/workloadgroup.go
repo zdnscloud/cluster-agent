@@ -2,6 +2,8 @@ package servicemesh
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"sort"
@@ -16,7 +18,6 @@ import (
 
 	"github.com/zdnscloud/cement/errgroup"
 	"github.com/zdnscloud/cement/log"
-	"github.com/zdnscloud/cement/uuid"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/controller"
@@ -65,7 +66,7 @@ func New(c cache.Cache) (*WorkloadGroupManager, error) {
 	stopCh := make(chan struct{})
 	apiServerURL, err := url.Parse(LinkerdControllerAPIAddr)
 	if err != nil {
-		return nil, fmt.Errorf("new linkerd public api server url failed: %s", err.Error())
+		return nil, fmt.Errorf("new servicemesh public api server url failed: %s", err.Error())
 	}
 
 	m := &WorkloadGroupManager{
@@ -228,11 +229,14 @@ func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*ty
 	}
 
 	workloadgroup := &types.SvcMeshWorkloadGroup{}
+	var workloadIDs []string
 	for result := range resultCh {
-		workloadgroup.Workloads = append(workloadgroup.Workloads, result.(*types.SvcMeshWorkload))
+		workload := result.(*types.SvcMeshWorkload)
+		workloadgroup.Workloads = append(workloadgroup.Workloads, workload)
+		workloadIDs = append(workloadIDs, workload.GetID())
 	}
 
-	id, err := uuid.Gen()
+	id, err := genWorkloadGroupID(workloadIDs)
 	if err != nil {
 		return nil, fmt.Errorf("gen workload group id failed: %s", err.Error())
 	}
@@ -242,12 +246,22 @@ func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*ty
 	return workloadgroup, nil
 }
 
+func genWorkloadGroupID(ids []string) (string, error) {
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	data, err := json.Marshal(ids)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", sha256.Sum256(data)), nil
+}
+
 func (m *WorkloadGroupManager) getStatOptionsGroups(namespace string) ([][]*StatOptions, error) {
 	m.lock.RLock()
 	resources, ok := m.nsResources[namespace]
 	m.lock.RUnlock()
 	if ok == false {
-		return nil, fmt.Errorf("no found namespace %s", namespace)
+		return nil, fmt.Errorf("namespace %s no resources injected by servicemesh", namespace)
 	}
 
 	es, err := getEdges(m.apiServerURL, namespace, ResourceTypePod)
@@ -375,11 +389,11 @@ func (m *WorkloadGroupManager) GetWorkloadPods(namespace, workloadId string) ([]
 	resources, ok := m.nsResources[namespace]
 	m.lock.RUnlock()
 	if ok == false {
-		return nil, fmt.Errorf("not found namespace %s", namespace)
+		return nil, fmt.Errorf("namespace %s no resources injected by servicemesh", namespace)
 	}
 
 	if pods, ok := resources.workloads[workloadId]; ok == false {
-		return nil, fmt.Errorf("not found workload id %s with namespace %s", workloadId, namespace)
+		return nil, fmt.Errorf("not found svcmeshworkload id %s with namespace %s", workloadId, namespace)
 	} else {
 		return pods, nil
 	}
@@ -390,17 +404,17 @@ func (m *WorkloadGroupManager) IsPodBelongToWorkload(namespace, workloadId, podN
 	resources, ok := m.nsResources[namespace]
 	m.lock.RUnlock()
 	if ok == false {
-		return fmt.Errorf("not found namespace %s", namespace)
+		return fmt.Errorf("namespace %s no resources injected by servicemesh", namespace)
 	}
 
 	if _, ok := resources.workloads[workloadId]; ok == false {
-		return fmt.Errorf("not found workload id %s with namespace %s", workloadId, namespace)
+		return fmt.Errorf("not found svcmeshworkload id %s with namespace %s", workloadId, namespace)
 	}
 
 	if wid, ok := resources.podOwners[podName]; ok == false {
 		return fmt.Errorf("not found pod %s with namespace %s", podName, namespace)
 	} else if wid != workloadId {
-		return fmt.Errorf("pod %s with namespace %s belong to workload id %s not %s", podName, namespace, wid, workloadId)
+		return fmt.Errorf("pod %s with namespace %s belong to svcmeshworkload %s not %s", podName, namespace, wid, workloadId)
 	}
 
 	return nil
