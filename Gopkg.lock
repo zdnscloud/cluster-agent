@@ -130,6 +130,14 @@
   version = "v0.0.8"
 
 [[projects]]
+  digest = "1:ff5ebae34cfbf047d505ee150de27e60570e8c394b3b8fdbb720ff6ac71985fc"
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  pruneopts = "UT"
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
+
+[[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
   name = "github.com/modern-go/concurrent"
   packages = ["."]
@@ -160,6 +168,26 @@
   pruneopts = "UT"
   revision = "0be1b92a6df0e4f5cb0a5d15fb7f643d0ad93ce6"
   version = "v3.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:982be0b5396e16a663697899ce69cc7b1e71ddcae4153af157578d4dc9bc3f88"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  pruneopts = "UT"
+  revision = "d1d2010b5beead3fa1c5f271a5cf626e40b3ad6e"
+
+[[projects]]
+  digest = "1:f119e3205d3a1f0f19dbd7038eb37528e2c6f0933269dc344e305951fb87d632"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model",
+  ]
+  pruneopts = "UT"
+  revision = "287d3e634a1e550c9e463dd7e5a75a422c614505"
+  version = "v0.7.0"
 
 [[projects]]
   digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
@@ -195,7 +223,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6db0cf7efec841fbe270262e2a418e95fc7f163778ec2866e1d6e3186ead78d2"
+  digest = "1:763cda17590d9ada51fcbb6c4804fc71ad25ce96248dc43e6a84d47f1bd51f82"
   name = "github.com/zdnscloud/gok8s"
   packages = [
     "cache",
@@ -212,7 +240,7 @@
     "util",
   ]
   pruneopts = "UT"
-  revision = "c7fc3fc1bb20ac9fcebb2500a8f737e7d3db2b4e"
+  revision = "180915767ead92935d37fd79a4e970203d83b308"
 
 [[projects]]
   branch = "master"
@@ -513,7 +541,7 @@
   revision = "facf06a8f4b8f4f51bb9016d848d0f698abe9c00"
 
 [[projects]]
-  digest = "1:1644a4994423dcd86774ae9391adb0fa7d9fd7a96ea1db6331f4d54bbbd9b94a"
+  digest = "1:8b19a1d6cffeb9a0da0c3b543499015e5a97aa2ca8d29af5b2299411c4cd6230"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -526,7 +554,6 @@
     "plugin/pkg/client/auth/exec",
     "rest",
     "rest/watch",
-    "restmapper",
     "tools/auth",
     "tools/cache",
     "tools/clientcmd",
@@ -598,6 +625,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/gin-gonic/gin",
+    "github.com/prometheus/common/expfmt",
     "github.com/zdnscloud/cement/cache",
     "github.com/zdnscloud/cement/log",
     "github.com/zdnscloud/cement/set",
@@ -621,6 +649,7 @@
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
+    "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
