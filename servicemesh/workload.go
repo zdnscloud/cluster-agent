@@ -163,6 +163,6 @@ func getWorkloadWithOptions(opts *StatOptions) (*types.SvcMeshWorkload, error) {
 			return nil, fmt.Errorf("get %s/%s stats with namespace %s failed: %s",
 				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
-		return &types.SvcMeshWorkload{Stat: stat}, nil
+		return &types.SvcMeshWorkload{Destinations: opts.Dsts, Stat: stat}, nil
 	}
 }

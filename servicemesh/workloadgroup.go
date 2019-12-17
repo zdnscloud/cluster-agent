@@ -214,15 +214,7 @@ func (m *WorkloadGroupManager) getWorkloadGroups(namespace string) (types.SvcMes
 
 func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*types.SvcMeshWorkloadGroup, error) {
 	resultCh, err := errgroup.Batch(statOptions, func(options interface{}) (interface{}, error) {
-		opts := options.(*StatOptions)
-		stat, err := getStat(opts)
-		if err != nil {
-			return nil, err
-		}
-
-		workload := &types.SvcMeshWorkload{Destinations: opts.Dsts, Stat: stat}
-		workload.SetID(opts.ResourceID)
-		return workload, nil
+		return getWorkloadWithOptions(options.(*StatOptions))
 	})
 	if err != nil {
 		return nil, err
@@ -232,8 +224,9 @@ func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*ty
 	var workloadIDs []string
 	for result := range resultCh {
 		workload := result.(*types.SvcMeshWorkload)
+		workload.SetID(workload.Stat.ID)
 		workloadgroup.Workloads = append(workloadgroup.Workloads, workload)
-		workloadIDs = append(workloadIDs, workload.GetID())
+		workloadIDs = append(workloadIDs, workload.Stat.ID)
 	}
 
 	id, err := genWorkloadGroupID(workloadIDs)
@@ -339,7 +332,6 @@ func (m *WorkloadGroupManager) workloadIDToStatOptions(namespace, id string, dst
 	return &StatOptions{
 		ApiServerURL: m.apiServerURL,
 		Namespace:    namespace,
-		ResourceID:   id,
 		Dsts:         dsts,
 		ResourceType: resourceType,
 		ResourceName: resourceName,

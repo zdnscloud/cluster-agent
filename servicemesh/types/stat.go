@@ -1,6 +1,7 @@
 package types
 
 type Stat struct {
+	ID              string           `json:"id,omitempty"`
 	Resource        Resource         `json:"resource,omitempty"`
 	TimeWindow      string           `json:"timeWindow,omitempty"`
 	Status          string           `json:"status,omitempty"`

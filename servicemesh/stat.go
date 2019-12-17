@@ -23,7 +23,6 @@ var WorkloadKinds = []string{ResourceTypeDeployment, ResourceTypeDaemonSet, Reso
 type StatOptions struct {
 	ApiServerURL *url.URL
 	Namespace    string
-	ResourceID   string
 	Dsts         []string
 	ResourceType string
 	ResourceName string
@@ -108,7 +107,7 @@ func pbStatsRespToStats(resp *pb.StatSummaryResponse, isReqPodType bool) types.S
 				continue
 			}
 
-			stats = append(stats, types.Stat{
+			stat := types.Stat{
 				Resource:        pbResourceToResource(pbstat.Resource),
 				TimeWindow:      pbstat.TimeWindow,
 				Status:          pbstat.Status,
@@ -135,7 +134,10 @@ func pbStatsRespToStats(resp *pb.StatSummaryResponse, isReqPodType bool) types.S
 					Weight: pbstat.TsStats.GetWeight(),
 				},
 				PodErrors: pbErrorsByPodToPodErrors(pbstat.ErrorsByPod),
-			})
+			}
+
+			stat.ID, _ = genResourceID(stat.Resource.Type, stat.Resource.Name)
+			stats = append(stats, stat)
 		}
 	}
 
@@ -163,4 +165,12 @@ func pbErrorsByPodToPodErrors(pbErrsByPod map[string]*pb.PodErrors) types.PodErr
 
 	sort.Sort(podErrors)
 	return podErrors
+}
+
+func genResourceID(typ, name string) (string, bool) {
+	if typ == ResourceTypePod {
+		return name, true
+	}
+
+	return genWorkloadID(typ, name)
 }
