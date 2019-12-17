@@ -7,13 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/zdnscloud/cement/log"
-	"github.com/zdnscloud/cluster-agent/blockdevice"
-	"github.com/zdnscloud/cluster-agent/configsyncer"
-	"github.com/zdnscloud/cluster-agent/network"
-	"github.com/zdnscloud/cluster-agent/nodeagent"
-	"github.com/zdnscloud/cluster-agent/service"
-	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client"
 	"github.com/zdnscloud/gok8s/client/config"
@@ -21,6 +16,15 @@ import (
 	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/resource"
 	"github.com/zdnscloud/gorest/resource/schema"
+
+	"github.com/zdnscloud/cluster-agent/blockdevice"
+	common "github.com/zdnscloud/cluster-agent/commonresource"
+	"github.com/zdnscloud/cluster-agent/configsyncer"
+	"github.com/zdnscloud/cluster-agent/metric"
+	"github.com/zdnscloud/cluster-agent/network"
+	"github.com/zdnscloud/cluster-agent/nodeagent"
+	"github.com/zdnscloud/cluster-agent/service"
+	"github.com/zdnscloud/cluster-agent/storage"
 )
 
 var (
@@ -95,12 +99,19 @@ func main() {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
 
+	metricMgr, err := metric.New(cache)
+	if err != nil {
+		log.Fatalf("Create metric manager failed:%s", err.Error())
+	}
+
 	schemas := schema.NewSchemaManager()
+	common.RegisterSchemas(&Version, schemas)
 	networkMgr.RegisterSchemas(&Version, schemas)
 	serviceMgr.RegisterSchemas(&Version, schemas)
 	storageMgr.RegisterSchemas(&Version, schemas)
 	nodeAgentMgr.RegisterSchemas(&Version, schemas)
 	blockDeviceMgr.RegisterSchemas(&Version, schemas)
+	metricMgr.RegisterSchemas(&Version, schemas)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
