@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/prometheus/common/expfmt"
@@ -287,12 +286,9 @@ func getPodMetrics(podIP, metricPath string, metricPort int) (Metrics, error) {
 	for _, mf := range metricFamilies {
 		var metricFamilies []MetricFamily
 		for _, m := range mf.GetMetric() {
-			var labels []Label
+			labels := make(map[string]string)
 			for _, label := range m.GetLabel() {
-				labels = append(labels, Label{
-					Name:  label.GetName(),
-					Value: label.GetValue(),
-				})
+				labels[label.GetName()] = label.GetValue()
 			}
 
 			if m.GetGauge() != nil || m.GetCounter() != nil {

@@ -28,14 +28,9 @@ type Metric struct {
 }
 
 type MetricFamily struct {
-	Labels  []Label `json:"labels,omitempty"`
-	Gauge   Gauge   `json:"gauge,omitempty"`
-	Counter Counter `json:"counter,omitempty"`
-}
-
-type Label struct {
-	Name  string `json:"name,omitempty"`
-	Value string `json:"value,omitempty"`
+	Labels  map[string]string `json:"labels,omitempty"`
+	Gauge   Gauge             `json:"gauge,omitempty"`
+	Counter Counter           `json:"counter,omitempty"`
 }
 
 type Gauge struct {
