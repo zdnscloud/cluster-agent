@@ -55,13 +55,13 @@ func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.SvcMe
 
 	pod := &types.SvcMeshPod{}
 	for result := range resultCh {
-		p := result.(*types.SvcMeshWorkload)
-		if len(p.Inbound) != 0 {
-			pod.Inbound = p.Inbound
-		} else if len(p.Outbound) != 0 {
-			pod.Outbound = p.Outbound
-		} else {
-			pod.Stat = p.Stat
+		switch r := result.(*StatResult); r.RequestType {
+		case RequestTypeInbound:
+			pod.Inbound = r.Inbound
+		case RequestTypeOutbound:
+			pod.Outbound = r.Outbound
+		case RequestTypePod:
+			pod.Stat = r.Stat
 		}
 	}
 

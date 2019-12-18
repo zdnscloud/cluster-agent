@@ -96,7 +96,7 @@ func getStatsByReq(apiServerURL *url.URL, req *pb.StatSummaryRequest, isReqPodTy
 }
 
 func pbStatsRespToStats(resp *pb.StatSummaryResponse, isReqPodType bool) types.Stats {
-	stats := make(types.Stats, 0)
+	var stats types.Stats
 	for _, pbStatTable := range resp.GetOk().GetStatTables() {
 		for _, pbstat := range pbStatTable.GetPodGroup().GetRows() {
 			if isReqPodType {
@@ -146,7 +146,7 @@ func pbStatsRespToStats(resp *pb.StatSummaryResponse, isReqPodType bool) types.S
 }
 
 func pbErrorsByPodToPodErrors(pbErrsByPod map[string]*pb.PodErrors) types.PodErrors {
-	podErrors := make(types.PodErrors, 0)
+	var podErrors types.PodErrors
 	for podName, pbPodErrs := range pbErrsByPod {
 		var containerErrs []types.ContainerError
 		for _, pbPodErr := range pbPodErrs.GetErrors() {

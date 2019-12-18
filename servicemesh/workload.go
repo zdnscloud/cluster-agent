@@ -12,6 +12,15 @@ import (
 	"github.com/zdnscloud/cluster-agent/servicemesh/types"
 )
 
+type RequestType string
+
+const (
+	RequestTypeInbound  RequestType = "inbound"
+	RequestTypeOutbound RequestType = "outbound"
+	RequestTypeWorkload RequestType = "workload"
+	RequestTypePod      RequestType = "pod"
+)
+
 type WorkloadManager struct {
 	apiServerURL *url.URL
 	groupManager *WorkloadGroupManager
@@ -51,17 +60,17 @@ func (m *WorkloadManager) getWorkload(namespace, id string) (*types.SvcMeshWorkl
 
 	workload := &types.SvcMeshWorkload{}
 	for result := range resultCh {
-		w := result.(*types.SvcMeshWorkload)
-		if len(w.Inbound) != 0 {
-			workload.Inbound = w.Inbound
-		} else if len(w.Outbound) != 0 {
-			workload.Outbound = w.Outbound
-		} else if w.Stat.Resource.Type == ResourceTypePod {
-			pod := &types.SvcMeshPod{Stat: w.Stat}
+		switch r := result.(*StatResult); r.RequestType {
+		case RequestTypeInbound:
+			workload.Inbound = r.Inbound
+		case RequestTypeOutbound:
+			workload.Outbound = r.Outbound
+		case RequestTypeWorkload:
+			workload.Stat = r.Stat
+		case RequestTypePod:
+			pod := &types.SvcMeshPod{Stat: r.Stat}
 			pod.SetID(pod.Stat.Resource.Name)
 			workload.Pods = append(workload.Pods, pod)
-		} else {
-			workload.Stat = w.Stat
 		}
 	}
 
@@ -141,7 +150,15 @@ func genBasicStatOptions(apiServerURL *url.URL, namespace, resourceType, resourc
 	}
 }
 
-func getWorkloadWithOptions(opts *StatOptions) (*types.SvcMeshWorkload, error) {
+type StatResult struct {
+	RequestType  RequestType
+	Destinations []string
+	Stat         types.Stat
+	Inbound      types.Stats
+	Outbound     types.Stats
+}
+
+func getWorkloadWithOptions(opts *StatOptions) (*StatResult, error) {
 	if opts.From {
 		stats, err := getStats(opts)
 		if err != nil {
@@ -149,20 +166,27 @@ func getWorkloadWithOptions(opts *StatOptions) (*types.SvcMeshWorkload, error) {
 				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
 
-		return &types.SvcMeshWorkload{Outbound: stats}, nil
+		return &StatResult{RequestType: RequestTypeOutbound, Outbound: stats}, nil
 	} else if opts.To {
 		stats, err := getStats(opts)
 		if err != nil {
 			return nil, fmt.Errorf("get %s/%s inbound stats with namespace %s failed: %s",
 				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
-		return &types.SvcMeshWorkload{Inbound: stats}, nil
+
+		return &StatResult{RequestType: RequestTypeInbound, Inbound: stats}, nil
 	} else {
 		stat, err := getStat(opts)
 		if err != nil {
 			return nil, fmt.Errorf("get %s/%s stats with namespace %s failed: %s",
 				opts.ResourceType, opts.ResourceName, opts.Namespace, err.Error())
 		}
-		return &types.SvcMeshWorkload{Destinations: opts.Dsts, Stat: stat}, nil
+
+		typ := RequestTypeWorkload
+		if opts.ResourceType == ResourceTypePod {
+			typ = RequestTypePod
+		}
+
+		return &StatResult{RequestType: typ, Destinations: opts.Dsts, Stat: stat}, nil
 	}
 }
