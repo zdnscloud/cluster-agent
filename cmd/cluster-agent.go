@@ -10,6 +10,7 @@ import (
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/blockdevice"
 	"github.com/zdnscloud/cluster-agent/configsyncer"
+	"github.com/zdnscloud/cluster-agent/monitor"
 	"github.com/zdnscloud/cluster-agent/network"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/service"
@@ -21,6 +22,8 @@ import (
 	"github.com/zdnscloud/gorest/adaptor"
 	"github.com/zdnscloud/gorest/resource"
 	"github.com/zdnscloud/gorest/resource/schema"
+	storagev1 "github.com/zdnscloud/immense/pkg/apis/zcloud/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 var (
@@ -31,21 +34,30 @@ var (
 )
 
 func createK8SClient() (cache.Cache, client.Client, error) {
-	config, err := config.GetConfig()
+	cfg, err := config.GetConfig()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	c, err := cache.New(config, cache.Options{})
+	scm := scheme.Scheme
+	storagev1.AddToScheme(scm)
+
+	opts := cache.Options{
+		Scheme: scm,
+	}
+	c, err := cache.New(cfg, opts)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	cli, err := client.New(config, client.Options{})
+	var options client.Options
+	options.Scheme = client.GetDefaultScheme()
+	storagev1.AddToScheme(options.Scheme)
+
+	cli, err := client.New(cfg, options)
 	if err != nil {
 		return nil, nil, err
 	}
-
 	stop := make(chan struct{})
 	go c.Start(stop)
 	c.WaitForCacheSync(stop)
@@ -116,6 +128,8 @@ func main() {
 		)
 	}))
 	adaptor.RegisterHandler(router, gorest.NewAPIServer(schemas), schemas.GenerateResourceRoute())
+	monitorMgr := monitor.NewMonitorManager(cli, storageMgr)
+	go monitorMgr.Start()
 	addr := "0.0.0.0:8090"
 	router.Run(addr)
 }

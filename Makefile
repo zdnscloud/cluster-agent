@@ -15,3 +15,5 @@ all: container
 container: 
 	docker build -t $(REGISTRY_NAME)/$(IMAGE_Name):${IMAGE_VERSION} ./ --no-cache
 	#docker build -t $(REGISTRY_NAME)/$(IMAGE_Name):$(VERSION) ./ --no-cache
+build:
+	CGO_ENABLED=0 GOOS=linux go build cmd/cluster-agent.go
