@@ -21,7 +21,29 @@ type Pod struct {
 
 type Metric struct {
 	resource.ResourceBase `json:",inline"`
-	Name                  string `json:"metrics,omitempty"`
+	Name                  string         `json:"name,omitempty"`
+	Type                  string         `json:"type,omitempty"`
+	Help                  string         `json:"help,omitempty"`
+	Metrics               []MetricFamily `json:"metrics,omitempty"`
+}
+
+type MetricFamily struct {
+	Labels  []Label `json:"labels,omitempty"`
+	Gauge   Gauge   `json:"gauge,omitempty"`
+	Counter Counter `json:"counter,omitempty"`
+}
+
+type Label struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type Gauge struct {
+	Value int `json:"value,omitempty"`
+}
+
+type Counter struct {
+	Value int `json:"value,omitempty"`
 }
 
 func (m Metric) GetParents() []resource.ResourceKind {

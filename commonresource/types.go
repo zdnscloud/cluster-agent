@@ -35,3 +35,9 @@ type StatefulSet struct {
 func (s StatefulSet) GetParents() []resource.ResourceKind {
 	return []resource.ResourceKind{Namespace{}}
 }
+
+var (
+	ResourceTypeDeployment  = resource.DefaultKindName(Deployment{})
+	ResourceTypeDaemonSet   = resource.DefaultKindName(DaemonSet{})
+	ResourceTypeStatefulSet = resource.DefaultKindName(StatefulSet{})
+)
