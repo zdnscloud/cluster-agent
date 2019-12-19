@@ -245,7 +245,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c5282de25bf9a65ce2334f83af43d1998bb8eca8f452b59144007b5149280c31"
+  digest = "1:120949b0178b883838d36565e6d07d94677d189214b2ffe5b2791e9781810484"
   name = "github.com/zdnscloud/gorest"
   packages = [
     ".",
@@ -255,18 +255,19 @@
     "resource/schema",
     "resource/schema/resourcedoc",
     "resource/schema/resourcefield",
+    "resource/schema/resourcefield/validator",
     "util",
   ]
   pruneopts = "UT"
-  revision = "7fc3469150115bd35224f479adaa5dfe6c199749"
+  revision = "fc1a11e10b88441e3e3f992194b18b3af756a4ca"
 
 [[projects]]
-  digest = "1:4252f5ae3abd7d768466e08b563120b4d45fbb38f45556fe06f1b83e2a8dc4a3"
+  branch = "master"
+  digest = "1:2acaae9b07303e00609a515ef14d7031268e453a22cc1d01ce2e692665ae4790"
   name = "github.com/zdnscloud/immense"
   packages = ["pkg/apis/zcloud/v1"]
   pruneopts = "UT"
-  revision = "aaaaf55f12bf8fb2ec7778306dc1e86b573d170c"
-  version = "v1.0"
+  revision = "d123db3cf85294cbf8b28673779308f3b1c74e4f"
 
 [[projects]]
   branch = "master"

@@ -13,25 +13,45 @@ type ClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
-	StorageType string     `json:"storageType"`
-	Hosts       []HostSpec `json:"hosts"`
+	StorageType string `json:"storageType"`
+	//Hosts       []HostSpec `json:"hosts"`
+	Hosts []string `json:"hosts"`
 }
 
-type HostSpec struct {
-	NodeName     string   `json:"nodeName"`
+type HostInfo struct {
+	NodeName string `json:"nodeName"`
+	//BlockDevices []Dev  `json:"blockDevices"`
 	BlockDevices []string `json:"blockDevices"`
 }
+
+/*
+type Dev struct {
+	Name string `json:"name"`
+	Size string `json:"size"`
+}*/
 
 // ClusterStatus defines the observed state of Cluster
 // +k8s:openapi-gen=true
 type ClusterStatus struct {
-	Phase    string `json:"phase,omitempty"`
-	Message  string `json:"message,omitempty"`
+	Phase    StatusPhase `json:"phase,omitempty"`
+	Message  string      `json:"message,omitempty"`
+	Config   []HostInfo  `json:"config"`
 	Capacity `json:"capacity,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html
 }
+
+type StatusPhase string
+
+const (
+	Creating StatusPhase = "Creating"
+	Running  StatusPhase = "Running"
+	Updating StatusPhase = "Updating"
+	Deleting StatusPhase = "Deleting"
+	Warnning StatusPhase = "Warnning"
+	Failed   StatusPhase = "Failed"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -56,19 +76,19 @@ type ClusterList struct {
 }
 
 type Capacity struct {
-	Total     Size
-	Instances []Instance
+	Total     Size       `json:"total"`
+	Instances []Instance `json:"instances"`
 }
 
 type Instance struct {
-	Host string
-	Dev  string
-	Stat bool
-	Info Size
+	Host string `json:"host"`
+	Dev  string `json:"dev"`
+	Stat bool   `json:"stat"`
+	Info Size   `json:"info"`
 }
 
 type Size struct {
-	Total string
-	Used  string
-	Free  string
+	Total string `json:"total"`
+	Used  string `json:"used"`
+	Free  string `json:"free"`
 }
