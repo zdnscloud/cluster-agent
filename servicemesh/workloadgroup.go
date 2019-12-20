@@ -224,7 +224,7 @@ func (m *WorkloadGroupManager) getWorkloadGroup(statOptions []*StatOptions) (*ty
 	var workloadIDs []string
 	for result := range resultCh {
 		if r := result.(*StatResult); r.RequestType == RequestTypeWorkload {
-			workload := &types.SvcMeshWorkload{Stat: r.Stat}
+			workload := &types.SvcMeshWorkload{Destinations: r.Destinations, Stat: r.Stat}
 			workload.SetID(workload.Stat.ID)
 			workloadgroup.Workloads = append(workloadgroup.Workloads, workload)
 			workloadIDs = append(workloadIDs, workload.Stat.ID)
