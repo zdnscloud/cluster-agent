@@ -6,12 +6,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/monitor/event"
 	"github.com/zdnscloud/cluster-agent/monitor/node"
 	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 )
 
 var ctx = context.TODO()
@@ -22,8 +24,7 @@ type Monitor struct {
 	eventCh        chan interface{}
 	PVInfo         map[string]event.StorageSize
 	StorageManager *storage.StorageManager
-	Interval       int
-	Threshold      float32
+	alreadyRunning bool
 }
 
 type Namespace struct {
@@ -36,19 +37,30 @@ type Namespace struct {
 	StorageUsed int64
 }
 
-func New(cli client.Client, sch chan struct{}, ech chan interface{}, storageMgr *storage.StorageManager, interval int, threshold float32) *Monitor {
+func New(cli client.Client, storageMgr *storage.StorageManager, ch chan interface{}) *Monitor {
 	return &Monitor{
 		cli:            cli,
-		stopCh:         sch,
-		eventCh:        ech,
+		stopCh:         make(chan struct{}),
+		eventCh:        ch,
 		PVInfo:         make(map[string]event.StorageSize),
 		StorageManager: storageMgr,
-		Interval:       interval,
-		Threshold:      threshold,
 	}
 }
 
-func (m *Monitor) Start() {
+func (m *Monitor) Stop() {
+	log.Infof("stop namespace monitor")
+	m.stopCh <- struct{}{}
+	<-m.stopCh
+	close(m.stopCh)
+}
+
+func (m *Monitor) Start(cfg event.MonitorConfig) {
+	c := cfg.(*event.NamespaceMonitorConfig)
+	if m.alreadyRunning {
+		return
+	}
+	m.alreadyRunning = true
+	log.Infof("start namespace monitor")
 	for {
 		select {
 		case <-m.stopCh:
@@ -57,10 +69,12 @@ func (m *Monitor) Start() {
 		default:
 		}
 		m.genPVInfo()
-		namespaces := getNamespaces(m.cli, m.PVInfo)
-		m.check(namespaces)
-		m.checkPodStorgeUsed(namespaces)
-		time.Sleep(time.Duration(m.Interval) * time.Second)
+		for ns, cfg := range c.Configs {
+			namespace := getNamespace(m.cli, ns, m.PVInfo)
+			m.check(namespace, cfg)
+			m.checkPodStorgeUsed(namespace, cfg)
+		}
+		time.Sleep(time.Duration(event.CheckInterval) * time.Second)
 	}
 }
 
@@ -78,68 +92,60 @@ func (m *Monitor) genPVInfo() {
 	}
 }
 
-func getNamespaces(cli client.Client, pvInfo map[string]event.StorageSize) []*Namespace {
-	var ns []*Namespace
-	namespaces := corev1.NamespaceList{}
-	_ = cli.List(ctx, nil, &namespaces)
-	for _, namespace := range namespaces.Items {
-		ns = append(ns, getNamespace(cli, namespace.Name, pvInfo))
-	}
-	return ns
+func getNamespace(cli client.Client, name string, pvInfo map[string]event.StorageSize) *Namespace {
+	ns := corev1.Namespace{}
+	_ = cli.Get(context.TODO(), k8stypes.NamespacedName{"", name}, &ns)
+	return genNamespace(cli, ns.Name, pvInfo)
 }
 
-func (m *Monitor) check(namespaces []*Namespace) {
-	for _, namespace := range namespaces {
-		if namespace.Cpu > 0 {
-			if ratio := float32(namespace.CpuUsed) / float32(namespace.Cpu); ratio > m.Threshold {
-				m.eventCh <- event.Event{
-					Namespace: namespace.Name,
-					Kind:      event.NamespaceKind,
-					Name:      namespace.Name,
-					Message:   fmt.Sprintf("High cpu utilization %.2f in namespace %s", ratio, namespace.Name),
-				}
+func (m *Monitor) check(namespace *Namespace, cfg *event.Config) {
+	if namespace.Cpu > 0 && cfg.Cpu > 0 {
+		if ratio := float32(namespace.CpuUsed) / float32(namespace.Cpu); ratio > cfg.Cpu {
+			m.eventCh <- event.Event{
+				Namespace: namespace.Name,
+				Kind:      event.NamespaceKind,
+				Name:      namespace.Name,
+				Message:   fmt.Sprintf("High cpu utilization %.2f", ratio),
 			}
 		}
-		if namespace.Memory > 0 {
-			if ratio := float32(namespace.MemoryUsed) / float32(namespace.Memory); ratio > m.Threshold {
-				m.eventCh <- event.Event{
-					Namespace: namespace.Name,
-					Kind:      event.NamespaceKind,
-					Name:      namespace.Name,
-					Message:   fmt.Sprintf("High memory utilization %.2f in namespace %s", ratio, namespace.Name),
-				}
+	}
+	if namespace.Memory > 0 && cfg.Memory > 0 {
+		if ratio := float32(namespace.MemoryUsed) / float32(namespace.Memory); ratio > cfg.Memory {
+			m.eventCh <- event.Event{
+				Namespace: namespace.Name,
+				Kind:      event.NamespaceKind,
+				Name:      namespace.Name,
+				Message:   fmt.Sprintf("High memory utilization %.2f", ratio),
 			}
 		}
-		if namespace.Storage > 0 {
-			if ratio := float32(namespace.StorageUsed) / float32(namespace.Storage); ratio > m.Threshold {
-				m.eventCh <- event.Event{
-					Namespace: namespace.Name,
-					Kind:      event.NamespaceKind,
-					Name:      namespace.Name,
-					Message:   fmt.Sprintf("High storage utilization %.2f in namespace %s", ratio, namespace.Name),
-				}
+	}
+	if namespace.Storage > 0 && cfg.Storage > 0 {
+		if ratio := float32(namespace.StorageUsed) / float32(namespace.Storage); ratio > cfg.Storage {
+			m.eventCh <- event.Event{
+				Namespace: namespace.Name,
+				Kind:      event.NamespaceKind,
+				Name:      namespace.Name,
+				Message:   fmt.Sprintf("High storage utilization %.2f", ratio),
 			}
 		}
 	}
 }
 
-func (m *Monitor) checkPodStorgeUsed(namespaces []*Namespace) {
-	for _, namespace := range namespaces {
-		pods := getPodsWithPvcs(m.cli, namespace.Name)
-		pvcs := getPvcsWithPv(m.cli, namespace.Name)
-		for pod, ps := range pods {
-			for _, pvc := range ps {
-				pv, ok := pvcs[pvc]
-				if ok {
-					size, ok := m.PVInfo[pv]
-					if ok {
-						if ratio := float32(size.Used) / float32(size.Total); ratio > m.Threshold {
-							m.eventCh <- event.Event{
-								Namespace: namespace.Name,
-								Kind:      event.PodKind,
-								Name:      pod,
-								Message:   fmt.Sprintf("High storage utilization %.2f for pod %s in namespace %s", ratio, pod, namespace.Name),
-							}
+func (m *Monitor) checkPodStorgeUsed(namespace *Namespace, cfg *event.Config) {
+	pods := getPodsWithPvcs(m.cli, namespace.Name)
+	pvcs := getPvcsWithPv(m.cli, namespace.Name)
+	for pod, ps := range pods {
+		for _, pvc := range ps {
+			pv, ok := pvcs[pvc]
+			if ok {
+				size, ok := m.PVInfo[pv]
+				if ok && cfg.PodStorage > 0 {
+					if ratio := float32(size.Used) / float32(size.Total); ratio > cfg.PodStorage {
+						m.eventCh <- event.Event{
+							Namespace: namespace.Name,
+							Kind:      event.PodKind,
+							Name:      pod,
+							Message:   fmt.Sprintf("High storage utilization %.2f", ratio),
 						}
 					}
 				}
@@ -148,7 +154,7 @@ func (m *Monitor) checkPodStorgeUsed(namespaces []*Namespace) {
 	}
 }
 
-func getNamespace(cli client.Client, ns string, pvInfo map[string]event.StorageSize) *Namespace {
+func genNamespace(cli client.Client, ns string, pvInfo map[string]event.StorageSize) *Namespace {
 	var namespace Namespace
 	namespace.Name = ns
 	podMetricsList, err := cli.GetPodMetrics(ns, "", labels.Everything())
@@ -204,5 +210,5 @@ func getAllPVCUsedSize(cli client.Client, ns string, pvInfo map[string]event.Sto
 			used += size.Used
 		}
 	}
-	return used
+	return used * 1024
 }

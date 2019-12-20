@@ -1,6 +1,7 @@
 package event
 
 const (
+	CheckInterval           = 60
 	ClusterKind   EventKind = "Cluster"
 	NodeKind      EventKind = "Node"
 	NamespaceKind EventKind = "Namespace"
@@ -15,6 +16,28 @@ type Event struct {
 }
 
 type EventKind string
+
+type MonitorConfig interface{}
+
+type ClusterMonitorConfig struct {
+	Cpu        float32
+	Memory     float32
+	Storage    float32
+	PodCount   float32
+	NodeCpu    float32
+	NodeMemory float32
+}
+
+type NamespaceMonitorConfig struct {
+	Configs map[string]*Config
+}
+
+type Config struct {
+	Cpu        float32
+	Memory     float32
+	Storage    float32
+	PodStorage float32
+}
 
 type StorageSize struct {
 	Total int64

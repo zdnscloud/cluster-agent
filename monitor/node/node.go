@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/monitor/event"
 	"github.com/zdnscloud/gok8s/client"
 	corev1 "k8s.io/api/core/v1"
@@ -13,11 +14,9 @@ import (
 )
 
 type Monitor struct {
-	cli       client.Client
-	stopCh    chan struct{}
-	eventCh   chan interface{}
-	Interval  int
-	Threshold float32
+	cli     client.Client
+	stopCh  chan struct{}
+	eventCh chan interface{}
 }
 
 type Node struct {
@@ -30,17 +29,24 @@ type Node struct {
 	PodUsed    int64
 }
 
-func New(cli client.Client, sch chan struct{}, ech chan interface{}, interval int, threshold float32) *Monitor {
+func New(cli client.Client, ch chan interface{}) *Monitor {
 	return &Monitor{
-		cli:       cli,
-		stopCh:    sch,
-		eventCh:   ech,
-		Interval:  interval,
-		Threshold: threshold,
+		cli:     cli,
+		stopCh:  make(chan struct{}),
+		eventCh: ch,
 	}
 }
 
-func (m *Monitor) Start() {
+func (m *Monitor) Stop() {
+	log.Infof("stop node monitor")
+	m.stopCh <- struct{}{}
+	<-m.stopCh
+	close(m.stopCh)
+}
+
+func (m *Monitor) Start(cfg event.MonitorConfig) {
+	log.Infof("start node monitor")
+	c := cfg.(*event.ClusterMonitorConfig)
 	for {
 		select {
 		case <-m.stopCh:
@@ -49,33 +55,38 @@ func (m *Monitor) Start() {
 		default:
 		}
 		nodes := GetNodes(m.cli)
-		m.check(nodes)
-		time.Sleep(time.Duration(m.Interval) * time.Second)
+		m.check(nodes, c)
+		time.Sleep(time.Duration(event.CheckInterval) * time.Second)
 	}
 }
-func (m *Monitor) check(nodes []*Node) {
+func (m *Monitor) check(nodes []*Node, cfg *event.ClusterMonitorConfig) {
 	for _, node := range nodes {
-		if ratio := float32(node.CpuUsed) / float32(node.Cpu); ratio > m.Threshold {
-			m.eventCh <- event.Event{
-				Kind:    event.NodeKind,
-				Name:    node.Name,
-				Message: fmt.Sprintf("High cpu utilization %.2f on node %s", ratio, node.Name),
+		if cfg.NodeCpu > 0 {
+			if ratio := float32(node.CpuUsed) / float32(node.Cpu); ratio > cfg.NodeCpu {
+				m.eventCh <- event.Event{
+					Kind:    event.NodeKind,
+					Name:    node.Name,
+					Message: fmt.Sprintf("High cpu utilization %.2f", ratio),
+				}
 			}
 		}
-		if ratio := float32(node.MemoryUsed) / float32(node.Memory); ratio > m.Threshold {
-			m.eventCh <- event.Event{
-				Kind:    event.NodeKind,
-				Name:    node.Name,
-				Message: fmt.Sprintf("High memory utilization %.2f on node %s", ratio, node.Name),
+		if cfg.NodeMemory > 0 {
+			if ratio := float32(node.MemoryUsed) / float32(node.Memory); ratio > cfg.NodeMemory {
+				m.eventCh <- event.Event{
+					Kind:    event.NodeKind,
+					Name:    node.Name,
+					Message: fmt.Sprintf("High memory utilization %.2f", ratio),
+				}
 			}
 		}
-		if ratio := float32(node.PodUsed) / float32(node.Pod); ratio > m.Threshold {
-			m.eventCh <- event.Event{
-				Kind:    event.NodeKind,
-				Name:    node.Name,
-				Message: fmt.Sprintf("High pod utilization %.2f on node %s", ratio, node.Name),
-			}
-		}
+		/*
+			if ratio := float32(node.PodUsed) / float32(node.Pod); ratio > m.Threshold {
+				m.eventCh <- event.Event{
+					Kind:    event.NodeKind,
+					Name:    node.Name,
+					Message: fmt.Sprintf("High pod utilization %.2f on node %s", ratio, node.Name),
+				}
+			}*/
 	}
 }
 

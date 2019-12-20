@@ -3,6 +3,7 @@ package monitor
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/zdnscloud/cement/randomdata"
@@ -11,14 +12,16 @@ import (
 	"github.com/zdnscloud/cluster-agent/monitor/namespace"
 	"github.com/zdnscloud/cluster-agent/monitor/node"
 	"github.com/zdnscloud/cluster-agent/storage"
+	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client"
+	"github.com/zdnscloud/gok8s/controller"
+	"github.com/zdnscloud/gok8s/predicate"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 const (
-	checkInterval  = 60
-	checkThreshold = 0.0
 	eventNamespace = "zcloud"
 	eventLevel     = "Warning"
 	eventReason    = "resource shortage"
@@ -26,39 +29,54 @@ const (
 	eventName      = "cluster-agent"
 )
 
+var ctx = context.TODO()
+
 type MonitorManager struct {
-	cli       client.Client
-	stopCh    chan struct{}
-	eventCh   chan interface{}
-	Cluster   Monitor
-	Node      Monitor
-	Namespace Monitor
+	lock                  sync.RWMutex
+	cache                 cache.Cache
+	cli                   client.Client
+	stopCh                chan struct{}
+	EventCh               chan interface{}
+	clusterConfig         *event.ClusterMonitorConfig
+	namespaceConfig       *event.NamespaceMonitorConfig
+	Cluster               Monitor
+	Node                  Monitor
+	Namespace             Monitor
+	startNamespaceMonitor bool
+	startClusterMonitor   bool
 }
 
 type Monitor interface {
-	Start()
+	Start(event.MonitorConfig)
+	Stop()
 }
 
-func NewMonitorManager(cli client.Client, storageMgr *storage.StorageManager) *MonitorManager {
+func NewMonitorManager(c cache.Cache, cli client.Client, storageMgr *storage.StorageManager) *MonitorManager {
+	eventCh := make(chan interface{})
+	stopCh := make(chan struct{})
 	m := &MonitorManager{
-		cli:     cli,
-		stopCh:  make(chan struct{}),
-		eventCh: make(chan interface{}),
+		cache:           c,
+		cli:             cli,
+		EventCh:         eventCh,
+		stopCh:          stopCh,
+		clusterConfig:   &event.ClusterMonitorConfig{},
+		namespaceConfig: &event.NamespaceMonitorConfig{},
 	}
-	m.monitorInit(storageMgr)
+	m.Cluster = cluster.New(cli, eventCh)
+	m.Node = node.New(cli, eventCh)
+	m.Namespace = namespace.New(cli, storageMgr, eventCh)
+	ctrl := controller.New("resource-threshold", c, scheme.Scheme)
+	ctrl.Watch(&corev1.ConfigMap{})
+	go ctrl.Start(stopCh, m, predicate.NewIgnoreUnchangedUpdate())
 	return m
 }
 
-func (m *MonitorManager) monitorInit(storageMgr *storage.StorageManager) {
-	m.Cluster = cluster.New(m.cli, m.stopCh, m.eventCh, checkInterval, checkThreshold)
-	m.Node = node.New(m.cli, m.stopCh, m.eventCh, checkInterval, checkThreshold)
-	m.Namespace = namespace.New(m.cli, m.stopCh, m.eventCh, storageMgr, checkInterval, checkThreshold)
+func (m *MonitorManager) Stop() {
+	m.stopCh <- struct{}{}
+	close(m.stopCh)
 }
 
 func (m *MonitorManager) Start() {
-	go m.Node.Start()
-	go m.Cluster.Start()
-	go m.Namespace.Start()
 	for {
 		select {
 		case <-m.stopCh:
@@ -66,17 +84,11 @@ func (m *MonitorManager) Start() {
 			return
 		default:
 		}
-		v := <-m.eventCh
+		v := <-m.EventCh
 		e := v.(event.Event)
 		fmt.Println("=========", e)
 		creatK8sEvent(m.cli, e)
 	}
-}
-
-func (m *MonitorManager) Stop() {
-	m.stopCh <- struct{}{}
-	<-m.stopCh
-	close(m.stopCh)
 }
 
 func creatK8sEvent(cli client.Client, e event.Event) {
@@ -98,7 +110,7 @@ func creatK8sEvent(cli client.Client, e event.Event) {
 		LastTimestamp: metav1.Time{time.Now()},
 		Message:       e.Message,
 	}
-	if err := cli.Create(context.TODO(), k8sEvent); err != nil {
+	if err := cli.Create(ctx, k8sEvent); err != nil {
 		fmt.Println(err)
 	}
 }

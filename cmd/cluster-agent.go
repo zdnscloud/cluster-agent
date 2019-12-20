@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/blockdevice"
-	"github.com/zdnscloud/cluster-agent/configsyncer"
+	//"github.com/zdnscloud/cluster-agent/configsyncer"
 	"github.com/zdnscloud/cluster-agent/monitor"
 	"github.com/zdnscloud/cluster-agent/network"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
@@ -73,7 +73,7 @@ func main() {
 		log.Fatalf("Create cache failed:%s", err.Error())
 	}
 
-	configsyncer.NewConfigSyncer(cli, cache)
+	//configsyncer.NewConfigSyncer(cli, cache)
 
 	to := os.Getenv("CACHE_TIME")
 	if to == "" {
@@ -128,7 +128,7 @@ func main() {
 		)
 	}))
 	adaptor.RegisterHandler(router, gorest.NewAPIServer(schemas), schemas.GenerateResourceRoute())
-	monitorMgr := monitor.NewMonitorManager(cli, storageMgr)
+	monitorMgr := monitor.NewMonitorManager(cache, cli, storageMgr)
 	go monitorMgr.Start()
 	addr := "0.0.0.0:8090"
 	router.Run(addr)
