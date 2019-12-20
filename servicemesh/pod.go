@@ -57,9 +57,9 @@ func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.SvcMe
 	for result := range resultCh {
 		switch r := result.(*StatResult); r.RequestType {
 		case RequestTypeInbound:
-			pod.Inbound = r.Inbound
+			pod.Inbound = m.statResultBoundToPodBound(namespace, r.Inbound)
 		case RequestTypeOutbound:
-			pod.Outbound = r.Outbound
+			pod.Outbound = m.statResultBoundToPodBound(namespace, r.Outbound)
 		case RequestTypePod:
 			pod.Stat = r.Stat
 		}
@@ -67,4 +67,15 @@ func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.SvcMe
 
 	pod.SetID(podName)
 	return pod, nil
+}
+
+func (m *PodManager) statResultBoundToPodBound(namespace string, stats types.Stats) types.Stats {
+	podOwners, _ := m.groupManager.GetPodOwners(namespace)
+	var ss types.Stats
+	for _, s := range stats {
+		s.WorkloadID = podOwners[s.Resource.Name]
+		ss = append(ss, s)
+	}
+
+	return ss
 }

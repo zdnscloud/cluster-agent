@@ -413,3 +413,14 @@ func (m *WorkloadGroupManager) IsPodBelongToWorkload(namespace, workloadId, podN
 
 	return nil
 }
+
+func (m *WorkloadGroupManager) GetPodOwners(namespace string) (map[string]string, error) {
+	m.lock.RLock()
+	resources, ok := m.nsResources[namespace]
+	m.lock.RUnlock()
+	if ok == false {
+		return nil, fmt.Errorf("namespace %s no resources injected by servicemesh", namespace)
+	}
+
+	return resources.podOwners, nil
+}
