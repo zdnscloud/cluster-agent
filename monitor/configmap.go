@@ -23,7 +23,6 @@ const (
 	PodStorageConfigName                  = "podStorage"
 	NodeCpuConfigName                     = "nodeCpu"
 	NodeMemoryConfigName                  = "nodeMemory"
-	denominator                           = float32(100)
 )
 
 func (m *MonitorManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
@@ -99,27 +98,27 @@ func isOnlyOne(cli client.Client) bool {
 func (m *MonitorManager) initClusterMonitorConfig(cm *corev1.ConfigMap) {
 	if v, ok := cm.Data[CpuConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.clusterConfig.Cpu = float32(n) / denominator
+		m.clusterConfig.Cpu = int64(n)
 	}
 	if v, ok := cm.Data[MemoryConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.clusterConfig.Memory = float32(n) / denominator
+		m.clusterConfig.Memory = int64(n)
 	}
 	if v, ok := cm.Data[StorageConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.clusterConfig.Storage = float32(n) / denominator
+		m.clusterConfig.Storage = int64(n)
 	}
 	if v, ok := cm.Data[PodCountConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.clusterConfig.PodCount = float32(n) / denominator
+		m.clusterConfig.PodCount = int64(n)
 	}
 	if v, ok := cm.Data[NodeCpuConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.clusterConfig.NodeCpu = float32(n) / denominator
+		m.clusterConfig.NodeCpu = int64(n)
 	}
 	if v, ok := cm.Data[NodeMemoryConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.clusterConfig.NodeMemory = float32(n) / denominator
+		m.clusterConfig.NodeMemory = int64(n)
 	}
 	log.Infof("update cluster and node monitor config %v", *m.clusterConfig)
 }
@@ -134,19 +133,19 @@ func (m *MonitorManager) initNamespaceMonitorConfig(cm *corev1.ConfigMap, namesp
 	}
 	if v, ok := cm.Data[CpuConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.namespaceConfig.Configs[namespace].Cpu = float32(n) / denominator
+		m.namespaceConfig.Configs[namespace].Cpu = int64(n)
 	}
 	if v, ok := cm.Data[MemoryConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.namespaceConfig.Configs[namespace].Memory = float32(n) / denominator
+		m.namespaceConfig.Configs[namespace].Memory = int64(n)
 	}
 	if v, ok := cm.Data[StorageConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.namespaceConfig.Configs[namespace].Storage = float32(n) / denominator
+		m.namespaceConfig.Configs[namespace].Storage = int64(n)
 	}
 	if v, ok := cm.Data[PodStorageConfigName]; ok {
 		n, _ := strconv.Atoi(v)
-		m.namespaceConfig.Configs[namespace].PodStorage = float32(n) / denominator
+		m.namespaceConfig.Configs[namespace].PodStorage = int64(n)
 	}
 	for ns, cfg := range m.namespaceConfig.Configs {
 		log.Infof("update namespace %s monitor config: %v", ns, *cfg)

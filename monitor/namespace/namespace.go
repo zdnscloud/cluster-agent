@@ -92,36 +92,36 @@ func (m *Monitor) genPVInfo() {
 
 func (m *Monitor) check(namespace *Namespace, cfg *event.Config) {
 	if namespace.Cpu > 0 && cfg.Cpu > 0 {
-		if ratio := float32(namespace.CpuUsed) / float32(namespace.Cpu); ratio > cfg.Cpu {
+		if ratio := (namespace.CpuUsed * event.Denominator) / namespace.Cpu; ratio > cfg.Cpu {
 			m.eventCh <- event.Event{
 				Namespace: namespace.Name,
 				Kind:      event.NamespaceKind,
 				Name:      namespace.Name,
-				Message:   fmt.Sprintf("High cpu utilization %.2f%%", ratio*100),
+				Message:   fmt.Sprintf("High cpu utilization %d%%", ratio),
 			}
-			log.Infof("The CPU utilization of namespace %s is %.2f%%, higher than the indicator set by the user %.2f%%", namespace.Name, ratio*100, cfg.Cpu*100)
+			log.Infof("The CPU utilization of namespace %s is %d%%, higher than the threshold set by the user %d%%", namespace.Name, ratio, cfg.Cpu)
 		}
 	}
 	if namespace.Memory > 0 && cfg.Memory > 0 {
-		if ratio := float32(namespace.MemoryUsed) / float32(namespace.Memory); ratio > cfg.Memory {
+		if ratio := (namespace.MemoryUsed * event.Denominator) / namespace.Memory; ratio > cfg.Memory {
 			m.eventCh <- event.Event{
 				Namespace: namespace.Name,
 				Kind:      event.NamespaceKind,
 				Name:      namespace.Name,
-				Message:   fmt.Sprintf("High memory utilization %.2f%%", ratio*100),
+				Message:   fmt.Sprintf("High memory utilization %d%%", ratio),
 			}
-			log.Infof("The memory utilization of namespace %s is %.2f%%, higher than the indicator set by the user %.2f%%", namespace.Name, ratio*100, cfg.Memory*100)
+			log.Infof("The memory utilization of namespace %s is %d%%, higher than the threshold set by the user %d%%", namespace.Name, ratio, cfg.Memory)
 		}
 	}
 	if namespace.Storage > 0 && cfg.Storage > 0 {
-		if ratio := float32(namespace.StorageUsed) / float32(namespace.Storage); ratio > cfg.Storage {
+		if ratio := (namespace.StorageUsed * event.Denominator) / namespace.Storage; ratio > cfg.Storage {
 			m.eventCh <- event.Event{
 				Namespace: namespace.Name,
 				Kind:      event.NamespaceKind,
 				Name:      namespace.Name,
-				Message:   fmt.Sprintf("High storage utilization %.2f%%", ratio*100),
+				Message:   fmt.Sprintf("High storage utilization %d%%", ratio),
 			}
-			log.Infof("The storage utilization of namespace %s is %.2f%%, higher than the indicator set by the user %.2f%%", namespace.Name, ratio*100, cfg.Storage*100)
+			log.Infof("The storage utilization of namespace %s is %d%%, higher than the threshold set by the user %d%%", namespace.Name, ratio, cfg.Storage)
 		}
 	}
 }
@@ -135,14 +135,14 @@ func (m *Monitor) checkPodStorgeUsed(namespace *Namespace, cfg *event.Config) {
 			if ok {
 				size, ok := m.PVInfo[pv]
 				if ok && cfg.PodStorage > 0 {
-					if ratio := float32(size.Used) / float32(size.Total); ratio > cfg.PodStorage {
+					if ratio := (size.Used * event.Denominator) / size.Total; ratio > cfg.PodStorage {
 						m.eventCh <- event.Event{
 							Namespace: namespace.Name,
 							Kind:      event.PodKind,
 							Name:      pod,
-							Message:   fmt.Sprintf("High storage utilization %.2f%%", ratio*100),
+							Message:   fmt.Sprintf("High storage utilization %d%%", ratio),
 						}
-						log.Infof("The sorage utilization of pod %s is %.2f%%, higher than the threshold set by the user %.2f%%", pod, ratio*100, cfg.PodStorage*100)
+						log.Infof("The sorage utilization of pod %s is %d%%, higher than the threshold set by the user %d%%", pod, ratio, cfg.PodStorage)
 					}
 				}
 			}

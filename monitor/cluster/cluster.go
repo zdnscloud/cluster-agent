@@ -60,40 +60,40 @@ func (m *Monitor) Start(cfg event.MonitorConfig) {
 
 func (m *Monitor) check(cluster *Cluster, cfg *event.ClusterMonitorConfig) {
 	if cluster.Cpu > 0 && cfg.Cpu > 0 {
-		if ratio := float32(cluster.CpuUsed) / float32(cluster.Cpu); ratio > cfg.Cpu {
+		if ratio := (cluster.CpuUsed * event.Denominator) / cluster.Cpu; ratio > cfg.Cpu {
 			m.eventCh <- event.Event{
 				Kind:    event.ClusterKind,
-				Message: fmt.Sprintf("High cpu utilization %.2f%% in cluster", ratio*100),
+				Message: fmt.Sprintf("High cpu utilization %d%% in cluster", ratio),
 			}
-			log.Infof("The current utilization of the cluster's CPU resources is %.2f%%, higher than the user set threshold %.2f%%", ratio*100, cfg.Cpu*100)
+			log.Infof("The current utilization of the cluster's CPU resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.Cpu)
 		}
 	}
 	if cluster.Memory > 0 && cfg.Memory > 0 {
-		if ratio := float32(cluster.MemoryUsed) / float32(cluster.Memory); ratio > cfg.Memory {
+		if ratio := (cluster.MemoryUsed * event.Denominator) / cluster.Memory; ratio > cfg.Memory {
 			m.eventCh <- event.Event{
 				Kind:    event.ClusterKind,
-				Message: fmt.Sprintf("High memory utilization %.2f%% in cluster", ratio*100),
+				Message: fmt.Sprintf("High memory utilization %d%% in cluster", ratio),
 			}
-			log.Infof("The current utilization of the cluster's memory resources is %.2f%% , higher than the user set threshold %.2f%%", ratio*100, cfg.Cpu*100)
+			log.Infof("The current utilization of the cluster's memory resources is %d%% , higher than the user set threshold %d%%", ratio, cfg.Cpu)
 		}
 	}
 	if cluster.Pod > 0 && cfg.PodCount > 0 {
-		if ratio := float32(cluster.PodUsed) / float32(cluster.Pod); ratio > cfg.PodCount {
+		if ratio := (cluster.PodUsed * event.Denominator) / cluster.Pod; ratio > cfg.PodCount {
 			m.eventCh <- event.Event{
 				Kind:    event.ClusterKind,
-				Message: fmt.Sprintf("High pod utilization %.2f%% in cluster", ratio*100),
+				Message: fmt.Sprintf("High pod utilization %d%% in cluster", ratio),
 			}
-			log.Infof("The current utilization of the cluster's podcount resources is %.2f%%, higher than the user set threshold %.2f%%", ratio*100, cfg.Cpu*100)
+			log.Infof("The current utilization of the cluster's podcount resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.Cpu)
 		}
 	}
 	if cfg.Storage > 0 {
 		for name, size := range cluster.StorageInfo {
-			if ratio := float32(size.Used) / float32(size.Total); ratio > cfg.Storage {
+			if ratio := (size.Used * event.Denominator) / size.Total; ratio > cfg.Storage {
 				m.eventCh <- event.Event{
 					Kind:    event.ClusterKind,
-					Message: fmt.Sprintf("High storage utilization %.2f%% for storage type %s in cluster", ratio*100, name),
+					Message: fmt.Sprintf("High storage utilization %d%% for storage type %s in cluster", ratio, name),
 				}
-				log.Infof("The current utilization of the cluster's storage resources is %.2f%%, higher than the user set threshold %.2f%%", ratio*100, cfg.Cpu*100)
+				log.Infof("The current utilization of the cluster's storage resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.Cpu)
 			}
 		}
 	}

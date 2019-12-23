@@ -6,6 +6,7 @@ const (
 	NodeKind      EventKind = "Node"
 	NamespaceKind EventKind = "Namespace"
 	PodKind       EventKind = "Pod"
+	Denominator             = 100
 )
 
 type Event struct {
@@ -20,12 +21,12 @@ type EventKind string
 type MonitorConfig interface{}
 
 type ClusterMonitorConfig struct {
-	Cpu        float32
-	Memory     float32
-	Storage    float32
-	PodCount   float32
-	NodeCpu    float32
-	NodeMemory float32
+	Cpu        int64
+	Memory     int64
+	Storage    int64
+	PodCount   int64
+	NodeCpu    int64
+	NodeMemory int64
 }
 
 type NamespaceMonitorConfig struct {
@@ -33,10 +34,10 @@ type NamespaceMonitorConfig struct {
 }
 
 type Config struct {
-	Cpu        float32
-	Memory     float32
-	Storage    float32
-	PodStorage float32
+	Cpu        int64
+	Memory     int64
+	Storage    int64
+	PodStorage int64
 }
 
 type StorageSize struct {
