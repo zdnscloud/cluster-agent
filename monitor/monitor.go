@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cement/randomdata"
 	"github.com/zdnscloud/cluster-agent/monitor/cluster"
 	"github.com/zdnscloud/cluster-agent/monitor/event"
@@ -111,6 +112,6 @@ func creatK8sEvent(cli client.Client, e event.Event) {
 		Message:       e.Message,
 	}
 	if err := cli.Create(ctx, k8sEvent); err != nil {
-		fmt.Println(err)
+		log.Warnf("Create event failed:%s", err.Error())
 	}
 }

@@ -3,6 +3,7 @@ package namespace
 import (
 	"strconv"
 
+	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/monitor/event"
 	"github.com/zdnscloud/gok8s/client"
 	storagev1 "github.com/zdnscloud/immense/pkg/apis/zcloud/v1"
@@ -12,8 +13,8 @@ import (
 func GetStorage(cli client.Client) map[string]event.StorageSize {
 	storages := make(map[string]event.StorageSize)
 	storageclusters := storagev1.ClusterList{}
-	err := cli.List(ctx, nil, &storageclusters)
-	if err != nil {
+	if err := cli.List(ctx, nil, &storageclusters); err != nil {
+		log.Warnf("Get storage clusters failed:%s", err.Error())
 		return storages
 	}
 	for _, storagecluster := range storageclusters.Items {
@@ -31,8 +32,8 @@ func GetStorage(cli client.Client) map[string]event.StorageSize {
 func getPodsWithPvcs(cli client.Client, namespace string) map[string][]string {
 	podsWithPvcs := make(map[string][]string)
 	pods := corev1.PodList{}
-	err := cli.List(ctx, &client.ListOptions{Namespace: namespace}, &pods)
-	if err != nil {
+	if err := cli.List(ctx, &client.ListOptions{Namespace: namespace}, &pods); err != nil {
+		log.Warnf("Get pods failed:%s", err.Error())
 		return podsWithPvcs
 	}
 	for _, pod := range pods.Items {
@@ -52,8 +53,8 @@ func getPodsWithPvcs(cli client.Client, namespace string) map[string][]string {
 func getPvcsWithPv(cli client.Client, namespace string) map[string]string {
 	pvcsWithPv := make(map[string]string)
 	pvcs := corev1.PersistentVolumeClaimList{}
-	err := cli.List(ctx, &client.ListOptions{Namespace: namespace}, &pvcs)
-	if err != nil {
+	if err := cli.List(ctx, &client.ListOptions{Namespace: namespace}, &pvcs); err != nil {
+		log.Warnf("Get pvcs failed:%s", err.Error())
 		return pvcsWithPv
 	}
 	for _, pvc := range pvcs.Items {
@@ -68,8 +69,9 @@ func getPvcsWithPv(cli client.Client, namespace string) map[string]string {
 func getQuotas(cli client.Client, namespace string) (int64, int64, int64) {
 	var cpu, mem, storage int64
 	resourceQuotas := corev1.ResourceQuotaList{}
-	err := cli.List(ctx, &client.ListOptions{Namespace: namespace}, &resourceQuotas)
-	if err != nil {
+	if err := cli.List(ctx, &client.ListOptions{Namespace: namespace}, &resourceQuotas); err != nil {
+		log.Warnf("Get resourcequota failed:%s", err.Error())
+		return cpu, mem, storage
 	}
 	for _, quota := range resourceQuotas.Items {
 		if quota.Spec.Hard != nil {

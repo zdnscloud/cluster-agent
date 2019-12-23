@@ -63,24 +63,27 @@ func (m *Monitor) check(cluster *Cluster, cfg *event.ClusterMonitorConfig) {
 		if ratio := float32(cluster.CpuUsed) / float32(cluster.Cpu); ratio > cfg.Cpu {
 			m.eventCh <- event.Event{
 				Kind:    event.ClusterKind,
-				Message: fmt.Sprintf("High cpu utilization %.2f in cluster", ratio),
+				Message: fmt.Sprintf("High cpu utilization %.2f%% in cluster", ratio*100),
 			}
+			log.Infof("The current utilization of the cluster's CPU resources is %.2f%%, higher than the user set threshold %.2f%%", ratio*100, cfg.Cpu*100)
 		}
 	}
 	if cluster.Memory > 0 && cfg.Memory > 0 {
 		if ratio := float32(cluster.MemoryUsed) / float32(cluster.Memory); ratio > cfg.Memory {
 			m.eventCh <- event.Event{
 				Kind:    event.ClusterKind,
-				Message: fmt.Sprintf("High memory utilization %.2f in cluster", ratio),
+				Message: fmt.Sprintf("High memory utilization %.2f%% in cluster", ratio*100),
 			}
+			log.Infof("The current utilization of the cluster's memory resources is %.2f%% , higher than the user set threshold %.2f%%", ratio*100, cfg.Cpu*100)
 		}
 	}
 	if cluster.Pod > 0 && cfg.PodCount > 0 {
 		if ratio := float32(cluster.PodUsed) / float32(cluster.Pod); ratio > cfg.PodCount {
 			m.eventCh <- event.Event{
 				Kind:    event.ClusterKind,
-				Message: fmt.Sprintf("High pod utilization %.2f in cluster", ratio),
+				Message: fmt.Sprintf("High pod utilization %.2f%% in cluster", ratio*100),
 			}
+			log.Infof("The current utilization of the cluster's podcount resources is %.2f%%, higher than the user set threshold %.2f%%", ratio*100, cfg.Cpu*100)
 		}
 	}
 	if cfg.Storage > 0 {
@@ -88,8 +91,9 @@ func (m *Monitor) check(cluster *Cluster, cfg *event.ClusterMonitorConfig) {
 			if ratio := float32(size.Used) / float32(size.Total); ratio > cfg.Storage {
 				m.eventCh <- event.Event{
 					Kind:    event.ClusterKind,
-					Message: fmt.Sprintf("High storage utilization %.2f for storage type %s in cluster", ratio, name),
+					Message: fmt.Sprintf("High storage utilization %.2f%% for storage type %s in cluster", ratio*100, name),
 				}
+				log.Infof("The current utilization of the cluster's storage resources is %.2f%%, higher than the user set threshold %.2f%%", ratio*100, cfg.Cpu*100)
 			}
 		}
 	}

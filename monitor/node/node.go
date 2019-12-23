@@ -66,8 +66,9 @@ func (m *Monitor) check(nodes []*Node, cfg *event.ClusterMonitorConfig) {
 				m.eventCh <- event.Event{
 					Kind:    event.NodeKind,
 					Name:    node.Name,
-					Message: fmt.Sprintf("High cpu utilization %.2f", ratio),
+					Message: fmt.Sprintf("High cpu utilization %.2f%%", ratio*100),
 				}
+				log.Infof("The CPU utilization of node %s is %.2f%%, higher than the indicator set by the user %.2f%%", node.Name, ratio*100, cfg.NodeCpu*100)
 			}
 		}
 		if cfg.NodeMemory > 0 {
@@ -75,25 +76,19 @@ func (m *Monitor) check(nodes []*Node, cfg *event.ClusterMonitorConfig) {
 				m.eventCh <- event.Event{
 					Kind:    event.NodeKind,
 					Name:    node.Name,
-					Message: fmt.Sprintf("High memory utilization %.2f", ratio),
+					Message: fmt.Sprintf("High memory utilization %.2f%%", ratio*100),
 				}
+				log.Infof("The memory utilization of node %s is %.2f%%, higher than the indicator set by the user %.2f%%", node.Name, ratio*100, cfg.NodeCpu*100)
 			}
 		}
-		/*
-			if ratio := float32(node.PodUsed) / float32(node.Pod); ratio > m.Threshold {
-				m.eventCh <- event.Event{
-					Kind:    event.NodeKind,
-					Name:    node.Name,
-					Message: fmt.Sprintf("High pod utilization %.2f on node %s", ratio, node.Name),
-				}
-			}*/
 	}
 }
 
 func GetNodes(cli client.Client) []*Node {
 	var nodes []*Node
-	k8sNodes, err := getK8SNodes(cli)
-	if err != nil {
+	k8sNodes := corev1.NodeList{}
+	if err := cli.List(context.TODO(), nil, &k8sNodes); err != nil {
+		log.Warnf("Get nodes failed:%s", err.Error())
 		return nodes
 	}
 
@@ -103,12 +98,6 @@ func GetNodes(cli client.Client) []*Node {
 		nodes = append(nodes, k8sNodeToNode(&k8sNode, nodeMetrics, podCountOnNode))
 	}
 	return nodes
-}
-
-func getK8SNodes(cli client.Client) (*corev1.NodeList, error) {
-	nodes := corev1.NodeList{}
-	err := cli.List(context.TODO(), nil, &nodes)
-	return &nodes, err
 }
 
 func getPodCountOnNode(cli client.Client, name string) map[string]int {
@@ -128,6 +117,8 @@ func getPodCountOnNode(cli client.Client, name string) map[string]int {
 			}
 			podCountOnNode[n] += 1
 		}
+	} else {
+		log.Warnf("Get pods failed:%s", err.Error())
 	}
 	return podCountOnNode
 }
@@ -139,6 +130,8 @@ func getNodeMetrics(cli client.Client, name string) map[string]metricsapi.NodeMe
 		for _, metrics := range nodeMetricsList.Items {
 			nodeMetricsByName[metrics.Name] = metrics
 		}
+	} else {
+		log.Warnf("Get node meterics failed:%s", err.Error())
 	}
 	return nodeMetricsByName
 }

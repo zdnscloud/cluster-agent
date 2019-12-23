@@ -83,15 +83,14 @@ func (m *MonitorManager) OnGeneric(e event.GenericEvent) (handler.Result, error)
 }
 
 func isOnlyOne(cli client.Client) bool {
-	namespaces := corev1.NamespaceList{}
-	_ = cli.List(ctx, nil, &namespaces)
-	for _, ns := range namespaces.Items {
-		cms := corev1.ConfigMapList{}
-		_ = cli.List(ctx, &client.ListOptions{Namespace: ns.Name}, &cms)
-		for _, cm := range cms.Items {
-			if strings.HasPrefix(cm.Name, NamespaceThresholdConfigmapNamePrefix) {
-				return false
-			}
+	cms := corev1.ConfigMapList{}
+	if err := cli.List(ctx, &client.ListOptions{Namespace: ThresholdConfigmapNamespace}, &cms); err != nil {
+		log.Warnf("Get configmaps failed:%s", err.Error())
+		return false
+	}
+	for _, cm := range cms.Items {
+		if strings.HasPrefix(cm.Name, NamespaceThresholdConfigmapNamePrefix) {
+			return false
 		}
 	}
 	return true
@@ -149,8 +148,7 @@ func (m *MonitorManager) initNamespaceMonitorConfig(cm *corev1.ConfigMap, namesp
 		n, _ := strconv.Atoi(v)
 		m.namespaceConfig.Configs[namespace].PodStorage = float32(n) / denominator
 	}
-	log.Infof("update namespace monitor config")
 	for ns, cfg := range m.namespaceConfig.Configs {
-		log.Infof("namespace: %s, config: %v", ns, *cfg)
+		log.Infof("update namespace %s monitor config: %v", ns, *cfg)
 	}
 }

@@ -11,9 +11,7 @@ import (
 	"github.com/zdnscloud/cluster-agent/monitor/node"
 	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/client"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	k8stypes "k8s.io/apimachinery/pkg/types"
 )
 
 var ctx = context.TODO()
@@ -92,12 +90,6 @@ func (m *Monitor) genPVInfo() {
 	}
 }
 
-func getNamespace(cli client.Client, name string, pvInfo map[string]event.StorageSize) *Namespace {
-	ns := corev1.Namespace{}
-	_ = cli.Get(context.TODO(), k8stypes.NamespacedName{"", name}, &ns)
-	return genNamespace(cli, ns.Name, pvInfo)
-}
-
 func (m *Monitor) check(namespace *Namespace, cfg *event.Config) {
 	if namespace.Cpu > 0 && cfg.Cpu > 0 {
 		if ratio := float32(namespace.CpuUsed) / float32(namespace.Cpu); ratio > cfg.Cpu {
@@ -105,8 +97,9 @@ func (m *Monitor) check(namespace *Namespace, cfg *event.Config) {
 				Namespace: namespace.Name,
 				Kind:      event.NamespaceKind,
 				Name:      namespace.Name,
-				Message:   fmt.Sprintf("High cpu utilization %.2f", ratio),
+				Message:   fmt.Sprintf("High cpu utilization %.2f%%", ratio*100),
 			}
+			log.Infof("The CPU utilization of namespace %s is %.2f%%, higher than the indicator set by the user %.2f%%", namespace.Name, ratio*100, cfg.Cpu*100)
 		}
 	}
 	if namespace.Memory > 0 && cfg.Memory > 0 {
@@ -115,8 +108,9 @@ func (m *Monitor) check(namespace *Namespace, cfg *event.Config) {
 				Namespace: namespace.Name,
 				Kind:      event.NamespaceKind,
 				Name:      namespace.Name,
-				Message:   fmt.Sprintf("High memory utilization %.2f", ratio),
+				Message:   fmt.Sprintf("High memory utilization %.2f%%", ratio*100),
 			}
+			log.Infof("The memory utilization of namespace %s is %.2f%%, higher than the indicator set by the user %.2f%%", namespace.Name, ratio*100, cfg.Memory*100)
 		}
 	}
 	if namespace.Storage > 0 && cfg.Storage > 0 {
@@ -125,8 +119,9 @@ func (m *Monitor) check(namespace *Namespace, cfg *event.Config) {
 				Namespace: namespace.Name,
 				Kind:      event.NamespaceKind,
 				Name:      namespace.Name,
-				Message:   fmt.Sprintf("High storage utilization %.2f", ratio),
+				Message:   fmt.Sprintf("High storage utilization %.2f%%", ratio*100),
 			}
+			log.Infof("The storage utilization of namespace %s is %.2f%%, higher than the indicator set by the user %.2f%%", namespace.Name, ratio*100, cfg.Storage*100)
 		}
 	}
 }
@@ -145,8 +140,9 @@ func (m *Monitor) checkPodStorgeUsed(namespace *Namespace, cfg *event.Config) {
 							Namespace: namespace.Name,
 							Kind:      event.PodKind,
 							Name:      pod,
-							Message:   fmt.Sprintf("High storage utilization %.2f", ratio),
+							Message:   fmt.Sprintf("High storage utilization %.2f%%", ratio*100),
 						}
+						log.Infof("The sorage utilization of pod %s is %.2f%%, higher than the threshold set by the user %.2f%%", pod, ratio*100, cfg.PodStorage*100)
 					}
 				}
 			}
@@ -154,11 +150,12 @@ func (m *Monitor) checkPodStorgeUsed(namespace *Namespace, cfg *event.Config) {
 	}
 }
 
-func genNamespace(cli client.Client, ns string, pvInfo map[string]event.StorageSize) *Namespace {
+func getNamespace(cli client.Client, ns string, pvInfo map[string]event.StorageSize) *Namespace {
 	var namespace Namespace
 	namespace.Name = ns
 	podMetricsList, err := cli.GetPodMetrics(ns, "", labels.Everything())
 	if err != nil {
+		log.Warnf("Get pod metrics failed:%s", err.Error())
 	}
 	for _, pod := range podMetricsList.Items {
 		var cpuUsed, memoryUsed int64
