@@ -41,7 +41,6 @@ func (m *Monitor) Stop() {
 	log.Infof("stop node monitor")
 	m.stopCh <- struct{}{}
 	<-m.stopCh
-	close(m.stopCh)
 }
 
 func (m *Monitor) Start(cfg event.MonitorConfig) {
@@ -62,7 +61,7 @@ func (m *Monitor) Start(cfg event.MonitorConfig) {
 func (m *Monitor) check(nodes []*Node, cfg *event.ClusterMonitorConfig) {
 	for _, node := range nodes {
 		if cfg.NodeCpu > 0 {
-			if ratio := (node.CpuUsed*event.Denominator) / (node.Cpu); ratio > (cfg.NodeCpu) {
+			if ratio := (node.CpuUsed * event.Denominator) / (node.Cpu); ratio > (cfg.NodeCpu) {
 				m.eventCh <- event.Event{
 					Kind:    event.NodeKind,
 					Name:    node.Name,
@@ -72,13 +71,13 @@ func (m *Monitor) check(nodes []*Node, cfg *event.ClusterMonitorConfig) {
 			}
 		}
 		if cfg.NodeMemory > 0 {
-			if ratio := (node.MemoryUsed*event.Denominator) / (node.Memory); ratio > (cfg.NodeMemory) {
+			if ratio := (node.MemoryUsed * event.Denominator) / (node.Memory); ratio > (cfg.NodeMemory) {
 				m.eventCh <- event.Event{
 					Kind:    event.NodeKind,
 					Name:    node.Name,
 					Message: fmt.Sprintf("High memory utilization %d%%", ratio),
 				}
-				log.Infof("The memory utilization of node %s is %d%%, higher than the threshold set by the user %d%%", node.Name, ratio, cfg.NodeCpu)
+				log.Infof("The memory utilization of node %s is %d%%, higher than the threshold set by the user %d%%", node.Name, ratio, cfg.NodeMemory)
 			}
 		}
 	}

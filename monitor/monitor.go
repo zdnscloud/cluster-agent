@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -26,8 +25,6 @@ const (
 	eventNamespace = "zcloud"
 	eventLevel     = "Warning"
 	eventReason    = "resource shortage"
-	eventKind      = "Pod"
-	eventName      = "cluster-agent"
 )
 
 var ctx = context.TODO()
@@ -73,7 +70,6 @@ func NewMonitorManager(c cache.Cache, cli client.Client, storageMgr *storage.Sto
 }
 
 func (m *MonitorManager) Stop() {
-	m.stopCh <- struct{}{}
 	close(m.stopCh)
 }
 

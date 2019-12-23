@@ -49,7 +49,6 @@ func (m *Monitor) Stop() {
 	log.Infof("stop namespace monitor")
 	m.stopCh <- struct{}{}
 	<-m.stopCh
-	close(m.stopCh)
 }
 
 func (m *Monitor) Start(cfg event.MonitorConfig) {

@@ -39,7 +39,6 @@ func (m *Monitor) Stop() {
 	log.Infof("stop cluster monitor")
 	m.stopCh <- struct{}{}
 	<-m.stopCh
-	close(m.stopCh)
 }
 
 func (m *Monitor) Start(cfg event.MonitorConfig) {
@@ -74,7 +73,7 @@ func (m *Monitor) check(cluster *Cluster, cfg *event.ClusterMonitorConfig) {
 				Kind:    event.ClusterKind,
 				Message: fmt.Sprintf("High memory utilization %d%% in cluster", ratio),
 			}
-			log.Infof("The current utilization of the cluster's memory resources is %d%% , higher than the user set threshold %d%%", ratio, cfg.Cpu)
+			log.Infof("The current utilization of the cluster's memory resources is %d%% , higher than the user set threshold %d%%", ratio, cfg.Memory)
 		}
 	}
 	if cluster.Pod > 0 && cfg.PodCount > 0 {
@@ -83,7 +82,7 @@ func (m *Monitor) check(cluster *Cluster, cfg *event.ClusterMonitorConfig) {
 				Kind:    event.ClusterKind,
 				Message: fmt.Sprintf("High pod utilization %d%% in cluster", ratio),
 			}
-			log.Infof("The current utilization of the cluster's podcount resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.Cpu)
+			log.Infof("The current utilization of the cluster's podcount resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.PodCount)
 		}
 	}
 	if cfg.Storage > 0 {
@@ -93,7 +92,7 @@ func (m *Monitor) check(cluster *Cluster, cfg *event.ClusterMonitorConfig) {
 					Kind:    event.ClusterKind,
 					Message: fmt.Sprintf("High storage utilization %d%% for storage type %s in cluster", ratio, name),
 				}
-				log.Infof("The current utilization of the cluster's storage resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.Cpu)
+				log.Infof("The current utilization of the cluster's storage resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.Storage)
 			}
 		}
 	}

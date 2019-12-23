@@ -2,10 +2,10 @@ package event
 
 const (
 	CheckInterval           = 60
-	ClusterKind   EventKind = "Cluster"
-	NodeKind      EventKind = "Node"
-	NamespaceKind EventKind = "Namespace"
-	PodKind       EventKind = "Pod"
+	ClusterKind   EventKind = "cluster"
+	NodeKind      EventKind = "node"
+	NamespaceKind EventKind = "namespace"
+	PodKind       EventKind = "pod"
 	Denominator             = 100
 )
 
