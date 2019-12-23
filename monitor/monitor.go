@@ -87,7 +87,6 @@ func (m *MonitorManager) Start() {
 		}
 		v := <-m.EventCh
 		e := v.(event.Event)
-		fmt.Println("=========", e)
 		creatK8sEvent(m.cli, e)
 	}
 }
