@@ -18,6 +18,7 @@ type PV struct {
 	Pods             []Pod  `json:"pods"`
 	StorageClassName string `json:"-"`
 	Node             string `json:"node"`
+	PVC              string `json:"pvc"`
 }
 
 type Pod struct {

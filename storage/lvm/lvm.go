@@ -50,6 +50,7 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) *types.Storage {
 			FreeSize: fSize,
 			Pods:     pods,
 			Node:     node,
+			PVC:      pvc,
 		}
 		res = append(res, pv)
 	}
