@@ -87,12 +87,14 @@ func (m *Monitor) check(cluster *Cluster, cfg *event.ClusterMonitorConfig) {
 	}
 	if cfg.Storage > 0 {
 		for name, size := range cluster.StorageInfo {
-			if ratio := (size.Used * event.Denominator) / size.Total; ratio > cfg.Storage {
-				m.eventCh <- event.Event{
-					Kind:    event.ClusterKind,
-					Message: fmt.Sprintf("High storage utilization %d%% for storage type %s in cluster", ratio, name),
+			if size.Total > 0 {
+				if ratio := (size.Used * event.Denominator) / size.Total; ratio > cfg.Storage {
+					m.eventCh <- event.Event{
+						Kind:    event.ClusterKind,
+						Message: fmt.Sprintf("High storage utilization %d%% for storage type %s in cluster", ratio, name),
+					}
+					log.Infof("The current utilization of the cluster's storage resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.Storage)
 				}
-				log.Infof("The current utilization of the cluster's storage resources is %d%%, higher than the user set threshold %d%%", ratio, cfg.Storage)
 			}
 		}
 	}

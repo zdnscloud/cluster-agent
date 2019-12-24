@@ -36,8 +36,6 @@ func (m *blockDeviceMgr) RegisterSchemas(version *resource.APIVersion, schemas r
 func (m *blockDeviceMgr) List(ctx *resource.Context) interface{} {
 	bs := m.GetBuf()
 	if len(bs) == 0 {
-		log.Infof("Get blockdevices from nodeagent")
-		log.Infof("Add cache %d second", m.timeout)
 		bs = m.SetBuf()
 	}
 	return bs
@@ -74,7 +72,6 @@ func (m *blockDeviceMgr) SetBuf() []*BlockDevice {
 }
 
 func (m *blockDeviceMgr) GetBuf() []*BlockDevice {
-	log.Infof("Get blockdevices from cache")
 	res, has := m.cache.Get(key)
 	if !has {
 		log.Warnf("Cache not found blockdevice")
@@ -92,7 +89,6 @@ func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() []*BlockDevice {
 			log.Warnf("Create node agent client: %s failed: %s", node.Name, err.Error())
 			continue
 		}
-		log.Infof("Get node %s Disk info", node.Name)
 		req := pb.GetDisksInfoRequest{}
 		reply, err := cli.GetDisksInfo(context.TODO(), &req)
 		if err != nil {
