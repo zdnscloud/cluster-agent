@@ -60,8 +60,8 @@ func (m *Monitor) Start(cfg event.MonitorConfig) {
 }
 func (m *Monitor) check(nodes []*Node, cfg *event.ClusterMonitorConfig) {
 	for _, node := range nodes {
-		if cfg.NodeCpu > 0 {
-			if ratio := (node.CpuUsed * event.Denominator) / (node.Cpu); ratio > (cfg.NodeCpu) {
+		if node.Cpu > 0 && cfg.NodeCpu > 0 {
+			if ratio := (node.CpuUsed * event.Denominator) / node.Cpu; ratio > (cfg.NodeCpu) {
 				m.eventCh <- event.Event{
 					Kind:    event.NodeKind,
 					Name:    node.Name,
@@ -70,8 +70,8 @@ func (m *Monitor) check(nodes []*Node, cfg *event.ClusterMonitorConfig) {
 				log.Infof("The CPU utilization of node %s is %d%%, higher than the threshold set by the user %d%%", node.Name, ratio, cfg.NodeCpu)
 			}
 		}
-		if cfg.NodeMemory > 0 {
-			if ratio := (node.MemoryUsed * event.Denominator) / (node.Memory); ratio > (cfg.NodeMemory) {
+		if node.Memory > 0 && cfg.NodeMemory > 0 {
+			if ratio := (node.MemoryUsed * event.Denominator) / node.Memory; ratio > (cfg.NodeMemory) {
 				m.eventCh <- event.Event{
 					Kind:    event.NodeKind,
 					Name:    node.Name,

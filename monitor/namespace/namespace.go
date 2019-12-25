@@ -133,7 +133,7 @@ func (m *Monitor) checkPodStorgeUsed(namespace *Namespace, cfg *event.Config) {
 			pv, ok := pvcs[pvc]
 			if ok {
 				size, ok := m.PVInfo[pv]
-				if ok && cfg.PodStorage > 0 {
+				if ok && size.Total > 0 && cfg.PodStorage > 0 {
 					if ratio := (size.Used * event.Denominator) / size.Total; ratio > cfg.PodStorage {
 						m.eventCh <- event.Event{
 							Namespace: namespace.Name,
