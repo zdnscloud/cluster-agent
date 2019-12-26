@@ -70,11 +70,17 @@ func buildStatRequest(option *StatOption) *pb.StatSummaryRequest {
 			Namespace: option.Namespace,
 			Type:      AllResourceType,
 		}
+		if option.ResourceType == ResourceTypePod {
+			req.Selector.Resource.Type = ResourceTypePod
+		}
 		req.Outbound = &pb.StatSummaryRequest_FromResource{FromResource: pbResource}
 	} else if option.To {
 		req.Selector.Resource = &pb.Resource{
 			Namespace: option.Namespace,
 			Type:      AllResourceType,
+		}
+		if option.ResourceType == ResourceTypePod {
+			req.Selector.Resource.Type = ResourceTypePod
 		}
 		req.Outbound = &pb.StatSummaryRequest_ToResource{ToResource: pbResource}
 	}
@@ -99,11 +105,7 @@ func pbStatsRespToStats(resp *pb.StatSummaryResponse, isReqPodType bool) types.S
 	var stats types.Stats
 	for _, pbStatTable := range resp.GetOk().GetStatTables() {
 		for _, pbstat := range pbStatTable.GetPodGroup().GetRows() {
-			if isReqPodType {
-				if pbstat.Resource.GetType() != ResourceTypePod {
-					continue
-				}
-			} else if slice.SliceIndex(WorkloadKinds, pbstat.Resource.Type) == -1 {
+			if isReqPodType == false && slice.SliceIndex(WorkloadKinds, pbstat.Resource.Type) == -1 {
 				continue
 			}
 
