@@ -15,19 +15,19 @@ const (
 )
 
 type PodManager struct {
-	apiServerURL *url.URL
-	groupManager *WorkloadGroupManager
+	apiServerURL    *url.URL
+	workloadManager *WorkloadManager
 }
 
-func newPodManager(apiServerURL *url.URL, groupManager *WorkloadGroupManager) *PodManager {
+func newPodManager(apiServerURL *url.URL, workloadManager *WorkloadManager) *PodManager {
 	return &PodManager{
-		apiServerURL: apiServerURL,
-		groupManager: groupManager,
+		apiServerURL:    apiServerURL,
+		workloadManager: workloadManager,
 	}
 }
 
 func (m *PodManager) Get(ctx *resource.Context) resource.Resource {
-	namespace := ctx.Resource.GetParent().GetParent().GetParent().GetID()
+	namespace := ctx.Resource.GetParent().GetParent().GetID()
 	workloadId := ctx.Resource.GetParent().GetID()
 	podId := ctx.Resource.(*types.SvcMeshPod).GetID()
 	pod, err := m.getPod(namespace, workloadId, podId)
@@ -40,13 +40,14 @@ func (m *PodManager) Get(ctx *resource.Context) resource.Resource {
 }
 
 func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.SvcMeshPod, error) {
-	if err := m.groupManager.IsPodBelongToWorkload(namespace, workloadId, podName); err != nil {
+	podOwners, err := m.workloadManager.GetPodOwners(namespace, workloadId, podName)
+	if err != nil {
 		return nil, err
 	}
 
 	resultCh, err := errgroup.Batch(genBasicStatOptions(m.apiServerURL, namespace, ResourceTypePod, podName),
-		func(options interface{}) (interface{}, error) {
-			return getWorkloadWithOptions(options.(*StatOptions))
+		func(option interface{}) (interface{}, error) {
+			return getWorkloadWithOption(option.(*StatOption))
 		},
 	)
 	if err != nil {
@@ -57,9 +58,9 @@ func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.SvcMe
 	for result := range resultCh {
 		switch r := result.(*StatResult); r.RequestType {
 		case RequestTypeInbound:
-			pod.Inbound = m.statResultBoundToPodBound(namespace, r.Inbound)
+			pod.Inbound = m.statResultBoundToPodBound(podOwners, namespace, r.Inbound)
 		case RequestTypeOutbound:
-			pod.Outbound = m.statResultBoundToPodBound(namespace, r.Outbound)
+			pod.Outbound = m.statResultBoundToPodBound(podOwners, namespace, r.Outbound)
 		case RequestTypePod:
 			pod.Stat = r.Stat
 		}
@@ -69,8 +70,7 @@ func (m *PodManager) getPod(namespace, workloadId, podName string) (*types.SvcMe
 	return pod, nil
 }
 
-func (m *PodManager) statResultBoundToPodBound(namespace string, stats types.Stats) types.Stats {
-	podOwners, _ := m.groupManager.GetPodOwners(namespace)
+func (m *PodManager) statResultBoundToPodBound(podOwners map[string]string, namespace string, stats types.Stats) types.Stats {
 	var ss types.Stats
 	for _, s := range stats {
 		s.WorkloadID = podOwners[s.Resource.Name]

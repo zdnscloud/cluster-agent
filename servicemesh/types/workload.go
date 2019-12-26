@@ -2,10 +2,13 @@ package types
 
 import (
 	"github.com/zdnscloud/gorest/resource"
+
+	"github.com/zdnscloud/cluster-agent/service"
 )
 
 type SvcMeshWorkload struct {
 	resource.ResourceBase `json:",inline"`
+	GroupID               string   `json:"groupId,omitempty"`
 	Destinations          []string `json:"destinations,omitempty"`
 	Stat                  Stat     `json:"stat,omitempty"`
 	Inbound               Stats    `json:"inbound,omitempty"`
@@ -14,23 +17,19 @@ type SvcMeshWorkload struct {
 }
 
 func (w SvcMeshWorkload) GetParents() []resource.ResourceKind {
-	return []resource.ResourceKind{SvcMeshWorkloadGroup{}}
+	return []resource.ResourceKind{service.Namespace{}}
 }
 
-type Workloads []*SvcMeshWorkload
+type SvcMeshWorkloads []*SvcMeshWorkload
 
-func (w Workloads) Len() int {
+func (w SvcMeshWorkloads) Len() int {
 	return len(w)
 }
 
-func (w Workloads) Swap(i, j int) {
+func (w SvcMeshWorkloads) Swap(i, j int) {
 	w[i], w[j] = w[j], w[i]
 }
 
-func (w Workloads) Less(i, j int) bool {
-	if w[i].Stat.Resource.Type == w[j].Stat.Resource.Type {
-		return w[i].Stat.Resource.Name < w[j].Stat.Resource.Name
-	}
-
-	return w[i].Stat.Resource.Type < w[j].Stat.Resource.Type
+func (w SvcMeshWorkloads) Less(i, j int) bool {
+	return w[i].Stat.ID < w[j].Stat.ID
 }

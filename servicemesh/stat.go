@@ -20,7 +20,7 @@ const (
 
 var WorkloadKinds = []string{ResourceTypeDeployment, ResourceTypeDaemonSet, ResourceTypeStatefulSet}
 
-type StatOptions struct {
+type StatOption struct {
 	ApiServerURL *url.URL
 	Namespace    string
 	Dsts         []string
@@ -30,8 +30,8 @@ type StatOptions struct {
 	To           bool
 }
 
-func getStat(options *StatOptions) (types.Stat, error) {
-	stats, err := getStatsByReq(options.ApiServerURL, buildStatRequest(options), options.ResourceType == ResourceTypePod)
+func getStat(option *StatOption) (types.Stat, error) {
+	stats, err := getStatsByReq(option.ApiServerURL, buildStatRequest(option), option.ResourceType == ResourceTypePod)
 	if err != nil {
 		return types.Stat{}, err
 	}
@@ -43,15 +43,15 @@ func getStat(options *StatOptions) (types.Stat, error) {
 	return stats[0], nil
 }
 
-func getStats(options *StatOptions) (types.Stats, error) {
-	return getStatsByReq(options.ApiServerURL, buildStatRequest(options), options.ResourceType == ResourceTypePod)
+func getStats(option *StatOption) (types.Stats, error) {
+	return getStatsByReq(option.ApiServerURL, buildStatRequest(option), option.ResourceType == ResourceTypePod)
 }
 
-func buildStatRequest(options *StatOptions) *pb.StatSummaryRequest {
+func buildStatRequest(option *StatOption) *pb.StatSummaryRequest {
 	pbResource := &pb.Resource{
-		Namespace: options.Namespace,
-		Type:      options.ResourceType,
-		Name:      options.ResourceName,
+		Namespace: option.Namespace,
+		Type:      option.ResourceType,
+		Name:      option.ResourceName,
 	}
 
 	req := &pb.StatSummaryRequest{
@@ -65,15 +65,15 @@ func buildStatRequest(options *StatOptions) *pb.StatSummaryRequest {
 		},
 	}
 
-	if options.From {
+	if option.From {
 		req.Selector.Resource = &pb.Resource{
-			Namespace: options.Namespace,
+			Namespace: option.Namespace,
 			Type:      AllResourceType,
 		}
 		req.Outbound = &pb.StatSummaryRequest_FromResource{FromResource: pbResource}
-	} else if options.To {
+	} else if option.To {
 		req.Selector.Resource = &pb.Resource{
-			Namespace: options.Namespace,
+			Namespace: option.Namespace,
 			Type:      AllResourceType,
 		}
 		req.Outbound = &pb.StatSummaryRequest_ToResource{ToResource: pbResource}
