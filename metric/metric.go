@@ -14,7 +14,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/zdnscloud/cement/log"
@@ -80,100 +79,89 @@ func (m *MetricManager) initMetricManager() error {
 	}
 
 	for _, ns := range nses.Items {
-		if err := m.initDeployments(ns.Name); err != nil {
-			return fmt.Errorf("list deployments with namespace %s failed: %s", ns, err.Error())
-		}
-		if err := m.initDaemonSets(ns.Name); err != nil {
-			return fmt.Errorf("list daemonsets with namespace %s failed: %s", ns, err.Error())
-		}
-		if err := m.initStateFulSets(ns.Name); err != nil {
-			return fmt.Errorf("list statefulsets with namespace %s failed: %s", ns, err.Error())
+		if err := m.initPods(ns.Name); err != nil {
+			return fmt.Errorf("list pods with namespace %s failed: %s", ns, err.Error())
 		}
 	}
 
 	return nil
 }
 
-func (m *MetricManager) initDeployments(namespace string) error {
-	deploys := appsv1.DeploymentList{}
-	if err := m.cache.List(context.TODO(), &client.ListOptions{Namespace: namespace}, &deploys); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil
+func (m *MetricManager) initPods(namespace string) error {
+	pods := corev1.PodList{}
+	if err := m.cache.List(context.TODO(), &client.ListOptions{Namespace: namespace}, &pods); err != nil {
+		if apierrors.IsNotFound(err) == false {
+			return fmt.Errorf("list pods with namespace %s failed: %s", namespace, err.Error())
 		}
-		return err
+
+		return nil
 	}
 
-	for _, deploy := range deploys.Items {
-		m.onCreateWorkload(deploy.Spec.Template, namespace, common.ResourceTypeDeployment, deploy.Name, deploy.Spec.Selector)
+	for _, pod := range pods.Items {
+		if err := m.onCreatePod(&pod); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (m *MetricManager) onCreateWorkload(spec corev1.PodTemplateSpec, namespace, typ, name string, selector *metav1.LabelSelector) {
-	port, path, err := getWorkloadExposedMetric(spec)
+func (m *MetricManager) onCreatePod(pod *corev1.Pod) error {
+	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+		return nil
+	}
+
+	port, path, err := getWorkloadExposedMetric(pod.Annotations)
 	if err != nil {
-		return
+		return nil
 	}
 
-	if selector == nil {
-		log.Debugf("workload %s/%s with namespace %s no selector", typ, name, namespace)
-		return
-	}
-
-	labelSelector, err := metav1.LabelSelectorAsSelector(selector)
-	if err != nil {
-		log.Warnf("workload %s/%s with namespace %s selector to label selector failed: %s", typ, name, namespace, err.Error())
-		return
-	}
-
-	workloads, ok := m.workloads[namespace]
+	workloads, ok := m.workloads[pod.Namespace]
 	if ok == false {
 		workloads = make(map[string]Workload)
-		m.workloads[namespace] = workloads
+		m.workloads[pod.Namespace] = workloads
 	}
 
-	workloadID := genWorkloadID(typ, name)
-	if _, ok := workloads[workloadID]; ok {
-		return
+	ownerType, ownerName, err := helper.GetPodOwner(m.cache, pod)
+	if err != nil {
+		return fmt.Errorf("get pod %s owner with namespace %s failed: %s", pod.Name, pod.Namespace, err.Error())
 	}
 
-	podList := corev1.PodList{}
-	if err := m.cache.List(context.TODO(), &client.ListOptions{Namespace: namespace,
-		LabelSelector: labelSelector}, &podList); err != nil {
-		if apierrors.IsNotFound(err) == false {
-			log.Warnf("list pods with namespace %s failed: %s", namespace, err.Error())
+	workloadID := genWorkloadID(ownerType, ownerName)
+	workload, ok := workloads[workloadID]
+	if ok == false {
+		workload = Workload{
+			Type:       ownerType,
+			Name:       ownerName,
+			MetricPort: port,
+			MetricPath: path,
 		}
-		return
+	} else {
+		for _, p := range workload.Pods {
+			if p.Name == pod.Name {
+				return nil
+			}
+		}
 	}
 
-	var pods []Pod
-	for _, pod := range podList.Items {
-		pods = append(pods, Pod{
-			Name: pod.Name,
-			IP:   pod.Status.PodIP,
-		})
-	}
-
-	workloads[workloadID] = Workload{
-		Type:       typ,
-		Name:       name,
-		MetricPort: port,
-		MetricPath: path,
-		Pods:       pods,
-	}
+	workload.Pods = append(workload.Pods, Pod{
+		Name: pod.Name,
+		IP:   pod.Status.PodIP,
+	})
+	workloads[workloadID] = workload
+	return nil
 }
 
 func genWorkloadID(typ, name string) string {
 	return typ + "/" + name
 }
 
-func getWorkloadExposedMetric(spec corev1.PodTemplateSpec) (int, string, error) {
-	if scrape, ok := spec.Annotations[AnnotationsPrometheusScrape]; ok == false || scrape != "true" {
+func getWorkloadExposedMetric(annotations map[string]string) (int, string, error) {
+	if scrape, ok := annotations[AnnotationsPrometheusScrape]; ok == false || scrape != "true" {
 		return 0, "", fmt.Errorf("no set annotions %s", AnnotationsPrometheusScrape)
 	}
 
-	portStr, ok := spec.Annotations[AnnotationsPrometheusPort]
+	portStr, ok := annotations[AnnotationsPrometheusPort]
 	if ok == false || portStr == "" {
 		return 0, "", fmt.Errorf("no set annotions %s", AnnotationsPrometheusPort)
 	}
@@ -183,44 +171,12 @@ func getWorkloadExposedMetric(spec corev1.PodTemplateSpec) (int, string, error) 
 		return 0, "", fmt.Errorf("parse %s %s to integer failed: %s", AnnotationsPrometheusPort, portStr, err.Error())
 	}
 
-	path := spec.Annotations[AnnotationsPrometheusPath]
+	path := annotations[AnnotationsPrometheusPath]
 	if path == "" {
 		path = DefaultMetricPath
 	}
 
 	return port, path, nil
-}
-
-func (m *MetricManager) initDaemonSets(namespace string) error {
-	daemonsets := appsv1.DaemonSetList{}
-	if err := m.cache.List(context.TODO(), &client.ListOptions{Namespace: namespace}, &daemonsets); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-		return err
-	}
-
-	for _, ds := range daemonsets.Items {
-		m.onCreateWorkload(ds.Spec.Template, namespace, common.ResourceTypeDaemonSet, ds.Name, ds.Spec.Selector)
-	}
-
-	return nil
-}
-
-func (m *MetricManager) initStateFulSets(namespace string) error {
-	statefulsets := appsv1.StatefulSetList{}
-	if err := m.cache.List(context.TODO(), &client.ListOptions{Namespace: namespace}, &statefulsets); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-		return err
-	}
-
-	for _, sts := range statefulsets.Items {
-		m.onCreateWorkload(sts.Spec.Template, namespace, common.ResourceTypeStatefulSet, sts.Name, sts.Spec.Selector)
-	}
-
-	return nil
 }
 
 func (m *MetricManager) List(ctx *resource.Context) interface{} {
@@ -318,12 +274,8 @@ func (m *MetricManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	switch obj := e.Object.(type) {
-	case *appsv1.Deployment:
-		m.onCreateWorkload(obj.Spec.Template, obj.Namespace, common.ResourceTypeDeployment, obj.Name, obj.Spec.Selector)
-	case *appsv1.DaemonSet:
-		m.onCreateWorkload(obj.Spec.Template, obj.Namespace, common.ResourceTypeDaemonSet, obj.Name, obj.Spec.Selector)
-	case *appsv1.StatefulSet:
-		m.onCreateWorkload(obj.Spec.Template, obj.Namespace, common.ResourceTypeStatefulSet, obj.Name, obj.Spec.Selector)
+	case *corev1.Pod:
+		m.onCreatePod(obj)
 	}
 
 	return handler.Result{}, nil
@@ -336,18 +288,20 @@ func (m *MetricManager) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 	case *corev1.Namespace:
 		delete(m.workloads, obj.Name)
 	case *appsv1.Deployment:
-		m.onDeleteWorkload(obj.Spec.Template, obj.Namespace, common.ResourceTypeDeployment, obj.Name)
+		m.onDeleteWorkload(obj.Spec.Template.Annotations, obj.Namespace, common.ResourceTypeDeployment, obj.Name)
 	case *appsv1.DaemonSet:
-		m.onDeleteWorkload(obj.Spec.Template, obj.Namespace, common.ResourceTypeDaemonSet, obj.Name)
+		m.onDeleteWorkload(obj.Spec.Template.Annotations, obj.Namespace, common.ResourceTypeDaemonSet, obj.Name)
 	case *appsv1.StatefulSet:
-		m.onDeleteWorkload(obj.Spec.Template, obj.Namespace, common.ResourceTypeStatefulSet, obj.Name)
+		m.onDeleteWorkload(obj.Spec.Template.Annotations, obj.Namespace, common.ResourceTypeStatefulSet, obj.Name)
+	case *corev1.Pod:
+		m.onDeletePod(obj)
 	}
 
 	return handler.Result{}, nil
 }
 
-func (m *MetricManager) onDeleteWorkload(spec corev1.PodTemplateSpec, namespace, typ, name string) {
-	if _, _, err := getWorkloadExposedMetric(spec); err != nil {
+func (m *MetricManager) onDeleteWorkload(annotions map[string]string, namespace, typ, name string) {
+	if _, _, err := getWorkloadExposedMetric(annotions); err != nil {
 		return
 	}
 
@@ -356,7 +310,36 @@ func (m *MetricManager) onDeleteWorkload(spec corev1.PodTemplateSpec, namespace,
 	}
 }
 
+func (m *MetricManager) onDeletePod(pod *corev1.Pod) {
+	workloads, ok := m.workloads[pod.Namespace]
+	if ok == false {
+		return
+	}
+
+	ownerType, ownerName, err := helper.GetPodOwner(m.cache, pod)
+	if err != nil {
+		log.Warnf("get pod %s owner failed: %s", pod.Name, err.Error())
+		return
+	}
+
+	workloadID := genWorkloadID(ownerType, ownerName)
+	workload, ok := workloads[workloadID]
+	if ok == false {
+		return
+	}
+
+	for i, p := range workload.Pods {
+		if p.Name == pod.Name {
+			workload.Pods = append(workload.Pods[:i], workload.Pods[i+1:]...)
+			break
+		}
+	}
+	workloads[workloadID] = workload
+}
+
 func (m *MetricManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 	switch obj := e.ObjectNew.(type) {
 	case *corev1.Pod:
 		m.onUpdatePod(e.ObjectOld.(*corev1.Pod), obj)
@@ -365,13 +348,20 @@ func (m *MetricManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
 }
 
 func (m *MetricManager) onUpdatePod(oldPod *corev1.Pod, newPod *corev1.Pod) {
+	if _, _, err := getWorkloadExposedMetric(newPod.Annotations); err != nil {
+		return
+	}
+
+	if newPod.Status.Phase == corev1.PodSucceeded || newPod.Status.Phase == corev1.PodFailed {
+		m.onDeletePod(newPod)
+		return
+	}
+
 	if oldPod.Status.PodIP == newPod.Status.PodIP {
 		return
 	}
 
-	m.lock.RLock()
 	workloads, ok := m.workloads[newPod.Namespace]
-	m.lock.RUnlock()
 	if ok == false {
 		return
 	}
@@ -382,14 +372,20 @@ func (m *MetricManager) onUpdatePod(oldPod *corev1.Pod, newPod *corev1.Pod) {
 		return
 	}
 
-	if w, ok := workloads[genWorkloadID(ownerType, ownerName)]; ok {
-		for i, pod := range w.Pods {
-			if pod.Name == newPod.Name {
-				w.Pods[i].IP = newPod.Status.PodIP
-				break
-			}
+	workloadID := genWorkloadID(ownerType, ownerName)
+	workload, ok := workloads[workloadID]
+	if ok == false {
+		return
+	}
+
+	for i, pod := range workload.Pods {
+		if pod.Name == newPod.Name {
+			workload.Pods[i].IP = newPod.Status.PodIP
+			break
 		}
 	}
+
+	workloads[workloadID] = workload
 }
 
 func (m *MetricManager) OnGeneric(e event.GenericEvent) (handler.Result, error) {
