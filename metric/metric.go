@@ -158,12 +158,12 @@ func genWorkloadID(typ, name string) string {
 
 func getWorkloadExposedMetric(annotations map[string]string) (int, string, error) {
 	if scrape, ok := annotations[AnnotationsPrometheusScrape]; ok == false || scrape != "true" {
-		return 0, "", fmt.Errorf("no set annotions %s", AnnotationsPrometheusScrape)
+		return 0, "", fmt.Errorf("no set annotations %s", AnnotationsPrometheusScrape)
 	}
 
 	portStr, ok := annotations[AnnotationsPrometheusPort]
 	if ok == false || portStr == "" {
-		return 0, "", fmt.Errorf("no set annotions %s", AnnotationsPrometheusPort)
+		return 0, "", fmt.Errorf("no set annotations %s", AnnotationsPrometheusPort)
 	}
 
 	port, err := strconv.Atoi(portStr)
@@ -271,8 +271,8 @@ func getPodMetrics(podIP, metricPath string, metricPort int) (Metrics, error) {
 }
 
 func (m *MetricManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	switch obj := e.Object.(type) {
 	case *corev1.Pod:
 		m.onCreatePod(obj)
@@ -282,8 +282,8 @@ func (m *MetricManager) OnCreate(e event.CreateEvent) (handler.Result, error) {
 }
 
 func (m *MetricManager) OnDelete(e event.DeleteEvent) (handler.Result, error) {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	switch obj := e.Object.(type) {
 	case *corev1.Namespace:
 		delete(m.workloads, obj.Name)
@@ -294,7 +294,9 @@ func (m *MetricManager) OnDelete(e event.DeleteEvent) (handler.Result, error) {
 	case *appsv1.StatefulSet:
 		m.onDeleteWorkload(obj.Spec.Template.Annotations, obj.Namespace, common.ResourceTypeStatefulSet, obj.Name)
 	case *corev1.Pod:
-		m.onDeletePod(obj)
+		if _, _, err := getWorkloadExposedMetric(obj.Annotations); err == nil {
+			m.onDeletePod(obj)
+		}
 	}
 
 	return handler.Result{}, nil
@@ -311,19 +313,7 @@ func (m *MetricManager) onDeleteWorkload(annotions map[string]string, namespace,
 }
 
 func (m *MetricManager) onDeletePod(pod *corev1.Pod) {
-	workloads, ok := m.workloads[pod.Namespace]
-	if ok == false {
-		return
-	}
-
-	ownerType, ownerName, err := helper.GetPodOwner(m.cache, pod)
-	if err != nil {
-		log.Warnf("get pod %s owner failed: %s", pod.Name, err.Error())
-		return
-	}
-
-	workloadID := genWorkloadID(ownerType, ownerName)
-	workload, ok := workloads[workloadID]
+	workload, workloadID, ok := m.getWorkload(pod)
 	if ok == false {
 		return
 	}
@@ -334,12 +324,13 @@ func (m *MetricManager) onDeletePod(pod *corev1.Pod) {
 			break
 		}
 	}
-	workloads[workloadID] = workload
+
+	m.workloads[pod.Namespace][workloadID] = workload
 }
 
 func (m *MetricManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
+	m.lock.Lock()
+	defer m.lock.Unlock()
 	switch obj := e.ObjectNew.(type) {
 	case *corev1.Pod:
 		m.onUpdatePod(e.ObjectOld.(*corev1.Pod), obj)
@@ -361,19 +352,7 @@ func (m *MetricManager) onUpdatePod(oldPod *corev1.Pod, newPod *corev1.Pod) {
 		return
 	}
 
-	workloads, ok := m.workloads[newPod.Namespace]
-	if ok == false {
-		return
-	}
-
-	ownerType, ownerName, err := helper.GetPodOwner(m.cache, newPod)
-	if err != nil {
-		log.Warnf("get pod %s owner failed: %s", newPod.Name, err.Error())
-		return
-	}
-
-	workloadID := genWorkloadID(ownerType, ownerName)
-	workload, ok := workloads[workloadID]
+	workload, workloadID, ok := m.getWorkload(newPod)
 	if ok == false {
 		return
 	}
@@ -385,7 +364,29 @@ func (m *MetricManager) onUpdatePod(oldPod *corev1.Pod, newPod *corev1.Pod) {
 		}
 	}
 
-	workloads[workloadID] = workload
+	m.workloads[newPod.Namespace][workloadID] = workload
+}
+
+func (m *MetricManager) getWorkload(pod *corev1.Pod) (Workload, string, bool) {
+	var workload Workload
+	workloads, ok := m.workloads[pod.Namespace]
+	if ok == false {
+		return workload, "", false
+	}
+
+	ownerType, ownerName, err := helper.GetPodOwner(m.cache, pod)
+	if err != nil {
+		log.Warnf("get pod %s owner failed: %s", pod.Name, err.Error())
+		return workload, "", false
+	}
+
+	workloadID := genWorkloadID(ownerType, ownerName)
+	workload, ok = workloads[workloadID]
+	if ok == false {
+		return workload, "", false
+	}
+
+	return workload, workloadID, true
 }
 
 func (m *MetricManager) OnGeneric(e event.GenericEvent) (handler.Result, error) {
