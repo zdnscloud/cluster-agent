@@ -31,14 +31,7 @@ func (m *ServiceManager) List(ctx *resource.Context) interface{} {
 	return nil
 }
 
-type dumbHandler struct{}
-
-func (h *dumbHandler) List(ctx *resource.Context) interface{} {
-	return nil
-}
-
 func (m *ServiceManager) RegisterSchemas(version *resource.APIVersion, schemas resource.SchemaManager) {
-	schemas.MustImport(version, Namespace{}, &dumbHandler{})
 	schemas.MustImport(version, InnerService{}, m)
 	schemas.MustImport(version, OuterService{}, m)
 }

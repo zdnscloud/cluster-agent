@@ -2,12 +2,9 @@ package service
 
 import (
 	"github.com/zdnscloud/gorest/resource"
-)
 
-type Namespace struct {
-	resource.ResourceBase `json:",inline"`
-	Name                  string `json:"name,omitempty"`
-}
+	common "github.com/zdnscloud/cluster-agent/commonresource"
+)
 
 type InnerService struct {
 	resource.ResourceBase `json:",inline"`
@@ -16,7 +13,7 @@ type InnerService struct {
 }
 
 func (s InnerService) GetParents() []resource.ResourceKind {
-	return []resource.ResourceKind{Namespace{}}
+	return []resource.ResourceKind{common.Namespace{}}
 }
 
 type Workload struct {
@@ -37,7 +34,7 @@ type OuterService struct {
 }
 
 func (s OuterService) GetParents() []resource.ResourceKind {
-	return []resource.ResourceKind{Namespace{}}
+	return []resource.ResourceKind{common.Namespace{}}
 }
 
 type InnerServiceByName []*InnerService
