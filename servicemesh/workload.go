@@ -549,16 +549,64 @@ func (m *WorkloadManager) OnDelete(e event.DeleteEvent) (handler.Result, error) 
 	case *corev1.Namespace:
 		delete(m.nsResources, obj.Name)
 	case *appsv1.Deployment:
-		delete(m.nsResources[obj.Namespace].workloadPods, DeploymentPrefix+obj.Name)
+		m.onDeleteWorkload(obj.Namespace, DeploymentPrefix+obj.Name)
 	case *appsv1.DaemonSet:
-		delete(m.nsResources[obj.Namespace].workloadPods, DaemonSetPrefix+obj.Name)
+		m.onDeleteWorkload(obj.Namespace, DaemonSetPrefix+obj.Name)
 	case *appsv1.StatefulSet:
-		delete(m.nsResources[obj.Namespace].workloadPods, StatefulSetPrefix+obj.Name)
+		m.onDeleteWorkload(obj.Namespace, StatefulSetPrefix+obj.Name)
 	case *corev1.Pod:
-		delete(m.nsResources[obj.Namespace].podOwners, obj.Name)
+		m.onDeletePod(obj)
 	}
 
 	return handler.Result{}, nil
+}
+
+func (m *WorkloadManager) onDeleteWorkload(namespace, workloadId string) {
+	resources, ok := m.nsResources[namespace]
+	if ok == false {
+		return
+	}
+
+	pods, ok := resources.workloadPods[workloadId]
+	if ok == false {
+		return
+	}
+
+	delete(resources.workloadPods, workloadId)
+	for _, pod := range pods {
+		delete(resources.podOwners, pod)
+	}
+}
+
+func (m *WorkloadManager) onDeletePod(pod *corev1.Pod) {
+	if isLinkerdInjectedPod(pod) == false {
+		return
+	}
+
+	resources, ok := m.nsResources[pod.Namespace]
+	if ok == false {
+		return
+	}
+
+	delete(resources.podOwners, pod.Name)
+	ownerType, ownerName, err := helper.GetPodOwner(m.cache, pod)
+	if err != nil {
+		log.Warnf("get pod %s owner with namespace %s failed: %s", pod.Name, pod.Namespace, err.Error())
+		return
+	}
+
+	workloadId, ok := genWorkloadID(ownerType, ownerName)
+	if ok == false {
+		return
+	}
+
+	for i, podName := range resources.workloadPods[workloadId] {
+		if podName == pod.Name {
+			resources.workloadPods[workloadId] = append(resources.workloadPods[workloadId][:i],
+				resources.workloadPods[workloadId][i+1:]...)
+			break
+		}
+	}
 }
 
 func (m *WorkloadManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) {
@@ -572,7 +620,7 @@ func (m *WorkloadManager) OnUpdate(e event.UpdateEvent) (handler.Result, error) 
 func (m *WorkloadManager) OnUpdatePod(k8spod *corev1.Pod) {
 	if k8spod.Status.Phase == corev1.PodSucceeded || k8spod.Status.Phase == corev1.PodFailed {
 		m.lock.Lock()
-		delete(m.nsResources[k8spod.Namespace].podOwners, k8spod.Name)
+		m.onDeletePod(k8spod)
 		m.lock.Unlock()
 	}
 }
