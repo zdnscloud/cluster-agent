@@ -48,6 +48,7 @@ func (s *ceph) GetInfo(mountpoints map[string][]int64) *types.Storage {
 			UsedSize: uSize,
 			FreeSize: fSize,
 			Pods:     pods,
+			PVC:      pvc,
 		}
 		res = append(res, pv)
 	}

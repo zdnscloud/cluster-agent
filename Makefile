@@ -7,15 +7,19 @@ GOSRC = $(shell find . -type f -name '*.go')
 
 REGISTRY_NAME = zdnscloud
 IMAGE_NAME = cluster-agent
-#IMAGE_VERSION = v3.1.5
+IMAGE_VERSION = latest
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build cmd/cluster-agent.go
 
-image:
+build-image:
 	docker build -t $(REGISTRY_NAME)/$(IMAGE_NAME):${BRANCH} --build-arg version=${VERSION} --build-arg buildtime=${BUILD} .
 	docker image prune -f
-	docker push $(REGISTRY_NAME)/$(IMAGE_NAME):${BRANCH}
+
+docker: 
+	docker build -t $(REGISTRY_NAME)/$(IMAGE_NAME):${IMAGE_VERSION} --build-arg version=${VERSION} --build-arg buildtime=${BUILD} .
+	docker image prune -f
+	docker push $(REGISTRY_NAME)/$(IMAGE_NAME):${IMAGE_VERSION}
 
 clean:
 	rm -f cluster-agent

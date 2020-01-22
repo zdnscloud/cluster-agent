@@ -7,9 +7,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"k8s.io/client-go/kubernetes/scheme"
+
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/blockdevice"
+	common "github.com/zdnscloud/cluster-agent/commonresource"
 	"github.com/zdnscloud/cluster-agent/configsyncer"
+	"github.com/zdnscloud/cluster-agent/metric"
 	"github.com/zdnscloud/cluster-agent/monitor"
 	"github.com/zdnscloud/cluster-agent/network"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
@@ -23,7 +27,6 @@ import (
 	"github.com/zdnscloud/gorest/resource"
 	"github.com/zdnscloud/gorest/resource/schema"
 	storagev1 "github.com/zdnscloud/immense/pkg/apis/zcloud/v1"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 var (
@@ -107,12 +110,19 @@ func main() {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
 
+	metricMgr, err := metric.New(cache)
+	if err != nil {
+		log.Fatalf("Create metric manager failed:%s", err.Error())
+	}
+
 	schemas := schema.NewSchemaManager()
+	common.RegisterSchemas(&Version, schemas)
 	networkMgr.RegisterSchemas(&Version, schemas)
 	serviceMgr.RegisterSchemas(&Version, schemas)
 	storageMgr.RegisterSchemas(&Version, schemas)
 	nodeAgentMgr.RegisterSchemas(&Version, schemas)
 	blockDeviceMgr.RegisterSchemas(&Version, schemas)
+	metricMgr.RegisterSchemas(&Version, schemas)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
