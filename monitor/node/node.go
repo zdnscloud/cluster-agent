@@ -43,9 +43,8 @@ func (m *Monitor) Stop() {
 	<-m.stopCh
 }
 
-func (m *Monitor) Start(cfg event.MonitorConfig) {
+func (m *Monitor) Start(cfg *event.MonitorConfig) {
 	log.Infof("start node monitor")
-	c := cfg.(*event.ClusterMonitorConfig)
 	for {
 		select {
 		case <-m.stopCh:
@@ -53,31 +52,30 @@ func (m *Monitor) Start(cfg event.MonitorConfig) {
 			return
 		default:
 		}
-		nodes := GetNodes(m.cli)
-		m.check(nodes, c)
+		m.check(GetNodes(m.cli), cfg)
 		time.Sleep(time.Duration(event.CheckInterval) * time.Second)
 	}
 }
-func (m *Monitor) check(nodes []*Node, cfg *event.ClusterMonitorConfig) {
+func (m *Monitor) check(nodes []*Node, cfg *event.MonitorConfig) {
 	for _, node := range nodes {
-		if node.Cpu > 0 && cfg.NodeCpu > 0 {
-			if ratio := (node.CpuUsed * event.Denominator) / node.Cpu; ratio > (cfg.NodeCpu) {
+		if node.Cpu > 0 && cfg.Cpu > 0 {
+			if ratio := (node.CpuUsed * event.Denominator) / node.Cpu; ratio > (cfg.Cpu) {
 				m.eventCh <- event.Event{
 					Kind:    event.NodeKind,
 					Name:    node.Name,
 					Message: fmt.Sprintf("High cpu utilization %d%%", ratio),
 				}
-				log.Infof("The CPU utilization of node %s is %d%%, higher than the threshold set by the user %d%%", node.Name, ratio, cfg.NodeCpu)
+				log.Infof("The CPU utilization of node %s is %d%%, higher than the threshold set by the user %d%%", node.Name, ratio, cfg.Cpu)
 			}
 		}
-		if node.Memory > 0 && cfg.NodeMemory > 0 {
-			if ratio := (node.MemoryUsed * event.Denominator) / node.Memory; ratio > (cfg.NodeMemory) {
+		if node.Memory > 0 && cfg.Memory > 0 {
+			if ratio := (node.MemoryUsed * event.Denominator) / node.Memory; ratio > (cfg.Memory) {
 				m.eventCh <- event.Event{
 					Kind:    event.NodeKind,
 					Name:    node.Name,
 					Message: fmt.Sprintf("High memory utilization %d%%", ratio),
 				}
-				log.Infof("The memory utilization of node %s is %d%%, higher than the threshold set by the user %d%%", node.Name, ratio, cfg.NodeMemory)
+				log.Infof("The memory utilization of node %s is %d%%, higher than the threshold set by the user %d%%", node.Name, ratio, cfg.Memory)
 			}
 		}
 	}

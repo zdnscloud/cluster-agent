@@ -30,22 +30,19 @@ const (
 var ctx = context.TODO()
 
 type MonitorManager struct {
-	lock                  sync.RWMutex
-	cache                 cache.Cache
-	cli                   client.Client
-	stopCh                chan struct{}
-	EventCh               chan interface{}
-	clusterConfig         *event.ClusterMonitorConfig
-	namespaceConfig       *event.NamespaceMonitorConfig
-	Cluster               Monitor
-	Node                  Monitor
-	Namespace             Monitor
-	startNamespaceMonitor bool
-	startClusterMonitor   bool
+	lock          sync.RWMutex
+	cache         cache.Cache
+	cli           client.Client
+	stopCh        chan struct{}
+	EventCh       chan interface{}
+	monitorConfig *event.MonitorConfig
+	Cluster       Monitor
+	Node          Monitor
+	Namespace     Monitor
 }
 
 type Monitor interface {
-	Start(event.MonitorConfig)
+	Start(*event.MonitorConfig)
 	Stop()
 }
 
@@ -53,12 +50,11 @@ func NewMonitorManager(c cache.Cache, cli client.Client, storageMgr *storage.Sto
 	eventCh := make(chan interface{})
 	stopCh := make(chan struct{})
 	m := &MonitorManager{
-		cache:           c,
-		cli:             cli,
-		EventCh:         eventCh,
-		stopCh:          stopCh,
-		clusterConfig:   &event.ClusterMonitorConfig{},
-		namespaceConfig: &event.NamespaceMonitorConfig{},
+		cache:         c,
+		cli:           cli,
+		EventCh:       eventCh,
+		stopCh:        stopCh,
+		monitorConfig: &event.MonitorConfig{},
 	}
 	m.Cluster = cluster.New(cli, eventCh)
 	m.Node = node.New(cli, eventCh)
@@ -82,8 +78,7 @@ func (m *MonitorManager) Start() {
 		default:
 		}
 		v := <-m.EventCh
-		e := v.(event.Event)
-		creatK8sEvent(m.cli, e)
+		creatK8sEvent(m.cli, v.(event.Event))
 	}
 }
 

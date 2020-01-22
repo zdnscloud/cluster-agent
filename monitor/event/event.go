@@ -18,26 +18,11 @@ type Event struct {
 
 type EventKind string
 
-type MonitorConfig interface{}
-
-type ClusterMonitorConfig struct {
-	Cpu        int64
-	Memory     int64
-	Storage    int64
-	PodCount   int64
-	NodeCpu    int64
-	NodeMemory int64
-}
-
-type NamespaceMonitorConfig struct {
-	Configs map[string]*Config
-}
-
-type Config struct {
-	Cpu        int64
-	Memory     int64
-	Storage    int64
-	PodStorage int64
+type MonitorConfig struct {
+	Cpu      int64
+	Memory   int64
+	Storage  int64
+	PodCount int64
 }
 
 type StorageSize struct {
