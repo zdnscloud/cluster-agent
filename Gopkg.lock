@@ -217,7 +217,7 @@
   version = "v0.7.0"
 
 [[projects]]
-  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
+  digest = "1:524b71991fc7d9246cc7dc2d9e0886ccb97648091c63e30eef619e6862c955dd"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = "UT"
@@ -242,7 +242,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6018d8044fa2d72760d71eb39a42daf2085c7d133c6437e04955dac738eec7ad"
+  digest = "1:65eb0ef09d69149d3af4fa8338481fe646d9239e0ce310c5049cc5f1b61af366"
   name = "github.com/zdnscloud/cement"
   packages = [
     "cache",
@@ -260,7 +260,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4bab71a76414c71228307d728952da8df26c9069c26dc15e70300b76c1043086"
+  digest = "1:b7c2062501059acd96f5a1172df353625701385045a7b9c188a8bccaf3ba69c7"
   name = "github.com/zdnscloud/gok8s"
   packages = [
     "cache",
@@ -329,14 +329,6 @@
   ]
   pruneopts = "UT"
   revision = "0f3403ce956f50e64e6631540209b89cbcd6fb9c"
-
-[[projects]]
-  branch = "master"
-  digest = "1:253618a9b5fe9b4b084719aeee0755ec0ddb56a255d00d775230adb483d54e39"
-  name = "github.com/zdnscloud/zke"
-  packages = ["types"]
-  pruneopts = "UT"
-  revision = "5686e34e4c62add7d4493c4db8b1bb902956e7b1"
 
 [[projects]]
   branch = "master"
@@ -696,8 +688,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/gin-gonic/gin",
-    "github.com/yourbasic/graph",
     "github.com/prometheus/common/expfmt",
+    "github.com/yourbasic/graph",
     "github.com/zdnscloud/cement/cache",
     "github.com/zdnscloud/cement/errgroup",
     "github.com/zdnscloud/cement/log",
@@ -724,7 +716,6 @@
     "github.com/zdnscloud/node-agent/proto",
     "github.com/zdnscloud/servicemesh",
     "github.com/zdnscloud/servicemesh/public",
-    "github.com/zdnscloud/zke/types",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
