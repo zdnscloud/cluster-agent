@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	LinkerdControllerAPIAddr = "http://linkerd-controller-api.linkerd.svc:8085/api/v1/"
+	LinkerdControllerAPIAddr = "http://linkerd-controller-api.zcloud.svc:8085/api/v1/"
 	ResourceTypeDeployment   = "deployment"
 	ResourceTypeDaemonSet    = "daemonset"
 	ResourceTypeStatefulSet  = "statefulset"
