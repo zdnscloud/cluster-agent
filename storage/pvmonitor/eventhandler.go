@@ -11,18 +11,16 @@ const (
 )
 
 func (s *PVMonitor) OnNewPV(pv *corev1.PersistentVolume) {
-	if pv.Spec.PersistentVolumeSource.CSI.Driver != s.DriverName {
+	if pv.Spec.PersistentVolumeSource.CSI == nil || pv.Spec.PersistentVolumeSource.CSI.Driver != s.DriverName {
 		return
 	}
-	quantity := pv.Spec.Capacity["storage"]
-	pvsize := utils.SizetoGb(quantity)
+	pvsize := utils.SizetoGb(pv.Spec.Capacity["storage"])
 	p := types.PV{
 		Name:             pv.Name,
 		Size:             pvsize,
 		StorageClassName: pv.Spec.StorageClassName,
 	}
-	pvs := s.PVs
-	s.PVs = append(pvs, p)
+	s.PVs = append(s.PVs, p)
 }
 
 func (s *PVMonitor) OnUpdatePV(pv *corev1.PersistentVolume) {
@@ -30,8 +28,7 @@ func (s *PVMonitor) OnUpdatePV(pv *corev1.PersistentVolume) {
 		if p.Name != pv.Name {
 			continue
 		}
-		quantity := pv.Spec.Capacity["storage"]
-		pvsize := utils.SizetoGb(quantity)
+		pvsize := utils.SizetoGb(pv.Spec.Capacity["storage"])
 		if p.Size == pvsize {
 			continue
 		}
@@ -40,16 +37,12 @@ func (s *PVMonitor) OnUpdatePV(pv *corev1.PersistentVolume) {
 }
 
 func (s *PVMonitor) OnNewPVC(pvc *corev1.PersistentVolumeClaim) {
-	if pvc.Spec.StorageClassName == nil {
+	if pvc.Spec.StorageClassName == nil || pvc.Annotations[CSIAnnotations] != s.DriverName {
 		return
 	}
-	if pvc.Annotations[CSIAnnotations] != s.DriverName {
-		return
-	}
-	pvcns := pvc.Namespace + "/" + pvc.Name
 	p := PVC{
 		Name:           pvc.Name,
-		NamespacedName: pvcns,
+		NamespacedName: pvc.Namespace + "/" + pvc.Name,
 	}
 	s.PvAndPVC[pvc.Spec.VolumeName] = p
 }
@@ -78,11 +71,10 @@ func (s *PVMonitor) OnNewPod(pod *corev1.Pod) {
 }
 
 func (s *PVMonitor) OnDelPV(pv *corev1.PersistentVolume) {
-	if pv.Spec.PersistentVolumeSource.CSI.Driver != s.DriverName {
+	if pv.Spec.PersistentVolumeSource.CSI == nil || pv.Spec.PersistentVolumeSource.CSI.Driver != s.DriverName {
 		return
 	}
-	pvs := s.PVs
-	for i, v := range pvs {
+	for i, v := range s.PVs {
 		if v.Name == pv.Name {
 			s.PVs = append(s.PVs[:i], s.PVs[i+1:]...)
 		}
@@ -90,18 +82,14 @@ func (s *PVMonitor) OnDelPV(pv *corev1.PersistentVolume) {
 }
 
 func (s *PVMonitor) OnDelPVC(pvc *corev1.PersistentVolumeClaim) {
-	if pvc.Spec.StorageClassName == nil {
-		return
-	}
-	if pvc.Annotations[CSIAnnotations] != s.DriverName {
+	if pvc.Spec.StorageClassName == nil || pvc.Annotations[CSIAnnotations] != s.DriverName {
 		return
 	}
 	delete(s.PvAndPVC, pvc.Spec.VolumeName)
 }
 
 func (s *PVMonitor) OnDelPod(pod *corev1.Pod) {
-	vs := pod.Spec.Volumes
-	for _, v := range vs {
+	for _, v := range pod.Spec.Volumes {
 		if v.PersistentVolumeClaim == nil {
 			continue
 		}

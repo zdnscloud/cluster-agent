@@ -157,6 +157,14 @@
   version = "v0.0.11"
 
 [[projects]]
+  digest = "1:ff5ebae34cfbf047d505ee150de27e60570e8c394b3b8fdbb720ff6ac71985fc"
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  pruneopts = "UT"
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
+
+[[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
   name = "github.com/modern-go/concurrent"
   packages = ["."]
@@ -189,7 +197,27 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:524b71991fc7d9246cc7dc2d9e0886ccb97648091c63e30eef619e6862c955dd"
+  branch = "master"
+  digest = "1:982be0b5396e16a663697899ce69cc7b1e71ddcae4153af157578d4dc9bc3f88"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  pruneopts = "UT"
+  revision = "d1d2010b5beead3fa1c5f271a5cf626e40b3ad6e"
+
+[[projects]]
+  digest = "1:f119e3205d3a1f0f19dbd7038eb37528e2c6f0933269dc344e305951fb87d632"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model",
+  ]
+  pruneopts = "UT"
+  revision = "287d3e634a1e550c9e463dd7e5a75a422c614505"
+  version = "v0.7.0"
+
+[[projects]]
+  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = "UT"
@@ -214,13 +242,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9e4c8513d2e3049f10bef8909f37e7d4ad5b68a674703047877ba63c0a0824d1"
+  digest = "1:6018d8044fa2d72760d71eb39a42daf2085c7d133c6437e04955dac738eec7ad"
   name = "github.com/zdnscloud/cement"
   packages = [
     "cache",
     "errgroup",
     "log",
     "log/log4go",
+    "randomdata",
     "set",
     "slice",
     "unittest",
@@ -231,7 +260,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:763cda17590d9ada51fcbb6c4804fc71ad25ce96248dc43e6a84d47f1bd51f82"
+  digest = "1:4bab71a76414c71228307d728952da8df26c9069c26dc15e70300b76c1043086"
   name = "github.com/zdnscloud/gok8s"
   packages = [
     "cache",
@@ -245,14 +274,15 @@
     "handler",
     "helper",
     "predicate",
+    "scheme",
     "util",
   ]
   pruneopts = "UT"
-  revision = "180915767ead92935d37fd79a4e970203d83b308"
+  revision = "517c0e8a9eeeb1b687c13b718693e674f1796070"
 
 [[projects]]
   branch = "master"
-  digest = "1:c5282de25bf9a65ce2334f83af43d1998bb8eca8f452b59144007b5149280c31"
+  digest = "1:120949b0178b883838d36565e6d07d94677d189214b2ffe5b2791e9781810484"
   name = "github.com/zdnscloud/gorest"
   packages = [
     ".",
@@ -262,10 +292,19 @@
     "resource/schema",
     "resource/schema/resourcedoc",
     "resource/schema/resourcefield",
+    "resource/schema/resourcefield/validator",
     "util",
   ]
   pruneopts = "UT"
-  revision = "7fc3469150115bd35224f479adaa5dfe6c199749"
+  revision = "fc1a11e10b88441e3e3f992194b18b3af756a4ca"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2acaae9b07303e00609a515ef14d7031268e453a22cc1d01ce2e692665ae4790"
+  name = "github.com/zdnscloud/immense"
+  packages = ["pkg/apis/zcloud/v1"]
+  pruneopts = "UT"
+  revision = "d123db3cf85294cbf8b28673779308f3b1c74e4f"
 
 [[projects]]
   branch = "master"
@@ -290,6 +329,14 @@
   ]
   pruneopts = "UT"
   revision = "0f3403ce956f50e64e6631540209b89cbcd6fb9c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:253618a9b5fe9b4b084719aeee0755ec0ddb56a255d00d775230adb483d54e39"
+  name = "github.com/zdnscloud/zke"
+  packages = ["types"]
+  pruneopts = "UT"
+  revision = "5686e34e4c62add7d4493c4db8b1bb902956e7b1"
 
 [[projects]]
   branch = "master"
@@ -329,14 +376,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:472d3f5adc36e1c0b9120bc3830d692a090134aa5461335f39caabd0fdb7feac"
+  digest = "1:0ab979be17fd0b01fc7c5d1644c11addaa857f4e47ad7ca68364c3da33801dab"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "ac6580df4449443a05718fd7858c1f91ad5f8d20"
+  revision = "4a24b406529242041050cb1dec3e0e4c46a5f1b6"
 
 [[projects]]
   digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
@@ -393,13 +440,14 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "0243a4be9c8f1264d238fdc2895620b4d9baf9e1"
+  revision = "b31c10ee225f87dbb9f5f878ead9d64f34f5cbbb"
 
 [[projects]]
-  digest = "1:b59ce3ddb11daeeccccc9cb3183b58ebf8e9a779f1c853308cd91612e817a301"
+  digest = "1:3fe55026bb11519b45c0fc9d848fd779028b868dc62f5563c518cf850c7421d5"
   name = "google.golang.org/grpc"
   packages = [
     ".",
+    "attributes",
     "backoff",
     "balancer",
     "balancer/base",
@@ -436,8 +484,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "1a3960e4bd028ac0cec0a2afd27d7d8e67c11514"
-  version = "v1.25.1"
+  revision = "f5b0812e6fe574d90da76b205e9eb51f6ddb1919"
+  version = "v1.26.0"
 
 [[projects]]
   digest = "1:2db5a1f3b009007bce11fc8bd83e69a70f3f8cd84afd85b2f873fc2baedd7b6a"
@@ -649,9 +697,11 @@
   input-imports = [
     "github.com/gin-gonic/gin",
     "github.com/yourbasic/graph",
+    "github.com/prometheus/common/expfmt",
     "github.com/zdnscloud/cement/cache",
     "github.com/zdnscloud/cement/errgroup",
     "github.com/zdnscloud/cement/log",
+    "github.com/zdnscloud/cement/randomdata",
     "github.com/zdnscloud/cement/set",
     "github.com/zdnscloud/cement/slice",
     "github.com/zdnscloud/cement/unittest",
@@ -669,21 +719,25 @@
     "github.com/zdnscloud/gorest/error",
     "github.com/zdnscloud/gorest/resource",
     "github.com/zdnscloud/gorest/resource/schema",
+    "github.com/zdnscloud/immense/pkg/apis/zcloud/v1",
     "github.com/zdnscloud/node-agent/client",
     "github.com/zdnscloud/node-agent/proto",
     "github.com/zdnscloud/servicemesh",
     "github.com/zdnscloud/servicemesh/public",
+    "github.com/zdnscloud/zke/types",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/resource",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/tools/cache",
+    "k8s.io/metrics/pkg/apis/metrics",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

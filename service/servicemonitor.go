@@ -24,10 +24,9 @@ const (
 	AnnkeyForUDPIngress = "zcloud_ingress_udp"
 	RunningState        = "Running"
 
-	OwnerKindReplicaset  = "ReplicaSet"
-	OwnerKindDeployment  = "Deployment"
-	OwnerKindStatefulSet = "StatefulSet"
-	OwnerKindDaemonSet   = "DaemonSet"
+	OwnerKindDeployment  = "deployment"
+	OwnerKindStatefulSet = "statefulset"
+	OwnerKindDaemonSet   = "daemonset"
 )
 
 //use service spec.Selector to get pods

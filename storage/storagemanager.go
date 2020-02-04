@@ -51,8 +51,6 @@ func (m *StorageManager) Get(ctx *resource.Context) resource.Resource {
 	cls := ctx.Resource.GetID()
 	mountpoints := m.GetBuf()
 	if len(mountpoints) == 0 {
-		log.Infof("Get pv used info from nodeagent")
-		log.Infof("Add cache %d second", m.timeout)
 		mountpoints = m.SetBuf()
 	}
 	for _, s := range m.storages {
@@ -68,8 +66,6 @@ func (m *StorageManager) List(ctx *resource.Context) interface{} {
 	var infos []*types.Storage
 	mountpoints := m.GetBuf()
 	if len(mountpoints) == 0 {
-		log.Infof("Get pv used info from nodeagent")
-		log.Infof("Add cache %d second", m.timeout)
 		mountpoints = m.SetBuf()
 	}
 	for _, s := range m.storages {
@@ -90,7 +86,6 @@ func (m *StorageManager) SetBuf() map[string][]int64 {
 		log.Warnf("Get PV Used Size failed:%s", err.Error())
 	}
 	if len(mountpoints) == 0 {
-		log.Warnf("Has no info to cache")
 		return mountpoints
 	}
 	m.cache.Add(&mountpoints, time.Duration(m.timeout)*time.Second)
@@ -98,11 +93,9 @@ func (m *StorageManager) SetBuf() map[string][]int64 {
 }
 
 func (m *StorageManager) GetBuf() map[string][]int64 {
-	log.Infof("Get pv used info from cache")
 	mountpoints := make(map[string][]int64)
 	res, has := m.cache.Get(key)
 	if !has {
-		log.Warnf("Cache not found info")
 		return mountpoints
 	}
 	mountpoints = *res.(*map[string][]int64)

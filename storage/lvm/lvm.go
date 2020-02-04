@@ -37,9 +37,8 @@ func (s *LVM) GetType() string {
 func (s *LVM) GetInfo(mountpoints map[string][]int64) *types.Storage {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	pvs := s.PVData.PVs
 	var res []types.PV
-	for _, p := range pvs {
+	for _, p := range s.PVData.PVs {
 		uSize, fSize := utils.GetPVSize(p, mountpoints)
 		pvc := s.PVData.PvAndPVC[p.Name].Name
 		pods := s.PVData.PVCAndPod[pvc]
@@ -51,6 +50,7 @@ func (s *LVM) GetInfo(mountpoints map[string][]int64) *types.Storage {
 			FreeSize: fSize,
 			Pods:     pods,
 			Node:     node,
+			PVC:      pvc,
 		}
 		res = append(res, pv)
 	}

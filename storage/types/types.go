@@ -4,11 +4,6 @@ import (
 	"github.com/zdnscloud/gorest/resource"
 )
 
-type Cluster struct {
-	resource.ResourceBase `json:",inline"`
-	Name                  string `json:"name,omitempty"`
-}
-
 type Storage struct {
 	resource.ResourceBase `json:",inline"`
 	Name                  string `json:"name"`
@@ -23,6 +18,7 @@ type PV struct {
 	Pods             []Pod  `json:"pods"`
 	StorageClassName string `json:"-"`
 	Node             string `json:"node"`
+	PVC              string `json:"pvc"`
 }
 
 type Pod struct {
