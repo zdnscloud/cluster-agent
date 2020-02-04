@@ -3,7 +3,7 @@ package types
 import (
 	"github.com/zdnscloud/gorest/resource"
 
-	"github.com/zdnscloud/cluster-agent/service"
+	"github.com/zdnscloud/cluster-agent/commonresource"
 )
 
 type SvcMeshWorkload struct {
@@ -17,7 +17,7 @@ type SvcMeshWorkload struct {
 }
 
 func (w SvcMeshWorkload) GetParents() []resource.ResourceKind {
-	return []resource.ResourceKind{service.Namespace{}}
+	return []resource.ResourceKind{commonresource.Namespace{}}
 }
 
 type SvcMeshWorkloads []*SvcMeshWorkload
