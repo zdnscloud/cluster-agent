@@ -18,6 +18,7 @@ import (
 	"github.com/zdnscloud/cluster-agent/network"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/service"
+	"github.com/zdnscloud/cluster-agent/servicemesh"
 	"github.com/zdnscloud/cluster-agent/storage"
 	"github.com/zdnscloud/gok8s/cache"
 	"github.com/zdnscloud/gok8s/client"
@@ -110,6 +111,11 @@ func main() {
 		log.Fatalf("Create service manager failed:%s", err.Error())
 	}
 
+	serviceMeshMgr, err := servicemesh.New(cache)
+	if err != nil {
+		log.Fatalf("Create servicemesh manager failed:%s", err.Error())
+	}
+
 	metricMgr, err := metric.New(cache)
 	if err != nil {
 		log.Fatalf("Create metric manager failed:%s", err.Error())
@@ -122,6 +128,7 @@ func main() {
 	storageMgr.RegisterSchemas(&Version, schemas)
 	nodeAgentMgr.RegisterSchemas(&Version, schemas)
 	blockDeviceMgr.RegisterSchemas(&Version, schemas)
+	serviceMeshMgr.RegisterSchemas(&Version, schemas)
 	metricMgr.RegisterSchemas(&Version, schemas)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()

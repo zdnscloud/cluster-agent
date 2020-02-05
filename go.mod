@@ -10,11 +10,13 @@ require (
 	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/prometheus/client_model v0.1.0 // indirect
 	github.com/prometheus/common v0.7.0
+	github.com/yourbasic/graph v0.0.0-20170921192928-40eb135c0b26
 	github.com/zdnscloud/cement v0.0.0-20200205075737-175eefa2a628
 	github.com/zdnscloud/gok8s v0.0.0-20200205030309-01bcca9746a5
 	github.com/zdnscloud/gorest v0.0.0-20200205081330-f0bca708912f
 	github.com/zdnscloud/immense v0.0.0-20200205100757-d5616c750e6f
 	github.com/zdnscloud/node-agent v0.0.0-20200205094505-a6abef5b48a7
+	github.com/zdnscloud/servicemesh v0.0.0-20200205073418-8a139a9aa55d
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
 	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
 	google.golang.org/genproto v0.0.0-20200204235621-fb4a7afc5178 // indirect

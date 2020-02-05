@@ -154,10 +154,12 @@ func (nc *NetworkCache) OnUpdateService(k8ssvc *corev1.Service) {
 }
 
 func (nc *NetworkCache) OnUpdatePod(k8spodOld, k8spodNew *corev1.Pod) {
+	if k8spodNew.Status.Phase == corev1.PodSucceeded || k8spodNew.Status.Phase == corev1.PodFailed {
+		nc.OnDeletePod(k8spodNew)
+		return
+	}
+
 	if k8spodOld.Status.PodIP == k8spodNew.Status.PodIP {
-		if k8spodNew.Status.Phase == corev1.PodSucceeded || k8spodNew.Status.Phase == corev1.PodFailed {
-			nc.OnDeletePod(k8spodNew)
-		}
 		return
 	}
 
