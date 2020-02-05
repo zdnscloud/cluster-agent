@@ -13,17 +13,13 @@ build:
 	CGO_ENABLED=0 GOOS=linux go build cmd/cluster-agent.go
 
 build-image:
-	go mod vendor
 	docker build -t $(REGISTRY_NAME)/$(IMAGE_NAME):${BRANCH} --build-arg version=${VERSION} --build-arg buildtime=${BUILD} .
 	docker image prune -f
-	rm -fr vendor
 
 docker: 
-	go mod vendor
 	docker build -t $(REGISTRY_NAME)/$(IMAGE_NAME):${IMAGE_VERSION} --build-arg version=${VERSION} --build-arg buildtime=${BUILD} .
 	docker image prune -f
 	docker push $(REGISTRY_NAME)/$(IMAGE_NAME):${IMAGE_VERSION}
-	rm -fr vendor
 
 clean:
 	rm -f cluster-agent
