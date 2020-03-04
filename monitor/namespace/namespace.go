@@ -66,7 +66,10 @@ func (m *Monitor) Start(cfg *event.MonitorConfig) {
 			continue
 		}
 		for _, ns := range namespaces.Items {
-			namespace := getNamespace(m.cli, ns.Name, pvInfo)
+			namespace, err := getNamespace(m.cli, ns.Name, pvInfo)
+			if err != nil {
+				continue
+			}
 			m.check(namespace, cfg)
 			m.checkPodStorgeUsed(namespace, cfg)
 		}
@@ -149,13 +152,14 @@ func (m *Monitor) checkPodStorgeUsed(namespace *Namespace, cfg *event.MonitorCon
 	}
 }
 
-func getNamespace(cli client.Client, ns string, pvInfo map[string]event.StorageSize) *Namespace {
+func getNamespace(cli client.Client, ns string, pvInfo map[string]event.StorageSize) (*Namespace, error) {
 	var namespace Namespace
 	namespace.Name = ns
 	namespace.PvInfo = pvInfo
 	podMetricsList, err := cli.GetPodMetrics(ns, "", labels.Everything())
 	if err != nil {
 		log.Warnf("Get pod metrics failed:%s", err.Error())
+		return nil, err
 	}
 	for _, pod := range podMetricsList.Items {
 		var cpuUsed, memoryUsed int64
@@ -195,7 +199,7 @@ func getNamespace(cli client.Client, ns string, pvInfo map[string]event.StorageS
 	} else {
 		namespace.Storage = storagesize
 	}
-	return &namespace
+	return &namespace, nil
 }
 
 func getAllPVCUsedSize(cli client.Client, ns string, pvInfo map[string]event.StorageSize) int64 {

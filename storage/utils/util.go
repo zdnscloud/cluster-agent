@@ -3,6 +3,15 @@ package utils
 import (
 	"context"
 	"fmt"
+	"math"
+	"strconv"
+	"strings"
+	"time"
+
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	k8stypes "k8s.io/apimachinery/pkg/types"
+
 	"github.com/zdnscloud/cement/log"
 	"github.com/zdnscloud/cluster-agent/nodeagent"
 	"github.com/zdnscloud/cluster-agent/storage/types"
@@ -10,13 +19,6 @@ import (
 	"github.com/zdnscloud/gok8s/client/config"
 	nodeclient "github.com/zdnscloud/node-agent/client"
 	pb "github.com/zdnscloud/node-agent/proto"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	k8stypes "k8s.io/apimachinery/pkg/types"
-	"math"
-	"strconv"
-	"strings"
-	"time"
 )
 
 const (
@@ -55,17 +57,6 @@ func CountFreeSize(t string, u int64) string {
 	return fmt.Sprintf("%.2f", math.Trunc(f*1e2)*1e-2)
 }
 
-func GetPVSize(pv types.PV, mountpoints map[string][]int64) (string, string) {
-	var uSize, fSize string
-	for k, v := range mountpoints {
-		if strings.Contains(k, pv.Name) {
-			uSize = KbyteToGb(v[1])
-			fSize = CountFreeSize(pv.Size, v[1])
-		}
-	}
-	return uSize, fSize
-}
-
 func GetNodes() (corev1.NodeList, error) {
 	nodes := corev1.NodeList{}
 	config, err := config.GetConfig()
@@ -82,7 +73,23 @@ func GetNodes() (corev1.NodeList, error) {
 	return nodes, nil
 }
 
-func GetNodeForLvmPv(name, DriverName string) (string, error) {
+func GetPv(name string) (*corev1.PersistentVolume, error) {
+	config, err := config.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+	cli, err := client.New(config, client.Options{})
+	if err != nil {
+		return nil, err
+	}
+	pv := &corev1.PersistentVolume{}
+	if err = cli.Get(context.TODO(), k8stypes.NamespacedName{"", name}, pv); err != nil {
+		return nil, err
+	}
+	return pv, nil
+}
+
+func GetNodeForLvmPv(name string) (string, error) {
 	config, err := config.GetConfig()
 	if err != nil {
 		return "", err
@@ -95,13 +102,12 @@ func GetNodeForLvmPv(name, DriverName string) (string, error) {
 	if err = cli.Get(context.TODO(), k8stypes.NamespacedName{"", name}, &pv); err != nil {
 		return "", err
 	}
-	if pv.Spec.PersistentVolumeSource.CSI == nil || pv.Spec.PersistentVolumeSource.CSI.Driver != DriverName {
-		return "", nil
-	}
-	for _, v := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms {
-		for _, i := range v.MatchExpressions {
-			if i.Key == "kubernetes.io/hostname" && i.Operator == "In" {
-				return i.Values[0], nil
+	if pv.Spec.NodeAffinity != nil && pv.Spec.NodeAffinity.Required != nil && pv.Spec.NodeAffinity.Required.NodeSelectorTerms != nil {
+		for _, v := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms {
+			for _, i := range v.MatchExpressions {
+				if i.Key == "kubernetes.io/hostname" && i.Operator == "In" {
+					return i.Values[0], nil
+				}
 			}
 		}
 	}
@@ -132,4 +138,15 @@ func GetAllPvUsedSize(nodeAgentMgr *nodeagent.NodeAgentManager) (map[string][]in
 		}
 	}
 	return infos, nil
+}
+
+func GetPVSize(pv *types.PV, mountpoints map[string][]int64) (string, string) {
+	var uSize, fSize string
+	for k, v := range mountpoints {
+		if strings.Contains(k, pv.Name) {
+			uSize = KbyteToGb(v[1])
+			fSize = CountFreeSize(pv.Size, v[1])
+		}
+	}
+	return uSize, fSize
 }

@@ -7,7 +7,7 @@ import (
 type Storage struct {
 	resource.ResourceBase `json:",inline"`
 	Name                  string `json:"name"`
-	PVs                   []PV   `json:"pvs"`
+	PVs                   []*PV  `json:"pvs"`
 }
 
 type PV struct {
@@ -24,3 +24,9 @@ type PV struct {
 type Pod struct {
 	Name string `json:"name"`
 }
+
+type Pvs []*PV
+
+func (s Pvs) Len() int           { return len(s) }
+func (s Pvs) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s Pvs) Less(i, j int) bool { return s[i].PVC < s[j].PVC }
