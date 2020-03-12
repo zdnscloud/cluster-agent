@@ -45,7 +45,6 @@ func (m *NodeAgentManager) GetNodeAgent(name string) (*NodeAgent, bool) {
 func (m *NodeAgentManager) Create(ctx *resource.Context) (resource.Resource, *gorestError.APIError) {
 	node := ctx.Resource.(*NodeAgent)
 	node.SetID(node.Name)
-	//node.SetType(NodeAgentType)
 
 	m.lock.Lock()
 	defer m.lock.Unlock()

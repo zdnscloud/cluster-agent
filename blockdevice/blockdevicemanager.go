@@ -87,12 +87,18 @@ func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() []*BlockDevice {
 		cli, err := nodeclient.NewClient(node.Address, 10*time.Second)
 		if err != nil {
 			log.Warnf("Create node agent client: %s failed: %s", node.Name, err.Error())
+			if err := nodeagent.CreateEvent(node.Name, err); err != nil {
+				log.Warnf("create event failed: %s", err.Error())
+			}
 			continue
 		}
 		req := pb.GetDisksInfoRequest{}
 		reply, err := cli.GetDisksInfo(context.TODO(), &req)
 		if err != nil {
 			log.Warnf("Get node %s Disk info failed: %s", node.Name, err.Error())
+			if err := nodeagent.CreateEvent(node.Name, err); err != nil {
+				log.Warnf("create event failed: %s", err.Error())
+			}
 			continue
 		}
 		var devs Devs

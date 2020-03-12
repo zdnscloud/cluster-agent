@@ -121,14 +121,20 @@ func GetAllPvUsedSize(nodeAgentMgr *nodeagent.NodeAgentManager) (map[string][]in
 		cli, err := nodeclient.NewClient(node.Address, 10*time.Second)
 		if err != nil {
 			log.Warnf("Create node agent client: %s failed: %s", node.Name, err.Error())
-			continue
+			if err := nodeagent.CreateEvent(node.Name, err); err != nil {
+				return nil, err
+			}
+			return nil, err
 		}
 		log.Infof("Get node %s MountpointsSize info", node.Name)
 		mreq := pb.GetMountpointsSizeRequest{}
 		mreply, err := cli.GetMountpointsSize(context.TODO(), &mreq)
 		if err != nil {
 			log.Warnf("Get MountpointsSize on %s failed: %s", node.Name, err.Error())
-			continue
+			if err := nodeagent.CreateEvent(node.Name, err); err != nil {
+				return nil, err
+			}
+			return nil, err
 		}
 		for k, v := range mreply.Infos {
 			if !strings.Contains(k, "pvc-") && !strings.Contains(k, "nfs-") {
