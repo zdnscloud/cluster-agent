@@ -137,7 +137,7 @@ func GetAllPvUsedSize(nodeAgentMgr *nodeagent.NodeAgentManager) (map[string][]in
 			}
 			return nil, err
 		}
-		for k, v := range mreply.Infos {
+		for k, v := range mreply.Sizes {
 			if !strings.Contains(k, "pvc-") && !strings.Contains(k, "nfs-") {
 				continue
 			}

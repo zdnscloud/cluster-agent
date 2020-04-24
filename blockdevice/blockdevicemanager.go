@@ -103,13 +103,13 @@ func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() []*BlockDevice {
 			continue
 		}
 		var devs Devs
-		for k, v := range reply.Infos {
+		for k, v := range reply.Disks {
 			dev := Dev{
 				Name:       k,
-				Size:       byteToG(v.Diskinfo["Size"]),
-				Parted:     sTob(v.Diskinfo["Parted"]),
-				Filesystem: sTob(v.Diskinfo["Filesystem"]),
-				Mount:      sTob(v.Diskinfo["Mountpoint"]),
+				Size:       byteToG(strconv.Itoa(int(v.Size))),
+				Parted:     v.Parted,
+				Filesystem: v.Filesystem,
+				Mount:      v.Mountpoint,
 			}
 			devs = append(devs, dev)
 		}
