@@ -119,6 +119,7 @@ func GetAllPvUsedSize(nodeAgentMgr *nodeagent.NodeAgentManager) (map[string][]in
 	nodes := nodeAgentMgr.GetNodeAgents()
 	for _, node := range nodes {
 		cli, err := nodeclient.NewClient(node.Address, 10*time.Second)
+		defer cli.Close()
 		if err != nil {
 			log.Warnf("Create node agent client: %s failed: %s", node.Name, err.Error())
 			if err := nodeagent.CreateEvent(node.Name, err); err != nil {

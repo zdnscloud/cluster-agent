@@ -92,6 +92,7 @@ func (m *blockDeviceMgr) getBlockdevicesFronNodeAgent() []*BlockDevice {
 			}
 			continue
 		}
+		defer cli.Close()
 		req := pb.GetDisksInfoRequest{}
 		reply, err := cli.GetDisksInfo(context.TODO(), &req)
 		if err != nil {
