@@ -17,8 +17,8 @@ require (
 	github.com/zdnscloud/node-agent v0.0.0-20200424024925-37fa95d9291f
 	github.com/zdnscloud/servicemesh v0.0.0-20200205073418-8a139a9aa55d
 	gopkg.in/go-playground/validator.v9 v9.30.2 // indirect
-	k8s.io/api v0.17.2
-	k8s.io/apimachinery v0.17.2
-	k8s.io/client-go v0.17.2
+	k8s.io/api v0.20.0
+	k8s.io/apimachinery v0.20.0
+	k8s.io/client-go v0.20.0
 	k8s.io/metrics v0.17.2
 )
