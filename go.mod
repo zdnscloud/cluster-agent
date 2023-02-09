@@ -3,10 +3,7 @@ module github.com/zdnscloud/cluster-agent
 go 1.13
 
 require (
-	github.com/gin-gonic/gin v1.5.0
-	github.com/go-playground/universal-translator v0.17.0 // indirect
-	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/mattn/go-isatty v0.0.11 // indirect
+	github.com/gin-gonic/gin v1.7.7
 	github.com/prometheus/client_model v0.1.0 // indirect
 	github.com/prometheus/common v0.7.0
 	github.com/yourbasic/graph v0.0.0-20170921192928-40eb135c0b26
@@ -16,7 +13,6 @@ require (
 	github.com/zdnscloud/immense v0.0.0-20200326032146-8accbcd68935
 	github.com/zdnscloud/node-agent v0.0.0-20200424024925-37fa95d9291f
 	github.com/zdnscloud/servicemesh v0.0.0-20200205073418-8a139a9aa55d
-	gopkg.in/go-playground/validator.v9 v9.30.2 // indirect
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v0.17.2
